@@ -1,0 +1,13 @@
+
+{
+  "name": "ordino-pos-frontend",
+  "version": "1.0.0",
+  "description": "A modern, efficient Point of Sale (POS) system.",
+  "private": true,
+  "scripts": {
+    "start": "serve -s . -l 8080"
+  },
+  "dependencies": {
+    "serve": "^14.2.3"
+  }
+}

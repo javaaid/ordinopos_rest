@@ -1,0 +1,21 @@
+{
+  "short_name": "ordino Pos",
+  "name": "ordino Pos - Modern POS System",
+  "description": "A modern, efficient Point of Sale (POS) system designed for restaurants, coffee shops, and pizza shops.",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#ffffff",
+  "background_color": "#f4f4f5"
+}

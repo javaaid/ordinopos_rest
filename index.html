@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAQlBMVEUAAAD/AP//AP//AP8A/wD/AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP+hVxiDAAAAFXRSTlMAAwQFBgcICQwNDhETFRYYGRobHB0eISIjJSbM1EwAAAFHSURBVFjD7dbZcoQwEEBRC4iCa97/KlsJ5CQl955d/5/W9+BpEwB83/8D/6sA4gJkZgKEEgAWADgBMAHgDICXwQFgB+AEgAXAKiB/4P/9AOoA2H8X4AIwABYAOAGQACQBmACIgPkbAOM7ALzABWAAMAAWACQBmAAIgfkLACaAIgAWACQAJAAzACKA5y8A8AIXgAFgACwASAAmACYAIiA/B8BjAK8AIgAWACQAJAAzACKA5y8A8AIXgAFgACwASAAmACYAIiA/B8BjAK8AIgAWACQAJAAzACKA5y8A8AIXgAFgACwASAAmACYAIiA/B8BjAK8AIgAWACQAJAAzACKA5y8A8AIXgAFgACwASAAmACYAIiA/B8BjAK8AIgAWACQAJAAzACKA538B3g82fN/F+x88H/w9gP8G0A8A9d8GqP8B+g8A998G6P8G0A8A+R8A/zcA/ifQ/wMAAAAA//8DAAD//wMAAP//AwAA//8DAAD//wMAAP//AwAA//8DAAD//wMAAP//AwAA//8DAAD//wMAAP//AwAA//8DAAD//wMAAP//AwAA//8DAAD//wMAAP//AwAA//8DAAD//wMAAP//AwAA//8DAAD//wMAAP//AwAA//8DAAD//wMAAP//AwAA//8DAAD//wMAAP//AwAA//8DAAD//wMAAP//AwAA//8DAAD//wMAAP//AwAA//8DAAD//-xDA-38oAAAAJUlEQVR42u2av27DMAyGvf+Vdl2cOAZOklOkS5foEgU6BAlSpkuoU6RIkCJFihQpkuZ6/gM8BDtIsiT/J2vHj2c/AAYAz/9w/6pA+IAIiMwAgBKADgBOADoBOAHwKDgA7AHgBMAAYAWg/8H9+wHUAXAAFuADMAKQAZABYAUgAaQAmYCAAc+fATAeAPAFLgADYAAsAEgAJgAjMH4DwBJAEQALABKABICVgIwAXP8DwAtcAAbAAlgAkABMACZgIgD/PIDXAKwCigC8B0gCAPwfAA/wAgAAAAASUVORK5CYII=" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ordino Pos - Modern POS</title>
+    
+    <!-- Prevent Browser Caching of this file -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ordino Pos">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+
+    <style>
+      :root {
+        --primary: 217 91% 60%; /* #2563eb */
+        --primary-foreground: 0 0% 100%; /* #ffffff */
+        
+        --secondary: 81 78% 52%; /* #a3e635 */
+        --secondary-foreground: 0 0% 0%; /* #000000 */
+
+        --background: 240 4% 96%; /* #f4f4f5 - Light Gray for body */
+        --foreground: 222 47% 11%; /* #111827 - Dark Gray Text */
+
+        --card: 0 0% 100%; /* #ffffff */
+        --card-foreground: 222 47% 11%;
+
+        --popover: 0 0% 100%;
+        --popover-foreground: 222 47% 11%;
+
+        --muted: 240 4% 90%; /* #e4e4e7 */
+        --muted-foreground: 240 4% 46%; /* #6b7280 */
+
+        --accent: 240 4% 96%; /* #f4f4f5 */
+        --accent-foreground: 222 47% 11%;
+
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 100%;
+
+        --border: 240 6% 90%; /* #d1d5db */
+        --input: 240 6% 90%;
+        --ring: 217 91% 60%;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+      }
+    </style>
+     <style>
+      /* Inlined Print Styles */
+      @media screen {
+        /* On screen, completely hide the print-root container so it does not affect layout. */
+        body > #print-root {
+          display: none !important;
+          visibility: hidden !important;
+        }
+      }
+
+      @media print {
+        /* Hide everything except the print-root and its contents */
+        body > *:not(#print-root) {
+          display: none !important;
+          visibility: hidden !important;
+        }
+
+        /* Make sure the print container is visible and takes up the page */
+        body > #print-root {
+          display: block !important;
+          visibility: visible !important;
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+        }
+
+        /* Reset body styles for a clean print output */
+        body {
+          background: none !important;
+          margin: 0;
+          padding: 0;
+        }
+
+        /* Generic printable area styles */
+        .printable-area-container {
+          color: #000 !important;
+          background: none !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        /* Specific styles for thermal receipts */
+        #receipt-printable-area,
+        #kitchen-receipt-printable-area {
+          width: 302px; /* Standard thermal printer width */
+          font-size: 9pt;
+          margin: 0 auto; /* Center it for preview */
+        }
+
+        /* A4 invoices should take up the full page */
+        #a4-invoice-wrapper {
+          width: 100%;
+          height: 100%;
+        }
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              border: 'hsl(var(--border))',
+              input: 'hsl(var(--input))',
+              ring: 'hsl(var(--ring))',
+              background: 'hsl(var(--background))',
+              foreground: 'hsl(var(--foreground))',
+              primary: {
+                DEFAULT: 'hsl(var(--primary))',
+                foreground: 'hsl(var(--primary-foreground))',
+              },
+              secondary: {
+                DEFAULT: 'hsl(var(--secondary))',
+                foreground: 'hsl(var(--secondary-foreground))',
+              },
+              destructive: {
+                DEFAULT: 'hsl(var(--destructive))',
+                foreground: 'hsl(var(--destructive-foreground))',
+              },
+              muted: {
+                DEFAULT: 'hsl(var(--muted))',
+                foreground: 'hsl(var(--muted-foreground))',
+              },
+              accent: {
+                DEFAULT: 'hsl(var(--accent))',
+                foreground: 'hsl(var(--accent-foreground))',
+              },
+              popover: {
+                DEFAULT: 'hsl(var(--popover))',
+                foreground: 'hsl(var(--popover-foreground))',
+              },
+              card: {
+                DEFAULT: 'hsl(var(--card))',
+                foreground: 'hsl(var(--card-foreground))',
+              },
+            },
+            borderRadius: {
+                lg: `0.75rem`, // Equivalent to rounded-xl
+                md: `calc(0.75rem - 2px)`,
+                sm: `calc(0.75rem - 4px)`,
+            },
+            boxShadow: {
+              'md': '0 2px 6px rgba(0, 0, 0, 0.1)',
+            },
+            fontFamily: {
+                sans: ['Inter', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+            },
+            keyframes: {
+              'fade-in-down': { from: { opacity: 0, transform: 'translateY(-10px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+              'fade-in-up': { from: { opacity: 0, transform: 'translateY(20px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+              'fade-in': { from: { opacity: 0 }, to: { opacity: 1 } },
+            },
+            animation: {
+              'fade-in-down': 'fade-in-down 0.2s ease-out forwards',
+              'fade-in-up': 'fade-in-up 0.3s ease-out forwards',
+              'fade-in': 'fade-in 0.2s ease-out forwards',
+            },
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@18.2.0/",
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/": "https://esm.sh/react-dom@18.2.0/",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "react-dom": "https://esm.sh/react-dom@18.2.0",
+    "@google/genai": "https://esm.sh/@google/genai",
+    "react-qr-code": "https://esm.sh/react-qr-code@2.0.12",
+    "class-variance-authority": "https://esm.sh/class-variance-authority@0.7.0",
+    "clsx": "https://esm.sh/clsx@2.1.0",
+    "tailwind-merge": "https://esm.sh/tailwind-merge@2.2.1",
+    "@radix-ui/react-slot": "https://esm.sh/@radix-ui/react-slot@1.0.2",
+    "@radix-ui/react-checkbox": "https://esm.sh/@radix-ui/react-checkbox@1.0.4",
+    "@heroicons/react/24/solid": "https://esm.sh/@heroicons/react@2.1.1/24/solid",
+    "@heroicons/react/24/outline": "https://esm.sh/@heroicons/react@2.1.1/24/outline",
+    "@heroicons/react/": "https://esm.sh/@heroicons/react@^2.2.0/",
+    "./plugins/index.ts": "./plugins/index.ts",
+    "./plugins/definitions.ts": "./plugins/definitions.ts"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-background text-foreground antialiased">
+    <div id="root"></div>
+    <div id="print-root"></div>
+    <div id="modal-root"></div>
+    <script type="module" src="./index.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./service-worker.js').then(registration => {
+            console.log('SW registered: ', registration);
+          }).catch(registrationError => {
+            console.log('SW registration failed: ', registrationError);
+          });
+        });
+      }
+    </script>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
