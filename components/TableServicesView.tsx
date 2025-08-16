@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Reservation, Customer, ReservationStatus, WaitlistEntry, WaitlistStatus, Table, ReservationSystem } from '../types';
 import TableCard from './TableCard';
@@ -112,7 +111,7 @@ const TableServicesView: React.FC = () => {
                 />}
                 {activeTab === 'waitlist' && isWaitlistPluginActive && <WaitlistView 
                     waitlist={waitlist}
-                    onAddToWaitlist={() => onAddToWaitlist(onSuggestWaitTime)}
+                    onAddToWaitlist={onAddToWaitlist}
                     onUpdateStatus={onUpdateWaitlistStatus}
                     onSeatParty={onSeatWaitlistParty}
                 />}

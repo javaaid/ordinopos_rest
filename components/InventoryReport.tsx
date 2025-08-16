@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Ingredient, Order, Supplier, WastageEntry, RecipeItem } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -30,6 +31,9 @@ const AIReorderSuggestions: React.FC<{ ingredients: Ingredient[], orders: Order[
             setIsLoading(true);
             setSuggestion(null);
             try {
+                if (!process.env.API_KEY) {
+                    throw new Error("API Key not found.");
+                }
                 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
                 const prompt = `
                     Based on the following data, generate a simple, actionable reorder suggestion list for a restaurant manager.

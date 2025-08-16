@@ -240,7 +240,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const [toasts, setToasts] = useState<ToastNotification[]>([]);
     const toastId = useRef(0);
-    
+
     const addToast = useCallback((toast: Omit<ToastNotification, 'id'>) => {
         const newToast = { ...toast, id: toastId.current++ };
         setToasts(prev => [...prev, newToast]);
@@ -249,9 +249,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const onSuggestRole = useCallback(async (jobTitle: string): Promise<AIRoleSuggestion | null> => {
         if (!settings.ai.enableAIFeatures) return null;
         try {
-            if (!process.env.API_KEY) {
-                throw new Error("API key is not configured.");
-            }
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             const availableRoles = (roles || []).map((r: Role) => ({ id: r.id, name: r.name }));
 
@@ -281,7 +278,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
         return null;
     }, [settings.ai.enableAIFeatures, roles, addToast]);
-
+    
     const floors = useMemo(() => {
         if (!tables) return ['Main Floor'];
         const floorSet = new Set((tables as Table[]).map(t => t.floor).filter(Boolean));
@@ -1100,10 +1097,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     
         setCart([]);
-        setAppliedDiscount(null);
-        setAppliedPromotion(null);
-        
-        addToast({ type: 'success', title: 'Tab Updated', message: `Items saved to ${selectedCustomer.name}'s tab.` });
     }, [selectedCustomer, cart, orders, activeTab, appliedDiscount, appliedPromotion, settings, currentLocation, createOrderObject, incrementOrderSequences, setOrders, addToast, setCart, setActiveTab, setAppliedDiscount, setAppliedPromotion, surcharges]);
 
     const handleSettleTab = useCallback(() => {
@@ -1255,6 +1248,68 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         openModal('qrCode', { table });
     }, []);
 
+    const onSuggestWaitTime = useCallback(async (partySize: number): Promise<string> => {
+        if (!settings.ai.enableAIFeatures) {
+            addToast({ type: 'info', title: 'AI Disabled', message: 'AI features are not enabled in settings.' });
+            return '15-20'; // Return a default value
+        }
+    
+        try {
+            if (!process.env.API_KEY) {
+                throw new Error("API key is not configured.");
+            }
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
+            const occupiedTables = (tables || []).filter((t: Table) => t.status === 'occupied').length;
+            const totalTables = (tables || []).length;
+            const waitlistCount = (waitlist || []).length;
+    
+            const prompt = `
+                As a restaurant host AI, estimate the wait time.
+                Current conditions:
+                - Party size requesting a table: ${partySize}
+                - Parties currently on waitlist: ${waitlistCount}
+                - Tables occupied: ${occupiedTables} out of ${totalTables}
+                
+                Based on this, provide a concise wait time estimation string. For example: "10-15 minutes", "Around 30 minutes", "Over an hour".
+                Do not add any extra explanation. Just provide the time string.
+            `;
+    
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+            });
+    
+            const suggestedTime = response.text.trim();
+            if (suggestedTime && suggestedTime.length < 30) {
+                return suggestedTime;
+            } else {
+                throw new Error("Invalid response from AI.");
+            }
+        } catch (error) {
+            console.error("Error suggesting wait time:", error);
+            addToast({ type: 'error', title: 'AI Error', message: 'Could not suggest a wait time.' });
+            return '15-20'; // Fallback
+        }
+    }, [settings.ai.enableAIFeatures, tables, waitlist, addToast]);
+    
+    const onAddToWaitlist = useCallback(() => {
+        openModal('waitlist', {
+            onSave: (entry: Omit<WaitlistEntry, 'id' | 'status' | 'addedAt' | 'locationId'>) => {
+                const newEntry: WaitlistEntry = {
+                    ...entry,
+                    id: `wl_${Date.now()}`,
+                    status: 'Waiting',
+                    addedAt: Date.now(),
+                    locationId: currentLocationId,
+                };
+                setWaitlist(prev => [...(prev || []), newEntry]);
+                closeModal();
+            },
+            onSuggestWaitTime: onSuggestWaitTime,
+        });
+    }, [openModal, setWaitlist, currentLocationId, onSuggestWaitTime]);
+    
     // Placeholder functions to prevent crashes
     const createPlaceholderToast = (name: string) => () => addToast({type: 'info', title: 'In Development', message: `${name} feature is not fully implemented yet.`});
     const onEditTable = createPlaceholderToast('Table Editing');
@@ -1265,11 +1320,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const onEditReservation = createPlaceholderToast('Edit Reservation');
     const onUpdateReservationStatus = createPlaceholderToast('Update Reservation Status');
     const onSeatReservationParty = createPlaceholderToast('Seat Reservation Party');
-    const onAddToWaitlist = createPlaceholderToast('Add to Waitlist');
     const onUpdateWaitlistStatus = createPlaceholderToast('Update Waitlist Status');
     const onSeatWaitlistParty = createPlaceholderToast('Seat Waitlist Party');
     const onSyncReservations = async () => { createPlaceholderToast('Sync Reservations')(); return Promise.resolve()};
-    const onSuggestWaitTime = async () => { createPlaceholderToast('AI Suggest Wait Time')(); return Promise.resolve('10-15'); };
 
 
     const allContexts = {
@@ -1366,6 +1419,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       // Data Context
       locations, setLocations, categories, setCategories, menuItems, setMenuItems, customers, setCustomers, drivers, setDrivers, employees, setEmployees, suppliers, setSuppliers, wastageLog, setWastageLog, roles, setRoles, auditLog, setAuditLog, printers, setPrinters, tables, setTables, floors, subscriptions, setSubscriptions, purchaseOrders, setPurchaseOrders, schedule, setSchedule, reservations, setReservations, ingredients, setIngredients, recipes, setRecipes, signageDisplays, setSignageDisplays, signageContent, setSignageContent, signagePlaylists, setSignagePlaylists, signageSchedule, setSignageSchedule, waitlist, setWaitlist, paymentTypes, setPaymentTypes, promotions, setPromotions, modifierGroups, setModifierGroups, kitchenDisplays, setKitchenDisplays, kitchenNotes, setKitchenNotes, voidReasons, setVoidReasons, manualDiscounts, setManualDiscounts, surcharges, setSurcharges, customerDisplays, setCustomerDisplays, scales, setScales, callLog, setCallLog, orders, setOrders, heldOrders, setHeldOrders, reportSchedules, setReportSchedules, lastCompletedOrder, lastReservationSync, lastAccountingSync, 
+      onSuggestRole,
       onToggleClockStatus,
       categoriesWithCounts,
       onGenerateQRCode, onEditTable, onAddFloor, onRenameFloor, onDeleteFloor, onAddReservation, onEditReservation, onUpdateReservationStatus, onSeatReservationParty, onAddToWaitlist, onUpdateWaitlistStatus, onSeatWaitlistParty, onSyncReservations, onSuggestWaitTime,
