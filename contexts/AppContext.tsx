@@ -210,8 +210,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [orders, setOrders] = usePersistentState<Order[]>('orders', []);
     const [heldOrders, setHeldOrders] = usePersistentState<HeldOrder[]>('heldOrders', []);
     const [modal, setModal] = useState({ type: null, props: {} });
-    const [toasts, setToasts] = useState<ToastNotification[]>([]);
-    const toastId = useRef(0);
+    
     const [printQueue, setPrintQueue] = usePersistentState<PrintJob[]>('printQueue', []);
     const [isSidebarHidden, setIsSidebarHidden] = usePersistentState('isSidebarHidden', false);
     const [calledOrderNumber, setCalledOrderNumber] = usePersistentState<string | null>('calledOrderNumber', null);
@@ -239,6 +238,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [activeOrderToSettle, setActiveOrderToSettle] = useState<Order | null>(null);
     const [activeTab, setActiveTab] = useState<Order | null>(null);
 
+    const [toasts, setToasts] = useState<ToastNotification[]>([]);
+    const toastId = useRef(0);
+    
+    const addToast = useCallback((toast: Omit<ToastNotification, 'id'>) => {
+        const newToast = { ...toast, id: toastId.current++ };
+        setToasts(prev => [...prev, newToast]);
+    }, [setToasts]);
+
+    const onSuggestRole = useCallback(async (jobTitle: string): Promise<AIRoleSuggestion | null> => {
+        if (!settings.ai.enableAIFeatures) return null;
+        try {
+            if (!process.env.API_KEY) {
+                throw new Error("API key is not configured.");
+            }
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const availableRoles = (roles || []).map((r: Role) => ({ id: r.id, name: r.name }));
+
+            const prompt = `Given the job title "${jobTitle}", suggest the most appropriate role from this list: ${JSON.stringify(availableRoles)}. Also provide a brief reason for the suggestion.`;
+            
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: {
+                    responseMimeType: 'application/json',
+                    responseSchema: {
+                        type: Type.OBJECT,
+                        properties: {
+                            suggestedRoleId: { type: Type.STRING, description: 'The ID of the suggested role.' },
+                            reason: { type: Type.STRING, description: 'A brief explanation for the suggestion.' }
+                        },
+                        required: ['suggestedRoleId', 'reason']
+                    }
+                }
+            });
+
+            const result = JSON.parse(response.text) as AIRoleSuggestion;
+            return result;
+        } catch (e) {
+            console.error("AI role suggestion failed:", e);
+            addToast({type: 'error', title: 'AI Suggestion Failed', message: 'Could not connect to the AI service.'});
+        }
+        return null;
+    }, [settings.ai.enableAIFeatures, roles, addToast]);
+
     const floors = useMemo(() => {
         if (!tables) return ['Main Floor'];
         const floorSet = new Set((tables as Table[]).map(t => t.floor).filter(Boolean));
@@ -255,10 +298,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
     }, [setTheme]);
     
-    const addToast = useCallback((toast: Omit<ToastNotification, 'id'>) => {
-        const newToast = { ...toast, id: toastId.current++ };
-        setToasts(prev => [...prev, newToast]);
-    }, [setToasts]);
     
     const openModal = (type: string, props = {}) => setModal({ type, props });
     const closeModal = () => setModal({ type: null, props: {} });
@@ -940,7 +979,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     useEffect(() => { broadcast('ORDERS_UPDATE', orders); }, [orders, broadcast]);
 
     const handleSendToKitchen = useCallback((orderType: OrderType) => {
-        setCart([]); // Clear cart immediately
         if (cart.length === 0 || !currentTable) return;
     
         const itemsToProcess = [...cart];
@@ -966,7 +1004,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
         handleKitchenPrinting(orderForProcessing);
     
-        // Clear other UI state, cart is already cleared
+        setCart([]);
         setAppliedDiscount(null);
         setAppliedPromotion(null);
         setAIUpsellSuggestions(null);
@@ -1033,8 +1071,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, [activeOrderToSettle, openModal, closeModal, onProcessFinalOrder, onDirectPrintReceipt, handlePrintA4, plugins, paymentTypes, currentLocation, settings, setSettings, addToast]);
     
     const handleSaveTab = useCallback(() => {
-        setCart([]); // Clear cart immediately
-    
         if (!selectedCustomer) {
             addToast({ type: 'error', title: 'Customer Required', message: 'Please select a customer to open or add to a tab.' });
             return;
@@ -1063,7 +1099,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setActiveTab(newTab);
         }
     
-        // No need to reset full state, just clear new items cart and discounts
+        setCart([]);
         setAppliedDiscount(null);
         setAppliedPromotion(null);
         

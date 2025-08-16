@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from './ui/Button';
 import { AppSettings, Language } from '../types';
@@ -124,7 +125,7 @@ const OrderNumberDisplayView: React.FC = () => {
                 style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
                 onMouseDown={handleMouseDown}
             >
-                <p className="text-4xl font-semibold mb-4 text-muted-foreground">{t('now_serving')}</p>
+                <p className="text-4xl font-semibold mb-4 text-foreground">{t('now_serving')}</p>
                 <div className="font-mono font-bold text-primary" style={{ fontSize: 'clamp(8rem, 30vw, 25rem)', lineHeight: 1 }}>
                     {calledOrderNumber || '----'}
                 </div>
