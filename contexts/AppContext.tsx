@@ -1097,6 +1097,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     
         setCart([]);
+        setAppliedDiscount(null);
+        setAppliedPromotion(null);
+        setAIUpsellSuggestions(null);
     }, [selectedCustomer, cart, orders, activeTab, appliedDiscount, appliedPromotion, settings, currentLocation, createOrderObject, incrementOrderSequences, setOrders, addToast, setCart, setActiveTab, setAppliedDiscount, setAppliedPromotion, surcharges]);
 
     const handleSettleTab = useCallback(() => {
