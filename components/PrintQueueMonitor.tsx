@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect, useRef, Fragment } from 'react';
+
+import React, { useState, useEffect, useRef, Fragment, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useAppContext, useDataContext, useToastContext } from '../contexts/AppContext';
 import { PrintJob, PrintJobStatus, Printer } from '../types';
@@ -150,11 +151,65 @@ const PrintQueueMonitor: React.FC = () => {
     const [isPaused, setIsPaused] = useState(false);
     const t = useTranslations(settings.language.staff);
 
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const dragInfoRef = useRef({
+        isDragging: false,
+        startX: 0,
+        startY: 0,
+        initialX: 0,
+        initialY: 0,
+        hasMoved: false,
+    });
+
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!dragInfoRef.current.isDragging) return;
+
+        const dx = e.clientX - dragInfoRef.current.startX;
+        const dy = e.clientY - dragInfoRef.current.startY;
+        
+        if (!dragInfoRef.current.hasMoved && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+            dragInfoRef.current.hasMoved = true;
+        }
+
+        setPosition({
+            x: dragInfoRef.current.initialX + dx,
+            y: dragInfoRef.current.initialY + dy,
+        });
+    }, []);
+
+    const handleMouseUp = useCallback(() => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+        
+        if (!dragInfoRef.current.hasMoved) {
+            setIsOpen(p => !p);
+        }
+
+        dragInfoRef.current.isDragging = false;
+    }, [handleMouseMove]);
+
+    const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+        if (e.button !== 0) return;
+        dragInfoRef.current = {
+            isDragging: true,
+            startX: e.clientX,
+            startY: e.clientY,
+            initialX: position.x,
+            initialY: position.y,
+            hasMoved: false,
+        };
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+    };
+
     const pendingCount = (printQueue || []).filter((job: PrintJob) => job.status === 'pending').length;
 
     return (
         <>
-            <div className="fixed bottom-6 right-6 z-40">
+            <div
+                className="fixed bottom-6 right-6 z-40"
+                style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
+            >
                 {isOpen && (
                     <div className="absolute bottom-0 right-0 w-80 max-h-[400px] bg-card border border-border rounded-lg shadow-2xl mb-20 flex flex-col animate-fade-in-up">
                         <header className="flex justify-between items-center p-3 border-b border-border shrink-0">
@@ -189,8 +244,8 @@ const PrintQueueMonitor: React.FC = () => {
                 )}
                 <Button 
                     size="icon" 
-                    onClick={() => setIsOpen(p => !p)} 
-                    className="w-14 h-14 rounded-full shadow-lg"
+                    onMouseDown={handleMouseDown}
+                    className="w-14 h-14 rounded-full shadow-lg cursor-grab active:cursor-grabbing"
                     aria-label="Toggle Print Queue"
                 >
                     <PrinterIcon className="w-7 h-7" />

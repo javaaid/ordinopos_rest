@@ -616,6 +616,7 @@ export const PURCHASE_ORDERS: PurchaseOrder[] = [];
 
 export const SCHEDULE: ScheduleEntry[] = [];
 export const RESERVATIONS: Reservation[] = [];
+export const WAITLIST: WaitlistEntry[] = [];
 
 export const SIGNAGE_DISPLAYS: SignageDisplay[] = [
     { id: 'disp_1', name: 'Main Entrance TV', status: 'online' },

@@ -39,7 +39,7 @@ import SuppliersView from './components/SuppliersView';
 import AccountingView from './components/AccountingView';
 import ReservationsView from './components/ReservationsView';
 import ZatcaSettingsView from './components/ZatcaSettingsView';
-import { View, ManagementSubView, SettingsSubView, AppSettings, Order, Table, AISettings, AppPlugin, Location, Language, Role, CartItem, Category, PrintJob } from './types';
+import { View, ManagementSubView, SettingsSubView, AppSettings, Order, Table, AISettings, AppPlugin, Location, Language, Role, CartItem, Category, PrintJob, Notification } from './types';
 import { LOCATIONS } from './constants';
 import WaitlistView from './components/WaitlistView';
 import QRCodeOrderingView from './components/QRCodeOrderingView';
@@ -77,6 +77,7 @@ import { useTranslations } from './hooks/useTranslations';
 import ChevronDoubleLeftIcon from './components/icons/ChevronDoubleLeftIcon';
 import ChevronDoubleRightIcon from './components/icons/ChevronDoubleRightIcon';
 import PrintersView from './components/PrintersView';
+import POSSubHeader from './components/POSSubHeader';
 
 const App: React.FC = () => {
   const { 
@@ -85,13 +86,75 @@ const App: React.FC = () => {
     isFullscreen, currentLocation,
     isMultiStorePluginActive, isKsaPluginActive,
     isReservationPluginActive, isWaitlistPluginActive, isOrderNumberDisplayPluginActive,
-    addPrintJobs, isSidebarHidden, onToggleSidebar
+    addPrintJobs, isSidebarHidden, onToggleSidebar,
+    notifications, handleMarkAllNotificationsAsRead
   } = useAppContext();
 
   const { roles, orders, tables, customers, categories, locations, employees, handleSaveCategory, handleDeleteCategory, onRequestRefund, onApproveRefund, onDenyRefund } = useDataContext();
   const { toasts, dismissToast } = useToastContext();
   const { openModal, closeModal } = useModalContext();
-  const { setCurrentTable, onLoadOrder, onPrintA4 } = usePOSContext();
+  const { setCurrentTable, onLoadOrder, onPrintA4, handleSelectTab } = usePOSContext();
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+
+  // State and handlers for the draggable AI FAB
+  const [aiFabPosition, setAiFabPosition] = useState({ x: 0, y: 0 });
+  const aiFabDragInfoRef = useRef({
+      isDragging: false,
+      startX: 0,
+      startY: 0,
+      initialX: 0,
+      initialY: 0,
+      hasMoved: false,
+  });
+  
+  const handleAiFabMouseMove = useCallback((e: MouseEvent) => {
+      if (!aiFabDragInfoRef.current.isDragging) return;
+  
+      const dx = e.clientX - aiFabDragInfoRef.current.startX;
+      const dy = e.clientY - aiFabDragInfoRef.current.startY;
+      
+      if (!aiFabDragInfoRef.current.hasMoved && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+          aiFabDragInfoRef.current.hasMoved = true;
+      }
+  
+      setAiFabPosition({
+          x: aiFabDragInfoRef.current.initialX + dx,
+          y: aiFabDragInfoRef.current.initialY + dy,
+      });
+  }, []);
+  
+  const handleAiFabMouseUp = useCallback(() => {
+      window.removeEventListener('mousemove', handleAiFabMouseMove);
+      window.removeEventListener('mouseup', handleAiFabMouseUp);
+      
+      if (!aiFabDragInfoRef.current.hasMoved) {
+          openModal('aiChat');
+      }
+  
+      aiFabDragInfoRef.current.isDragging = false;
+  }, [handleAiFabMouseMove, openModal]);
+
+  const handleAiFabMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (e.button !== 0) return;
+      aiFabDragInfoRef.current = {
+          isDragging: true,
+          startX: e.clientX,
+          startY: e.clientY,
+          initialX: aiFabPosition.x,
+          initialY: aiFabPosition.y,
+          hasMoved: false,
+      };
+      window.addEventListener('mousemove', handleAiFabMouseMove);
+      window.addEventListener('mouseup', handleAiFabMouseUp);
+  };
+  
+  useEffect(() => {
+    return () => {
+        window.removeEventListener('mousemove', handleAiFabMouseMove);
+        window.removeEventListener('mouseup', handleAiFabMouseUp);
+    };
+  }, [handleAiFabMouseMove, handleAiFabMouseUp]);
   
   if (!settings) {
     return null; // or a loading spinner
@@ -270,7 +333,10 @@ const App: React.FC = () => {
         <div className="flex flex-row gap-1 p-1 h-screen overflow-hidden">
             <main className="flex-1 flex flex-col gap-2 overflow-hidden">
                 <div className="flex-shrink-0">
-                    <POSHeader />
+                    <POSHeader setIsNotificationsOpen={setIsNotificationsOpen} />
+                </div>
+                <div className="flex-shrink-0">
+                    <POSSubHeader />
                 </div>
                  <div className="flex-shrink-0">
                     <CategoryTabs />
@@ -278,17 +344,25 @@ const App: React.FC = () => {
                 <div className="flex-grow overflow-y-auto pr-1">
                     <MenuGrid />
                 </div>
+                <div className="flex-shrink-0 mt-2">
+                    <ActiveTablesBar onSelectTable={handleSelectTableFromBar} />
+                </div>
             </main>
             <aside className="w-[380px] shrink-0">
                 <OrderSummary />
             </aside>
-             <button 
-                onClick={() => openModal('aiChat')} 
-                title="Gem AI Assistant" 
-                className="fixed bottom-4 right-[calc(380px+0.5rem+1.5rem)] bg-primary text-primary-foreground p-3 rounded-full shadow-lg hover:bg-primary/90 transition-all duration-300 hover:scale-110 z-30 animate-fade-in-up"
+             <div 
+                className="fixed bottom-4 right-[calc(380px+0.5rem+1.5rem)] z-30"
+                style={{ transform: `translate(${aiFabPosition.x}px, ${aiFabPosition.y}px)` }}
               >
-               <ChatBubbleOvalLeftEllipsisIcon className="w-6 h-6"/>
-             </button>
+                <button 
+                  onMouseDown={handleAiFabMouseDown}
+                  title="Gem AI Assistant" 
+                  className="bg-primary text-primary-foreground w-14 h-14 flex items-center justify-center rounded-full shadow-lg hover:bg-primary/90 transition-all duration-300 hover:scale-110 cursor-grab active:cursor-grabbing"
+                >
+                  <ChatBubbleOvalLeftEllipsisIcon className="w-7 h-7"/>
+                </button>
+              </div>
         </div>
       ) : <PermissionDenied />;
       case 'delivery': return permissions.viewDelivery ? <DeliveryView /> : <PermissionDenied />;
@@ -316,14 +390,12 @@ const App: React.FC = () => {
   const showSidebar = !!currentEmployee && !publicViews.includes(activeView);
   const showPrintMonitor = !!currentEmployee && !publicViews.includes(activeView);
   
-  const backOfficeViews: View[] = ['management', 'settings', 'dashboard', 'history'];
-  const isBackOffice = backOfficeViews.includes(activeView);
 
   return (
       <div className="flex bg-background text-foreground">
           {showSidebar && !isSidebarHidden && (
             <aside className="sticky top-0 h-screen">
-              <MainSidebar officeType={isBackOffice ? 'back-office' : 'front-office'} />
+              <MainSidebar />
             </aside>
           )}
           <div className="flex-grow w-full min-w-0">
@@ -341,6 +413,14 @@ const App: React.FC = () => {
           </div>
           
           <ModalManager />
+          {isNotificationsOpen && createPortal(
+            <NotificationsPanel
+              notifications={notifications}
+              onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+              onClose={() => setIsNotificationsOpen(false)}
+            />,
+            document.body
+          )}
           {showPrintMonitor && <PrintQueueMonitor />}
           <ToastContainer notifications={toasts} onDismiss={dismissToast}/>
       </div>

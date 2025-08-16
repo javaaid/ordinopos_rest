@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Order, Employee, Role, OrderStatus } from '../types';
+import { Order, Employee, Role, OrderStatus, Table, OrderType } from '../types';
 import SearchIcon from './icons/SearchIcon';
 import CurrencyDollarIcon from './icons/CurrencyDollarIcon';
 import DocumentArrowDownIcon from './icons/DocumentArrowDownIcon';
 import ReceiptRefundIcon from './icons/ReceiptRefundIcon';
-import { useAppContext } from '../contexts/AppContext';
+import { useAppContext, useDataContext } from '../contexts/AppContext';
 import { useTranslations } from '../hooks/useTranslations';
 
 interface OrderHistoryViewProps {
@@ -33,8 +33,17 @@ const statusStyles: Record<OrderStatus, { text: string, bg: string, text_color: 
     'process': { text: 'Processing', bg: 'bg-yellow-500/20', text_color: 'text-yellow-400' },
 };
 
+const typeColors: Record<OrderType, string> = {
+    'dine-in': 'border-blue-500',
+    'takeaway': 'border-purple-500',
+    'delivery': 'border-amber-500',
+    'kiosk': 'border-indigo-500',
+    'tab': 'border-teal-500',
+};
+
 const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ orders, onApproveRefund, onDenyRefund, currentRole, onLoadOrder, onPrintA4, onInitiateRefund, onViewReceipt }) => {
     const { settings } = useAppContext();
+    const { tables } = useDataContext();
     const t = useTranslations(settings.language.staff);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterDate, setFilterDate] = useState(new Date());
@@ -154,8 +163,12 @@ const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ orders, onApproveRe
                          <thead className="bg-muted/50 sticky top-0">
                             <tr>
                                 <th className={thClass}>{t('order_hash')}</th>
+                                <th className={thClass}>{t('customers')}</th>
+                                <th className={thClass}>Type</th>
+                                <th className={thClass}>Table</th>
                                 <th className={thClass}>{t('date_time')}</th>
                                 <th className={thClass}>{t('balance_due')}</th>
+                                <th className={thClass}>Total</th>
                                 <th className={thClass}>{t('status')}</th>
                                 <th className={`${thClass} text-right`}>{t('actions')}</th>
                             </tr>
@@ -163,11 +176,18 @@ const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ orders, onApproveRe
                         <tbody className="bg-card divide-y divide-border">
                            {filteredOrders.map(order => {
                                const statusStyle = statusStyles[order.status];
+                               const table = order.tableId ? (tables || []).find((t: Table) => t.id === order.tableId) : null;
+                               const orderTypeLabel = order.orderType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+
                                return (
-                                   <tr key={order.id} className="hover:bg-muted/50">
+                                   <tr key={order.id} className={`hover:bg-muted/50 border-l-4 ${typeColors[order.orderType] || 'border-transparent'}`}>
                                        <td className="px-4 py-3 font-mono text-foreground">#{order.orderNumber}</td>
+                                       <td className="px-4 py-3 text-muted-foreground">{order.customer?.name || t('walk_in_customer')}</td>
+                                       <td className="px-4 py-3 text-muted-foreground">{orderTypeLabel}</td>
+                                       <td className="px-4 py-3 text-muted-foreground">{table ? table.name : 'N/A'}</td>
                                        <td className="px-4 py-3 text-muted-foreground">{new Date(order.createdAt).toLocaleString()}</td>
                                        <td className={`px-4 py-3 font-semibold ${order.balanceDue > 0 ? 'text-amber-500' : 'text-muted-foreground'}`}>${order.balanceDue.toFixed(2)}</td>
+                                       <td className="px-4 py-3 font-semibold text-foreground">${order.total.toFixed(2)}</td>
                                        <td className="px-4 py-3">
                                            <span className={`px-2 py-1 text-xs font-bold rounded-full ${statusStyle.bg} ${statusStyle.text_color}`}>
                                                {statusStyle.text}

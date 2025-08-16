@@ -54,6 +54,37 @@
         --input: 240 6% 90%;
         --ring: 217 91% 60%;
       }
+
+      .dark {
+        --primary: 220 84% 61%; /* #3b82f6 */
+        --primary-foreground: 0 0% 100%;
+        
+        --secondary: 74 74% 49%; /* #84cc16 */
+        --secondary-foreground: 0 0% 0%;
+
+        --background: 222 47% 11%; /* #111827 */
+        --foreground: 220 13% 95%; /* #f3f4f6 */
+
+        --card: 215 28% 17%; /* #1f2937 */
+        --card-foreground: 220 13% 95%;
+
+        --popover: 215 28% 17%;
+        --popover-foreground: 220 13% 95%;
+
+        --muted: 217 33% 25%; /* #374151 */
+        --muted-foreground: 215 20% 65%; /* #9ca3af */
+
+        --accent: 217 33% 25%;
+        --accent-foreground: 220 13% 95%;
+
+        --destructive: 0 63% 31%; /* #9f1239 */
+        --destructive-foreground: 0 0% 100%;
+
+        --border: 217 33% 25%;
+        --input: 217 33% 25%;
+        --ring: 220 84% 61%;
+      }
+
       body {
         font-family: 'Inter', sans-serif;
       }
@@ -128,6 +159,7 @@
     </style>
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             colors: {
@@ -213,7 +245,6 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
 </head>
   <body class="bg-background text-foreground antialiased">
     <div id="root"></div>
@@ -231,6 +262,5 @@
         });
       }
     </script>
-  <script type="module" src="/index.tsx"></script>
-</body>
+  </body>
 </html>

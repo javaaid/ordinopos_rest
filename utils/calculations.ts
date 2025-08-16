@@ -1,4 +1,4 @@
-import { CartItem, Location, AppliedDiscount, Promotion, MenuItem, OrderType, AppSettings, RecipeItem, Ingredient, Customer } from '../types';
+import { CartItem, Location, AppliedDiscount, Promotion, MenuItem, OrderType, AppSettings, RecipeItem, Ingredient, Customer, Surcharge } from '../types';
 
 export const getPriceForItem = (item: MenuItem, orderType: OrderType, customer?: Customer | null): number => {
     if (customer && customer.membershipTier) {
@@ -21,10 +21,11 @@ export const calculateOrderTotals = (
     cart: CartItem[],
     location: Location,
     appliedDiscount: AppliedDiscount | null,
-    promotion?: Promotion | null,
+    promotion: Promotion | null | undefined,
     orderType: OrderType = 'dine-in',
-    settings?: AppSettings,
-    customer?: Customer | null,
+    settings: AppSettings | undefined,
+    customer: Customer | null | undefined,
+    surcharges: Surcharge[] = []
 ) => {
     const safeCart = cart || [];
     let subtotal = 0;
@@ -113,8 +114,29 @@ export const calculateOrderTotals = (
         }
     });
 
+    let surchargeAmount = 0;
+    let surchargeDetails: { name: string, amount: number } | null = null;
+
+    if (settings) {
+        if (orderType === 'dine-in' && settings.dineIn.surcharge.enabled) {
+            const { name, type, value } = settings.dineIn.surcharge;
+            surchargeAmount = type === 'percentage' ? subtotal * (value / 100) : value;
+            surchargeDetails = { name, amount: surchargeAmount };
+        } else if (orderType === 'delivery' && settings.delivery.surcharge.enabled && settings.delivery.surcharge.surchargeId) {
+            const surcharge = surcharges.find(s => s.id === settings.delivery.surcharge.surchargeId);
+            if (surcharge) {
+                surchargeAmount = surcharge.type === 'percentage' ? subtotal * surcharge.value : surcharge.value;
+                surchargeDetails = { name: surcharge.name, amount: surchargeAmount };
+            }
+        }
+    }
+
     const totalTax = Object.values(taxDetails).reduce((sum, tax) => sum + tax, 0);
-    const total = discountedSubtotal + totalTax;
+    let total = discountedSubtotal + totalTax + surchargeAmount;
+
+    if (settings && orderType === 'dine-in' && settings.dineIn.minCharge.enabled && total < settings.dineIn.minCharge.amount) {
+        total = settings.dineIn.minCharge.amount;
+    }
 
     return {
         subtotal,
@@ -122,7 +144,9 @@ export const calculateOrderTotals = (
         tax: totalTax,
         taxDetails,
         total,
-        finalAppliedDiscount
+        finalAppliedDiscount,
+        surchargeAmount,
+        surchargeDetails,
     };
 };
 

@@ -125,7 +125,7 @@ const CFDView: React.FC = () => {
 
     const { subtotal, tax, total } = useMemo(() => {
         if (!locationForCalcs) return { subtotal: 0, tax: 0, total: 0 };
-        return calculateOrderTotals(cart, locationForCalcs, null, null, 'dine-in', settings ?? undefined);
+        return calculateOrderTotals(cart, locationForCalcs, null, null, 'dine-in', settings ?? undefined, undefined, []);
     }, [cart, locationForCalcs, settings]);
 
 

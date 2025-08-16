@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { CartItem, Customer, OrderType, Employee, AppliedDiscount, Language, Table, Location, Order, AppSettings, AIResponse, AISettings, Promotion } from '../types';
+import { CartItem, Customer, OrderType, Employee, AppliedDiscount, Language, Table, Location, Order, AppSettings, AIResponse, AISettings, Promotion, ManualDiscount, Surcharge } from '../types';
 import OrderItem from './OrderItem';
 import UserCircleIcon from './icons/UserCircleIcon';
 import { calculateOrderTotals } from '../utils/calculations';
@@ -25,18 +25,18 @@ export default function OrderSummary() {
     return null; // or a loading component
   }
 
-  const { tables, orders, customers, handleSaveCustomer, manualDiscounts, employees } = useDataContext();
+  const { tables, orders, customers, handleSaveCustomer, manualDiscounts, employees, surcharges } = useDataContext();
   const { 
-    cart, onRemoveItem, onUpdateCartQuantity, currentTable, setCurrentTable: onSetCurrentTable, 
+    cart, setCart, onRemoveItem, onUpdateCartQuantity, currentTable, setCurrentTable: onSetCurrentTable, 
     selectedCustomer, setSelectedCustomer, onNewSaleClick, onVoidOrder, 
-    appliedDiscount, appliedPromotion,
+    appliedDiscount, setAppliedDiscount, appliedPromotion, setAppliedPromotion,
     aiUpsellSuggestions, isSuggestingUpsell, handleGetUpsellSuggestions, onSelectUpsellSuggestion,
     handleHoldOrder, availablePromotions,
     activeOrderToSettle, handleInitiateSettlePayment,
     handleSendToKitchen, handleSettleBill,
     orderType, setOrderType, handleApplyManualDiscount, handleRemoveDiscount, handleApplyPromotion,
     selectedStaff, setSelectedStaff,
-    activeTab, handleSaveTab, handleSettleTab,
+    activeTab, setActiveTab, handleSaveTab, handleSettleTab,
     handleInitiatePayment
   } = usePOSContext();
   const { openModal, closeModal } = useModalContext();
@@ -69,13 +69,26 @@ export default function OrderSummary() {
   
   const allItemsForBill = isSettlingOrder && activeOrderToSettle ? (activeOrderToSettle.cart || []) : [...sentItems, ...(cart || [])];
 
-  const { subtotal, tax, total, taxDetails, discountAmount, finalAppliedDiscount } = useMemo(() => 
-    calculateOrderTotals(allItemsForBill, currentLocation, appliedDiscount, appliedPromotion, orderType, settings, selectedCustomer),
-  [allItemsForBill, currentLocation, appliedDiscount, appliedPromotion, orderType, settings, selectedCustomer]);
+  const { subtotal, tax, total, taxDetails, discountAmount, finalAppliedDiscount, surchargeAmount, surchargeDetails } = useMemo(() => 
+    calculateOrderTotals(allItemsForBill, currentLocation, appliedDiscount, appliedPromotion, orderType, settings, selectedCustomer, surcharges),
+  [allItemsForBill, currentLocation, appliedDiscount, appliedPromotion, orderType, settings, selectedCustomer, surcharges]);
   
+  const selectCustomerAndLoadTab = (customer: Customer) => {
+      setSelectedCustomer(customer);
+      const openTab = (orders || []).find((o: Order) => o.customer?.id === customer.id && o.status === 'partially-paid');
+      
+      if (openTab) {
+          setActiveTab(openTab);
+          setAppliedDiscount(openTab.appliedDiscount || null);
+          setAppliedPromotion(openTab.appliedPromotion || null);
+      } else {
+          setActiveTab(null);
+      }
+  };
+
   const handleSelectCustomer = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    closeModal();
+    selectCustomerAndLoadTab(customer);
+    closeModal(); // This closes the customer select modal.
   };
 
   const handleAddNewCustomer = () => {
@@ -331,6 +344,12 @@ export default function OrderSummary() {
                 <span className="font-medium text-foreground">{currency}{value.toFixed(2)}</span>
               </div>
             ))}
+            {surchargeAmount > 0 && surchargeDetails && (
+                <div className="flex justify-between">
+                    <span className="text-muted-foreground">{surchargeDetails.name}</span>
+                    <span className="font-medium text-foreground">{currency}{surchargeAmount.toFixed(2)}</span>
+                </div>
+            )}
             {discountAmount > 0 ? (
               <div className="flex justify-between text-primary">
                 <button onClick={handleAddDiscountClick} className="text-primary hover:underline font-semibold">

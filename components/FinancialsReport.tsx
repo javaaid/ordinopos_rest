@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Order, PaymentMethod, AppSettings, PaymentType } from '../types';
 import BanknotesIcon from './icons/BanknotesIcon';
@@ -38,7 +37,7 @@ const FinancialsReport: React.FC<FinancialsReportProps> = ({ orders, settings, l
 
         safeOrders.forEach(order => {
             if(order.status !== 'refunded') {
-                order.payments.forEach(payment => {
+                order.payments?.forEach(payment => {
                     const breakdown = paymentBreakdown.get(payment.method);
                     if (breakdown) {
                         breakdown.total += payment.amount;
@@ -52,7 +51,7 @@ const FinancialsReport: React.FC<FinancialsReportProps> = ({ orders, settings, l
         
         safeOrders.forEach(order => {
             if(order.refundedAmount && order.refundedAmount > 0) {
-                const originalPaymentMethod = order.payments[0]?.method;
+                const originalPaymentMethod = order.payments?.[0]?.method;
                 if(originalPaymentMethod) {
                     const breakdown = paymentBreakdown.get(originalPaymentMethod);
                     if(breakdown) {
@@ -81,7 +80,7 @@ const FinancialsReport: React.FC<FinancialsReportProps> = ({ orders, settings, l
     };
 
     const cashRefunds = (orders || []).reduce((sum, o) => {
-        if (o.refundedAmount && o.payments[0]?.method === 'Cash') {
+        if (o.refundedAmount && o.payments?.[0]?.method === 'Cash') {
             return sum + o.refundedAmount;
         }
         return sum;

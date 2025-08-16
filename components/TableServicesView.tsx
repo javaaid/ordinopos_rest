@@ -17,18 +17,22 @@ const TableServicesView: React.FC = () => {
         onEditTable, onAddFloor, onRenameFloor, onDeleteFloor, 
         onAddReservation, onEditReservation, onUpdateReservationStatus, onSeatReservationParty, 
         onAddToWaitlist, onUpdateWaitlistStatus, onSeatWaitlistParty, onGenerateQRCode,
-        onSyncReservations, lastReservationSync
+        onSyncReservations, lastReservationSync, onSuggestWaitTime
     } = useDataContext();
     const { setCurrentTable: onSelectTableContext } = usePOSContext();
 
 
     const [activeTab, setActiveTab] = useState<TableViewTab>('floor');
-    const [activeFloor, setActiveFloor] = useState(floors[0] || 'Main Floor');
+    const [activeFloor, setActiveFloor] = useState((floors && floors.length > 0) ? floors[0] : 'Main Floor');
     const [isEditMode, setIsEditMode] = useState(false);
 
     useEffect(() => {
-        if (!floors.includes(activeFloor)) {
-            setActiveFloor(floors[0] || 'Main Floor');
+        if (floors && floors.length > 0) {
+            if (!floors.includes(activeFloor)) {
+                setActiveFloor(floors[0]);
+            }
+        } else if (activeFloor !== 'Main Floor') {
+             setActiveFloor('Main Floor');
         }
     }, [floors, activeFloor]);
     
@@ -50,14 +54,14 @@ const TableServicesView: React.FC = () => {
         <div className="p-6 h-full flex flex-col">
              <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
                 <div className="bg-card p-1 rounded-xl flex items-center gap-2 self-start flex-wrap border border-border">
-                    {floors.map((floor: string) => <button key={floor} onClick={() => setActiveFloor(floor)} className={floorButtonClass(floor)}>{floor}</button>)}
+                    {(floors || []).map((floor: string) => <button key={floor} onClick={() => setActiveFloor(floor)} className={floorButtonClass(floor)}>{floor}</button>)}
                 </div>
                 <div className="flex items-center gap-2">
                      {isEditMode && (
                         <div className="flex items-center gap-2 animate-fade-in-down">
                             <button onClick={onAddFloor} className="bg-green-500/20 text-green-400 hover:bg-green-500/40 text-xs font-semibold py-1 px-2 rounded">Add Floor</button>
                             <button onClick={() => onRenameFloor(activeFloor)} className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/40 text-xs font-semibold py-1 px-2 rounded">Rename</button>
-                            <button onClick={() => onDeleteFloor(activeFloor)} className="bg-red-500/20 text-red-400 hover:bg-red-500/40 text-xs font-semibold py-1 px-2 rounded" disabled={floors.length <= 1}>Delete</button>
+                            <button onClick={() => onDeleteFloor(activeFloor)} className="bg-red-500/20 text-red-400 hover:bg-red-500/40 text-xs font-semibold py-1 px-2 rounded" disabled={(floors || []).length <= 1}>Delete</button>
                             <div className="h-4 w-px bg-border mx-2"></div>
                             <button onClick={() => onEditTable(null)} className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-3 rounded-lg text-sm"><PlusIcon className="w-4 h-4" /> Add Table</button>
                         </div>
@@ -108,7 +112,7 @@ const TableServicesView: React.FC = () => {
                 />}
                 {activeTab === 'waitlist' && isWaitlistPluginActive && <WaitlistView 
                     waitlist={waitlist}
-                    onAddToWaitlist={onAddToWaitlist}
+                    onAddToWaitlist={() => onAddToWaitlist(onSuggestWaitTime)}
                     onUpdateStatus={onUpdateWaitlistStatus}
                     onSeatParty={onSeatWaitlistParty}
                 />}

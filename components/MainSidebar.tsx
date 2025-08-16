@@ -26,7 +26,7 @@ interface SidebarNavItem extends SidebarNavItemDef {
   allowed: boolean;
 }
 
-export const MainSidebar = ({ officeType }: { officeType: 'front-office' | 'back-office' }): React.ReactElement | null => {
+export const MainSidebar = (): React.ReactElement | null => {
   const { 
     activeView, setView: onSelectView, currentEmployee: currentUser, handleLogout, 
     settings, onToggleSidebar, isSidebarCollapsed, onToggleSidebarCollapse 
@@ -45,6 +45,21 @@ export const MainSidebar = ({ officeType }: { officeType: 'front-office' | 'back
   }, [currentUser, roles]);
   
   const permissions = role?.permissions;
+
+  const navItems = useMemo((): SidebarNavItemDef[] => {
+    if (!permissions) return [];
+    const items: SidebarNavItem[] = [
+      { id: 'dashboard', label: t('dashboard'), icon: HomeIcon, allowed: permissions.viewDashboard },
+      { id: 'pos', label: t('pos'), icon: BuildingStorefrontIcon, allowed: permissions.viewPOS },
+      { id: 'tables', label: t('tables'), icon: TableCellsIcon, allowed: permissions.viewFloorPlan },
+      { id: 'delivery', label: t('delivery'), icon: TruckIcon, allowed: permissions.viewDelivery },
+      { id: 'history', label: t('order_history'), icon: ReceiptLongIcon, allowed: permissions.viewHistory },
+      { id: 'timeclock', label: t('time_clock'), icon: ClockIcon, allowed: permissions.viewTimeClock },
+      { id: 'management', label: t('management'), icon: AccountingIcon, allowed: permissions.canPerformManagerFunctions || permissions.canManageUsersAndRoles || permissions.viewCustomers || permissions.viewPurchasing || permissions.viewReports },
+      { id: 'settings', label: t('settings'), icon: Cog6ToothIcon, allowed: permissions.viewSettings },
+    ];
+    return items.filter(item => item.allowed);
+  }, [permissions, t]);
 
   const navItemClass = (isActive: boolean, isPrimaryAction = false) => cn(
     'w-full flex items-center gap-4 py-3 rounded-lg transition-colors duration-200',
@@ -71,28 +86,6 @@ export const MainSidebar = ({ officeType }: { officeType: 'front-office' | 'back
       </button>
     );
   };
-
-  const frontOfficeItems = useMemo((): SidebarNavItemDef[] => {
-    if (!permissions) return [];
-    const items: SidebarNavItem[] = [
-      { id: 'dashboard', label: t('dashboard'), icon: HomeIcon, allowed: permissions.viewDashboard },
-      { id: 'pos', label: t('pos'), icon: BuildingStorefrontIcon, allowed: permissions.viewPOS },
-      { id: 'tables', label: t('tables'), icon: TableCellsIcon, allowed: permissions.viewFloorPlan },
-      { id: 'delivery', label: t('delivery'), icon: TruckIcon, allowed: permissions.viewDelivery },
-      { id: 'history', label: t('order_history'), icon: ReceiptLongIcon, allowed: permissions.viewHistory },
-      { id: 'timeclock', label: t('time_clock'), icon: ClockIcon, allowed: permissions.viewTimeClock },
-      { id: 'settings', label: t('settings'), icon: Cog6ToothIcon, allowed: permissions.viewSettings },
-    ];
-    return items.filter(item => item.allowed);
-  }, [permissions, t]);
-
-  const managementItem = useMemo((): SidebarNavItemDef | null => {
-    if (!permissions) return null;
-    const allowed = permissions.canPerformManagerFunctions || permissions.canManageUsersAndRoles || permissions.viewCustomers || permissions.viewPurchasing || permissions.viewReports;
-    if (!allowed) return null;
-    return { id: 'management', label: t('management'), icon: AccountingIcon };
-  }, [permissions, t]);
-
 
   return (
     <aside className={cn(
@@ -129,31 +122,11 @@ export const MainSidebar = ({ officeType }: { officeType: 'front-office' | 'back
       </div>
 
       <nav className="flex flex-col gap-2 flex-grow">
-        {officeType === 'back-office' ? (
-            renderNavItem({ id: 'pos', label: t('pos'), icon: BuildingStorefrontIcon }, true)
-        ) : (
-            <>
-                {frontOfficeItems.map(item => renderNavItem(item, item.id === 'pos'))}
-                <div className="flex-grow" />
-                {managementItem && renderNavItem(managementItem)}
-            </>
-        )}
+        {navItems.map(item => renderNavItem(item, item.id === 'pos'))}
       </nav>
       
-      <div className="mt-auto pt-4 space-y-2">
-        <div className={cn('p-2 rounded-lg bg-accent flex items-center transition-all duration-300', isSidebarCollapsed ? 'justify-center' : 'justify-start')}>
-            <img src={currentUser?.avatar} alt={currentUser?.name} className="w-10 h-10 rounded-full object-cover shrink-0"/>
-            <div className={cn("flex-grow flex justify-between items-center gap-3 overflow-hidden transition-all duration-200 ease-in-out", isSidebarCollapsed ? "w-0 opacity-0 ml-0" : "w-full opacity-100 ml-3")}>
-                <div className="whitespace-nowrap">
-                    <p className="font-bold text-sm text-foreground">{currentUser?.name?.split(' ')[0]}</p>
-                    <p className="text-xs text-muted-foreground">{role?.name || t('sidebar_user')}</p>
-                </div>
-                <button onClick={handleLogout} title={t('logout')} className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full shrink-0">
-                    <LogoutIcon className="w-5 h-5" />
-                </button>
-            </div>
-        </div>
-        <button
+      <div className="mt-auto pt-4 border-t border-border">
+         <button
             onClick={onToggleSidebarCollapse}
             className="w-full flex items-center justify-center py-2 text-muted-foreground hover:bg-accent rounded-lg"
             title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}

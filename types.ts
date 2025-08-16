@@ -14,7 +14,7 @@ export interface HeldOrder {
 
 export type Language = 'en' | 'es' | 'ar';
 
-export type Theme = 'dark';
+export type Theme = 'light' | 'dark';
 export type View = 'dashboard' | 'pos' | 'kds' | 'delivery' | 'cfd' | 'kiosk' | 'history' | 'tables' | 'timeclock' | 'management' | 'settings' | 'waitlist' | 'reservations' | 'qr_ordering' | 'order_number_display' | 'landing';
 export type ManagementSubView = 
   'customers' | 'users' | 'roles' | 'purchasing' | 
