@@ -14,6 +14,8 @@ import LocationPerformanceWidget from './LocationPerformanceWidget';
 import QrCodeIcon from './icons/QrCodeIcon';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card';
 import { calculateMenuItemCost } from '../utils/calculations';
+import { useAppContext } from '../contexts/AppContext';
+import { cn } from '../lib/utils';
 
 const paymentMethodIcons: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
     cash: CurrencyDollarIcon,
@@ -32,10 +34,10 @@ const widgetClasses: Record<SalesDashboardWidgetId, string> = {
 
 // --- Widget Components ---
 
-const StatsWidget: React.FC<{ stats: any }> = ({ stats }) => (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+const StatsWidget: React.FC<{ stats: any, showProfit: boolean }> = ({ stats, showProfit }) => (
+    <div className={cn("grid grid-cols-2 gap-6", showProfit ? "md:grid-cols-4" : "md:grid-cols-3")}>
         <Card><CardHeader><CardDescription>Total Revenue</CardDescription><CardTitle>${stats.totalRevenue.toFixed(2)}</CardTitle></CardHeader></Card>
-        <Card><CardHeader><CardDescription>Total Profit</CardDescription><CardTitle className="text-primary">${stats.totalProfit.toFixed(2)}</CardTitle></CardHeader></Card>
+        {showProfit && <Card><CardHeader><CardDescription>Total Profit</CardDescription><CardTitle className="text-primary">${stats.totalProfit.toFixed(2)}</CardTitle></CardHeader></Card>}
         <Card><CardHeader><CardDescription>Total Orders</CardDescription><CardTitle>{stats.orderCount}</CardTitle></CardHeader></Card>
         <Card><CardHeader><CardDescription>Avg. Order Value</CardDescription><CardTitle>${stats.avgOrderValue.toFixed(2)}</CardTitle></CardHeader></Card>
     </div>
@@ -141,6 +143,7 @@ interface SalesDashboardProps {
 
 const SalesDashboard: React.FC<SalesDashboardProps> = (props) => {
     const { orders, startDate, endDate, locations, currentLocationId, recipes, ingredients, allPaymentTypes } = props;
+    const { isAdvancedInventoryPluginActive } = useAppContext();
 
     const stats = useMemo(() => {
         const safeOrders = orders || [];
@@ -164,7 +167,7 @@ const SalesDashboard: React.FC<SalesDashboardProps> = (props) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const widgetComponents: Record<SalesDashboardWidgetId, React.ReactNode> = {
-        stats: <StatsWidget stats={stats} />,
+        stats: <StatsWidget stats={stats} showProfit={isAdvancedInventoryPluginActive} />,
         chart: <ChartWidget orders={orders} startDate={startDate} endDate={endDate} />,
         payment: <PaymentWidget orders={orders} totalRevenue={stats.totalRevenue} allPaymentTypes={allPaymentTypes} />,
         topItems: <TopItemsWidget orders={orders} />,

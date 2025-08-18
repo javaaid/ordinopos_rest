@@ -1,6 +1,8 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { Order, Category, Ingredient, RecipeItem } from '../types';
+import { useAppContext } from '../contexts/AppContext';
 
 interface CategoryReportProps {
     orders: Order[];
@@ -25,6 +27,7 @@ type SortDirection = 'asc' | 'desc';
 const CategoryReport: React.FC<CategoryReportProps> = ({ orders, categories, ingredients, recipes, filterCategoryId }) => {
     const [sortKey, setSortKey] = useState<SortKey>('revenue');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+    const { isAdvancedInventoryPluginActive } = useAppContext();
 
     const calculateMenuItemCost = (menuItemId: number): number => {
         const recipe = recipes[menuItemId];
@@ -120,10 +123,10 @@ const CategoryReport: React.FC<CategoryReportProps> = ({ orders, categories, ing
                              <th className={thClass} onClick={() => handleSort('revenue')}>
                                 Revenue <SortIndicator for_key="revenue" />
                             </th>
-                            <th className={thClass}>COGS</th>
-                            <th className={thClass} onClick={() => handleSort('profit')}>
+                            {isAdvancedInventoryPluginActive && <th className={thClass}>COGS</th>}
+                            {isAdvancedInventoryPluginActive && <th className={thClass} onClick={() => handleSort('profit')}>
                                 Profit <SortIndicator for_key="profit" />
-                            </th>
+                            </th>}
                              <th className={thClass.replace('cursor-pointer', '')}>% of Total Revenue</th>
                         </tr>
                     </thead>
@@ -133,8 +136,8 @@ const CategoryReport: React.FC<CategoryReportProps> = ({ orders, categories, ing
                                 <td className="px-4 py-3 whitespace-nowrap text-foreground font-medium">{item.name}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{item.quantitySold}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-foreground">${item.revenue.toFixed(2)}</td>
-                                <td className="px-4 py-3 whitespace-nowrap text-foreground">${item.cost.toFixed(2)}</td>
-                                <td className="px-4 py-3 whitespace-nowrap font-semibold text-green-500 dark:text-green-400">${item.profit.toFixed(2)}</td>
+                                {isAdvancedInventoryPluginActive && <td className="px-4 py-3 whitespace-nowrap text-foreground">${item.cost.toFixed(2)}</td>}
+                                {isAdvancedInventoryPluginActive && <td className="px-4 py-3 whitespace-nowrap font-semibold text-green-500 dark:text-green-400">${item.profit.toFixed(2)}</td>}
                                  <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                                     {totalRevenue > 0 ? `${((item.revenue / totalRevenue) * 100).toFixed(1)}%` : 'N/A'}
                                  </td>

@@ -233,19 +233,6 @@ const CustomizationSettings: React.FC = () => {
                         <h4 className="font-bold text-foreground mb-2">Notification Settings</h4>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">Position</label>
-                                <select name="position" value={localSettings.notificationSettings.position} onChange={handleNotificationChange} className="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground">
-                                    <option value="top-right">Top Right</option>
-                                    <option value="top-left">Top Left</option>
-                                    <option value="bottom-right">Bottom Right</option>
-                                    <option value="bottom-left">Bottom Left</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">Display Duration (seconds)</label>
-                                <input type="number" name="duration" value={localSettings.notificationSettings.duration} onChange={handleNotificationChange} className="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground" min="0.5" max="10" step="0.1" />
-                            </div>
-                            <div>
                                 <label className="block text-sm font-medium text-muted-foreground mb-1">Theme</label>
                                 <select name="theme" value={localSettings.notificationSettings.theme} onChange={handleNotificationChange} className="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground">
                                     <option value="dark">Dark</option>

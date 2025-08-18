@@ -27,7 +27,7 @@ const timeAgo = (timestamp: number): string => {
 
 const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ notifications, onMarkAllAsRead, onClose }) => {
     return (
-        <div className="absolute top-full right-0 mt-2 w-80 bg-popover rounded-lg shadow-2xl border border-border z-50">
+        <div className="absolute top-full right-0 mt-2 w-80 bg-popover rounded-lg shadow-2xl border border-border z-50 animate-fade-in-down">
             <div className="p-3 flex justify-between items-center border-b border-border">
                 <h3 className="font-semibold text-popover-foreground">Notifications</h3>
                 {notifications.some(n => !n.read) && (

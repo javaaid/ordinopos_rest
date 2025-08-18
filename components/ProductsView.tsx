@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
-import { MenuItem, Category, Printer, KitchenDisplay } from '../types';
+import { MenuItem, Category, Printer, KitchenDisplay, RecipeItem } from '../types';
 import { useDataContext, useModalContext, useAppContext } from '../contexts/AppContext';
 import SearchIcon from './icons/SearchIcon';
 import PlusIcon from './icons/PlusIcon';
@@ -47,8 +47,29 @@ const ProductsView: React.FC = () => {
         setSelectedIds(new Set());
     };
     
-    const onAddNew = () => openModal('productEdit', { onSave: handleSaveProduct, onAddNewCategory: () => openModal('categoryEdit', { onSave: handleSaveCategory }), printers, kitchenDisplays, justAddedCategoryId, onClearJustAddedCategoryId });
-    const onEdit = (item: MenuItem) => openModal('productEdit', { product: item, onSave: handleSaveProduct, onAddNewCategory: () => openModal('categoryEdit', { onSave: handleSaveCategory }), printers, kitchenDisplays, justAddedCategoryId, onClearJustAddedCategoryId });
+    const onAddNew = () => openModal('productEdit', { 
+        onSave: (product: MenuItem, recipe: RecipeItem[]) => handleSaveProduct(product, true, recipe), 
+        onAddNewCategory: () => openModal('categoryEdit', { onSave: (cat: Category) => {
+            const newCat = { ...cat, id: cat.id || cat.name.toLowerCase().replace(/\s+/g, '_') };
+            handleSaveCategory(newCat, true);
+        }}), 
+        printers, 
+        kitchenDisplays, 
+        justAddedCategoryId, 
+        onClearJustAddedCategoryId 
+    });
+    const onEdit = (item: MenuItem) => openModal('productEdit', { 
+        product: item, 
+        onSave: (product: MenuItem, recipe: RecipeItem[]) => handleSaveProduct(product, false, recipe), 
+        onAddNewCategory: () => openModal('categoryEdit', { onSave: (cat: Category) => {
+            const newCat = { ...cat, id: cat.id || cat.name.toLowerCase().replace(/\s+/g, '_') };
+            handleSaveCategory(newCat, true);
+        } }), 
+        printers, 
+        kitchenDisplays, 
+        justAddedCategoryId, 
+        onClearJustAddedCategoryId 
+    });
 
     const handleDuplicate = (itemToDuplicate: MenuItem) => {
         const { id, ...rest } = itemToDuplicate;
@@ -56,7 +77,7 @@ const ProductsView: React.FC = () => {
             ...rest,
             name: `${itemToDuplicate.name} (Copy)`,
         };
-        handleSaveProduct(newItemData as MenuItem);
+        handleSaveProduct(newItemData as MenuItem, true, null);
     };
 
     const handleExportToCSV = () => {

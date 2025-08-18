@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Order, MenuItem, Location, Ingredient, RecipeItem, AISettings } from '../types';
 import AIReportSummary from './AIReportSummary';
 import { calculateMenuItemCost } from '../utils/calculations';
+import { useAppContext } from '../contexts/AppContext';
 
 interface MenuReportProps {
     orders: Order[];
@@ -33,6 +34,7 @@ type SortDirection = 'asc' | 'desc';
 const MenuReport: React.FC<MenuReportProps> = ({ orders, menuItems, ingredients, recipes, filterCategoryId, locations, currentLocationId, aiSettings }) => {
     const [sortKey, setSortKey] = useState<SortKey>('revenue');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+    const { isAdvancedInventoryPluginActive } = useAppContext();
 
     const reportData = useMemo<ReportItem[]>(() => {
         const itemMap = new Map<number, ReportItem>();
@@ -119,10 +121,10 @@ const MenuReport: React.FC<MenuReportProps> = ({ orders, menuItems, ingredients,
                              <th className={thClass} onClick={() => handleSort('revenue')}>
                                 Revenue <SortIndicator for_key="revenue" />
                             </th>
-                            <th className={thClass}>COGS</th>
-                            <th className={thClass} onClick={() => handleSort('profit')}>
+                            {isAdvancedInventoryPluginActive && <th className={thClass}>COGS</th>}
+                            {isAdvancedInventoryPluginActive && <th className={thClass} onClick={() => handleSort('profit')}>
                                 Profit <SortIndicator for_key="profit" />
-                            </th>
+                            </th>}
                         </tr>
                     </thead>
                     <tbody className="bg-card divide-y divide-border">
@@ -131,8 +133,8 @@ const MenuReport: React.FC<MenuReportProps> = ({ orders, menuItems, ingredients,
                                 <td className="px-4 py-3 whitespace-nowrap text-foreground font-medium">{item.name}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{item.quantitySold}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-foreground">${item.revenue.toFixed(2)}</td>
-                                <td className="px-4 py-3 whitespace-nowrap text-foreground">${item.cost.toFixed(2)}</td>
-                                <td className="px-4 py-3 whitespace-nowrap font-semibold text-green-600 dark:text-green-500">${item.profit.toFixed(2)}</td>
+                                {isAdvancedInventoryPluginActive && <td className="px-4 py-3 whitespace-nowrap text-foreground">${item.cost.toFixed(2)}</td>}
+                                {isAdvancedInventoryPluginActive && <td className="px-4 py-3 whitespace-nowrap font-semibold text-green-600 dark:text-green-500">${item.profit.toFixed(2)}</td>}
                             </tr>
                         ))}
                     </tbody>

@@ -2,12 +2,12 @@ import React, { useMemo } from 'react';
 import { CartItem, MenuItem } from '../types';
 import MenuItemCard from './MenuItemCard';
 import { useAppContext, useDataContext, usePOSContext, useModalContext } from '../contexts/AppContext';
+import { isItemOutOfStock } from '../utils/calculations';
 
 const MenuGrid: React.FC = () => {
-  const { menuItems, printers, kitchenDisplays, handleSaveProduct, handleSaveCategory } = useDataContext();
-  const { cart, onUpdateQuantity, activeCategory, searchQuery, onSelectItem } = usePOSContext();
-  const { openModal, closeModal } = useModalContext();
-  const { justAddedCategoryId, onClearJustAddedCategoryId } = useAppContext();
+  const { menuItems, ingredients, recipes } = useDataContext();
+  const { cart, activeCategory, searchQuery, onSelectItem } = usePOSContext();
+  const { isAdvancedInventoryPluginActive } = useAppContext();
 
   const filteredMenuItems = useMemo(() => {
     // This logic should ideally be in the context as well, but this is fine for now.
@@ -27,7 +27,7 @@ const MenuGrid: React.FC = () => {
       {filteredMenuItems.map((item) => {
         const cartItemsForThisProduct = (cart || []).filter((ci: CartItem) => ci.menuItem.id === item.id);
         const cartQuantity = cartItemsForThisProduct.reduce((sum: number, i: CartItem) => sum + i.quantity, 0);
-        const isOutOfStock = item.stopSaleAtZeroStock && typeof item.stock === 'number' && item.stock <= cartQuantity;
+        const isOutOfStock = isAdvancedInventoryPluginActive && isItemOutOfStock(item, cart, ingredients, recipes);
 
         return (
             <MenuItemCard 

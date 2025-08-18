@@ -733,10 +733,12 @@ export interface AdvancedPOSSettings {
   emailReceipt: boolean;
   showTaxOnReceipt: boolean;
 
-  // Others
+  // Inventory
   inventoryManagement: boolean;
   allowMinusQuantity: boolean;
   useInventoryPrint: boolean;
+
+  // Others
   useEndOfDayReport: boolean;
   useStaffSalary: boolean;
   useCashInOutPrint: boolean;

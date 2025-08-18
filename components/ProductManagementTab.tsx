@@ -3,7 +3,7 @@ import { MenuItem, Category } from '../types';
 import PencilSquareIcon from './icons/PencilSquareIcon';
 import TrashIcon from './icons/TrashIcon';
 import DocumentDuplicateIcon from './icons/DocumentDuplicateIcon';
-import { useDataContext } from '../contexts/AppContext';
+import { useDataContext, useAppContext } from '../contexts/AppContext';
 
 interface ProductManagementTabProps {
     menuItems: MenuItem[];
@@ -23,7 +23,14 @@ const ProductManagementTab: React.FC<ProductManagementTabProps> = ({
     setSelectedIds
 }) => {
     const { categories } = useDataContext();
-    const [columnWidths, setColumnWidths] = useState([50, 250, 150, 120, 100, 120, 150]);
+    const { isAdvancedInventoryPluginActive } = useAppContext();
+    
+    const baseColumnWidths = [50, 250, 150, 120, 120, 150];
+    const inventoryColumnWidths = [50, 250, 150, 120, 100, 120, 150];
+
+    const [columnWidths, setColumnWidths] = useState(
+        isAdvancedInventoryPluginActive ? inventoryColumnWidths : baseColumnWidths
+    );
     const tableContainerRef = useRef<HTMLDivElement>(null);
     const resizingColumnIndex = useRef<number | null>(null);
     const startX = useRef(0);
@@ -112,8 +119,8 @@ const ProductManagementTab: React.FC<ProductManagementTabProps> = ({
                         <th className={`${thClass} relative`}>Item Name<div onMouseDown={e => onMouseDown(1, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50 transition-colors duration-200"/></th>
                         <th className={`${thClass} relative`}>Category<div onMouseDown={e => onMouseDown(2, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50 transition-colors duration-200"/></th>
                         <th className={`${thClass} relative`}>Dine In Price<div onMouseDown={e => onMouseDown(3, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50 transition-colors duration-200"/></th>
-                        <th className={`${thClass} relative`}>Stock<div onMouseDown={e => onMouseDown(4, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50 transition-colors duration-200"/></th>
-                        <th className={`${thClass} relative`}>Status<div onMouseDown={e => onMouseDown(5, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50 transition-colors duration-200"/></th>
+                        {isAdvancedInventoryPluginActive && <th className={`${thClass} relative`}>Stock<div onMouseDown={e => onMouseDown(4, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50 transition-colors duration-200"/></th>}
+                        <th className={`${thClass} relative`}>Status<div onMouseDown={e => onMouseDown(isAdvancedInventoryPluginActive ? 5 : 4, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50 transition-colors duration-200"/></th>
                         <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
@@ -133,7 +140,7 @@ const ProductManagementTab: React.FC<ProductManagementTabProps> = ({
                                 <td className="px-4 py-3 whitespace-nowrap text-foreground font-medium truncate">{item.name}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground truncate">{categoryName}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-green-500 dark:text-green-400 font-semibold truncate">${item.price.toFixed(2)}</td>
-                                <td className="px-4 py-3 whitespace-nowrap text-muted-foreground truncate">{item.stock ?? 'N/A'}</td>
+                                {isAdvancedInventoryPluginActive && <td className="px-4 py-3 whitespace-nowrap text-muted-foreground truncate">{item.stock ?? 'N/A'}</td>}
                                 <td className="px-4 py-3 whitespace-nowrap">
                                     <span className={`px-2 py-1 text-xs font-bold rounded-full ${item.isActive !== false ? 'bg-green-500/20 text-green-400' : 'bg-muted text-muted-foreground'}`}>
                                         {item.isActive !== false ? 'Active' : 'Inactive'}

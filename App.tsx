@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useCallback, useState, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import MenuGrid from './components/MenuGrid';
 import OrderSummary from './components/OrderSummary';
 import KDSView from './components/KDSView';
@@ -10,7 +9,6 @@ import PermissionDenied from './components/PermissionDenied';
 import CFDView from './components/CFDView';
 import KIOSKView from './components/KIOSKView';
 import SessionTimeoutWarningModal from './components/SessionTimeoutWarningModal';
-import NotificationsPanel from './components/NotificationsPanel';
 import { LoginPage } from './components/LoginPage';
 import OrderHistoryView from './components/OrderHistoryView';
 import ToastContainer from './components/ToastContainer';
@@ -86,15 +84,13 @@ const App: React.FC = () => {
     isFullscreen, currentLocation,
     isMultiStorePluginActive, isKsaPluginActive,
     isReservationPluginActive, isWaitlistPluginActive, isOrderNumberDisplayPluginActive,
-    addPrintJobs, isSidebarHidden, onToggleSidebar,
-    notifications, handleMarkAllNotificationsAsRead
+    addPrintJobs, isSidebarHidden, onToggleSidebar
   } = useAppContext();
 
   const { roles, orders, tables, customers, categories, locations, employees, handleSaveCategory, handleDeleteCategory, onRequestRefund, onApproveRefund, onDenyRefund } = useDataContext();
   const { toasts, dismissToast } = useToastContext();
   const { openModal, closeModal } = useModalContext();
   const { setCurrentTable, onLoadOrder, onPrintA4, handleSelectTab } = usePOSContext();
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
 
   // State and handlers for the draggable AI FAB
@@ -333,7 +329,7 @@ const App: React.FC = () => {
         <div className="flex flex-row gap-1 p-1 h-screen overflow-hidden">
             <main className="flex-1 flex flex-col gap-2 overflow-hidden">
                 <div className="flex-shrink-0">
-                    <POSHeader setIsNotificationsOpen={setIsNotificationsOpen} />
+                    <POSHeader />
                 </div>
                 <div className="flex-shrink-0">
                     <POSSubHeader />
@@ -413,14 +409,6 @@ const App: React.FC = () => {
           </div>
           
           <ModalManager />
-          {isNotificationsOpen && createPortal(
-            <NotificationsPanel
-              notifications={notifications}
-              onMarkAllAsRead={handleMarkAllNotificationsAsRead}
-              onClose={() => setIsNotificationsOpen(false)}
-            />,
-            document.body
-          )}
           {showPrintMonitor && <PrintQueueMonitor />}
           <ToastContainer notifications={toasts} onDismiss={dismissToast}/>
       </div>

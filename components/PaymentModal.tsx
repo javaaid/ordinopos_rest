@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Order, PaymentMethod, AppPlugin, PaymentType, AppSettings, ToastNotification } from '../types';
+import { Order, PaymentMethod, AppPlugin, PaymentType, AppSettings, ToastNotification, Payment } from '../types';
 import CurrencyDollarIcon from './icons/CurrencyDollarIcon';
 import CreditCardIcon from './icons/CreditCardIcon';
 import CheckCircleIcon from './icons/CheckCircleIcon';
@@ -17,7 +17,7 @@ interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   orderToPay: Order[] | null;
-  onProcessFinalOrder: (orders: Order[] | null, paymentMethod: PaymentMethod) => Order;
+  onFinalize: (payments: Payment[]) => Order;
   onDirectPrintReceipt: (order: Order) => void;
   onPrintA4: (order: Order) => void;
   cardPlugin: AppPlugin | undefined;
@@ -31,7 +31,7 @@ interface PaymentModalProps {
 type CardStatus = 'idle' | 'processing' | 'approved' | 'declined';
 type PaymentStatus = 'paying' | 'success';
 
-const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay, onProcessFinalOrder, onDirectPrintReceipt, onPrintA4, cardPlugin, allPaymentTypes, currency, settings, setSettings, addToast }) => {
+const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay, onFinalize, onDirectPrintReceipt, onPrintA4, cardPlugin, allPaymentTypes, currency, settings, setSettings, addToast }) => {
   const { openModal, closeModal } = useModalContext();
   const [activeMethod, setActiveMethod] = useState<string>('');
   const [tenderedAmount, setTenderedAmount] = useState('');
@@ -40,6 +40,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay
   const [finalizedOrder, setFinalizedOrder] = useState<Order | null>(null);
   const [email, setEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
+  const [payments, setPayments] = useState<Payment[]>([]);
   
   const isCardConfigured = useMemo(() => {
     return (cardPlugin?.status === 'enabled' || cardPlugin?.status === 'trial') 
@@ -54,12 +55,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay
   }, [allPaymentTypes]);
 
   const totalDue = useMemo(() => orderToPay?.reduce((sum, o) => sum + o.total, 0) || 0, [orderToPay]);
-  const tendered = parseFloat(tenderedAmount) || 0;
-  const changeDue = tendered > totalDue ? tendered - totalDue : 0;
+  const totalPaid = useMemo(() => payments.reduce((sum, p) => sum + p.amount, 0), [payments]);
+  const remainingDue = useMemo(() => totalDue - totalPaid, [totalDue, totalPaid]);
   
   useEffect(() => {
     if (isOpen) {
-      setTenderedAmount(totalDue.toFixed(2));
+      setPayments([]);
       setCardStatus('idle');
       setPaymentStatus('paying');
       setFinalizedOrder(null);
@@ -67,22 +68,26 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay
       setEmailSent(false);
       
       if (enabledPaymentTypes.length > 0) {
-        const cardMethod = enabledPaymentTypes.find(pt => pt?.id?.toLowerCase() === 'card');
-        if (cardMethod) {
-            setActiveMethod('card');
-        } else {
-            const firstMethod = enabledPaymentTypes[0];
-            if (firstMethod?.name) {
-                 setActiveMethod(firstMethod.name.toLowerCase());
-            } else {
-                 setActiveMethod(''); // Fallback for corrupted data
-            }
-        }
+        const firstMethod = enabledPaymentTypes[0];
+        setActiveMethod(firstMethod?.name?.toLowerCase() || '');
       } else {
         setActiveMethod('');
       }
     }
-  }, [isOpen, totalDue, enabledPaymentTypes, orderToPay]);
+  }, [isOpen, orderToPay, enabledPaymentTypes]);
+  
+  useEffect(() => {
+    setTenderedAmount(remainingDue > 0 ? remainingDue.toFixed(2) : '0.00');
+  }, [remainingDue]);
+
+  useEffect(() => {
+    if (remainingDue <= 0.001 && payments.length > 0 && paymentStatus === 'paying' && isOpen) {
+      const finalOrder = onFinalize(payments);
+      setFinalizedOrder(finalOrder);
+      setPaymentStatus('success');
+    }
+  }, [remainingDue, payments, paymentStatus, onFinalize, orderToPay, isOpen]);
+
 
   if (!isOpen || !orderToPay) return null;
 
@@ -106,40 +111,48 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay
         }
     });
   };
-
-  const handleProcessPayment = (method: PaymentMethod) => {
-    const tenderedNum = parseFloat(tenderedAmount) || 0;
-    // Compare values in cents to avoid floating point inaccuracies
-    if (method === 'Cash' && Math.round(tenderedNum * 100) < Math.round(totalDue * 100)) {
-      alert("Tendered amount is less than total due.");
-      return;
-    }
-
-    if (method === 'Card') {
-      setCardStatus('processing');
-      openModal('livePayment', {
-        amount: totalDue,
-        provider: settings.paymentProvider,
-        terminalId: settings.terminalId,
-        onApprove: () => {
-          closeModal(); // Close simulation modal
-          setCardStatus('approved');
-          setTimeout(() => {
-            const finalOrder = onProcessFinalOrder(orderToPay, method);
-            setFinalizedOrder(finalOrder);
-            setPaymentStatus('success');
-          }, 1000);
-        },
-        onDecline: () => {
-          closeModal(); // Close simulation modal
-          setCardStatus('declined');
-        }
-      });
+  
+  const handleAddPayment = (method: PaymentMethod, amount: number) => {
+    if (amount <= 0) return;
+    const newPayment: Payment = { method, amount, timestamp: Date.now() };
+    setPayments(prev => [...prev, newPayment]);
+  };
+  
+  const handleProcessCashPayment = () => {
+    const tendered = parseFloat(tenderedAmount) || 0;
+    if (tendered < remainingDue) {
+      handleAddPayment('Cash', tendered);
     } else {
-      const finalOrder = onProcessFinalOrder(orderToPay, method);
-      setFinalizedOrder(finalOrder);
-      setPaymentStatus('success');
+      const change = tendered - remainingDue;
+      if (change > 0) {
+        addToast({ type: 'info', title: 'Change Due', message: `${currency}${change.toFixed(2)}`});
+      }
+      handleAddPayment('Cash', remainingDue);
     }
+  };
+
+  const handleProcessCardPayment = () => {
+    const amountToCharge = parseFloat(tenderedAmount);
+    if (isNaN(amountToCharge) || amountToCharge <= 0) return;
+
+    setCardStatus('processing');
+    openModal('livePayment', {
+      amount: amountToCharge,
+      provider: settings.paymentProvider,
+      terminalId: settings.terminalId,
+      onApprove: () => {
+        closeModal(); // Close simulation modal
+        setCardStatus('approved');
+        setTimeout(() => {
+          handleAddPayment('Card', amountToCharge);
+          setCardStatus('idle');
+        }, 1000);
+      },
+      onDecline: () => {
+        closeModal(); // Close simulation modal
+        setCardStatus('declined');
+      }
+    });
   };
   
   const paymentMethodIcons: Record<string, React.FC<any>> = {
@@ -215,15 +228,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-3xl">
         <div className="flex flex-col h-full">
-            <div className="p-6 border-b border-border text-center">
-                <h2 className="text-2xl font-bold text-foreground">Payment</h2>
+            <div className="p-4 border-b border-border text-center">
+                <h2 className="text-lg font-bold text-foreground">Payment</h2>
                 <div className="text-center">
-                    <p className="text-6xl font-mono font-bold text-primary mt-2">{currency}{totalDue.toFixed(2)}</p>
-                    {settings.dualCurrency.enabled && (
-                        <p className="text-xl text-muted-foreground font-mono -mt-1">
-                            ≈ {settings.dualCurrency.secondaryCurrency} {(totalDue * settings.dualCurrency.exchangeRate).toFixed(2)}
-                        </p>
-                    )}
+                    <p className="text-2xl font-mono text-muted-foreground">Total Due</p>
+                    <p className="text-6xl font-mono font-bold text-primary mt-1">{currency}{totalDue.toFixed(2)}</p>
                 </div>
             </div>
             <div className="p-6 flex gap-6">
@@ -232,29 +241,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay
                     if (!pt?.name) return null;
                     const Icon = paymentMethodIcons[pt.name.toLowerCase()] || CurrencyDollarIcon;
                     const isActive = activeMethod === pt.name.toLowerCase();
-                    
-                    const activeColorClasses: { [key: string]: { button: string; icon: string; } } = {
-                        cash: { button: 'bg-green-600/20 border-green-500', icon: 'text-green-500' },
-                        card: { button: 'bg-blue-600/20 border-blue-500', icon: 'text-blue-500' },
-                    };
-
-                    const defaultActiveClasses = { button: 'bg-primary/10 border-primary', icon: 'text-primary' };
-                    
-                    const buttonClass = isActive 
-                        ? (activeColorClasses[pt.name.toLowerCase()]?.button || defaultActiveClasses.button)
-                        : 'bg-secondary border-border hover:border-muted-foreground';
-                        
-                    const iconClass = isActive
-                        ? (activeColorClasses[pt.name.toLowerCase()]?.icon || defaultActiveClasses.icon)
-                        : 'text-muted-foreground';
-                    
                     return (
                         <button 
                             key={pt.id} 
                             onClick={() => setActiveMethod(pt.name.toLowerCase())}
-                            className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${buttonClass}`}
+                            className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${isActive ? 'bg-primary/10 border-primary' : 'bg-secondary border-border hover:border-muted-foreground'}`}
                         >
-                            <Icon className={`w-8 h-8 ${iconClass}`} />
+                            <Icon className={`w-8 h-8 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
                             <span className="font-bold text-lg text-foreground">{pt.name}</span>
                         </button>
                     )
@@ -272,28 +265,40 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay
                                 className="p-3 text-2xl font-mono text-center h-auto"
                             />
                         </div>
-                         <div className="text-center bg-secondary p-4 rounded-lg">
-                            <p className="text-muted-foreground">Change Due</p>
-                            <p className="text-3xl font-mono font-bold text-primary">{currency}{changeDue.toFixed(2)}</p>
+                         <div className="grid grid-cols-3 gap-2">
+                             {[5,10,20,50,100,200].map(val => (
+                                 <Button key={val} type="button" variant="outline" onClick={() => setTenderedAmount(val.toFixed(2))}>{currency}{val}</Button>
+                             ))}
                          </div>
-                         <Button onClick={() => handleProcessPayment('Cash')} className="w-full mt-4 h-auto py-4 text-xl">
-                            Confirm Cash Payment
+                         <Button onClick={handleProcessCashPayment} className="w-full mt-4 h-auto py-4 text-xl">
+                            Pay With Cash
                          </Button>
                     </div>
                 )}
                  {activeMethod === 'card' && (
                     <>
                     {isCardConfigured ? (
-                        <div className="text-center flex flex-col items-center justify-center h-full bg-secondary rounded-lg p-6">
-                            {cardStatus === 'idle' && <Button onClick={() => handleProcessPayment('Card')} className="w-full h-auto py-12 text-xl">Process Card Payment</Button>}
-                            {cardStatus === 'processing' && <p className="text-muted-foreground animate-pulse">Waiting for terminal...</p>}
-                            {cardStatus === 'approved' && <p className="text-primary font-bold text-xl">Card Approved!</p>}
-                            {cardStatus === 'declined' && <p className="text-destructive font-bold text-xl">Card Declined. Please try another card.</p>}
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-muted-foreground mb-1">Amount to Charge</label>
+                                <Input 
+                                    type="number" 
+                                    value={tenderedAmount}
+                                    onChange={e => setTenderedAmount(e.target.value)}
+                                    className="p-3 text-2xl font-mono text-center h-auto"
+                                />
+                            </div>
+                            <Button onClick={handleProcessCardPayment} disabled={cardStatus !== 'idle'} className="w-full mt-4 h-auto py-4 text-xl">
+                                {cardStatus === 'idle' && 'Charge Card'}
+                                {cardStatus === 'processing' && 'Processing...'}
+                                {cardStatus === 'approved' && 'Approved!'}
+                                {cardStatus === 'declined' && 'Declined'}
+                            </Button>
                         </div>
                     ) : (
                         <div className="text-center flex flex-col items-center justify-center h-full bg-secondary rounded-lg p-6">
                             <h4 className="text-lg font-bold text-foreground mb-2">Card Payments Not Configured</h4>
-                            <p className="text-muted-foreground mb-6">The 'Advanced Card Payments' plugin must be configured before you can accept card payments.</p>
+                            <p className="text-muted-foreground mb-6">The 'Advanced Card Payments' plugin must be configured.</p>
                             <Button onClick={handleGoToCardSettings} className="w-full text-lg">
                                 Go to Settings
                             </Button>
@@ -302,6 +307,27 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay
                     </>
                 )}
               </div>
+            </div>
+            <div className="p-4 border-t border-border bg-card mt-auto space-y-2">
+                <div className="flex justify-between items-center text-xl font-bold">
+                    <span>Paid:</span>
+                    <span>{currency}{totalPaid.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center text-2xl font-bold text-destructive">
+                    <span>Remaining Due:</span>
+                    <span>{currency}{remainingDue.toFixed(2)}</span>
+                </div>
+                {payments.length > 0 && (
+                    <div className="pt-2 border-t border-border mt-2">
+                        <h4 className="text-xs font-semibold uppercase text-muted-foreground">Applied Payments</h4>
+                        {payments.map((p, i) => (
+                            <div key={i} className="flex justify-between text-sm">
+                                <span>{p.method}</span>
+                                <span>{currency}{p.amount.toFixed(2)}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     </Modal>

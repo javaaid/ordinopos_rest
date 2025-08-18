@@ -159,6 +159,53 @@ export const calculateMenuItemCost = (menuItemId: number, ingredients: Ingredien
     }, 0);
 };
 
+export const isItemOutOfStock = (
+    item: MenuItem, 
+    cart: CartItem[],
+    ingredients: Ingredient[], 
+    recipes: Record<number, RecipeItem[]>
+): boolean => {
+    if (!item.stopSaleAtZeroStock) return false;
+
+    const recipe = recipes[item.id];
+
+    if (recipe && recipe.length > 0) {
+        // Recipe-based check: Can we make one more?
+        // This is a comprehensive check that considers all items in the cart that use the same ingredients.
+        const ingredientDemand = new Map<string, number>();
+        cart.forEach(cartItem => {
+            const cartItemRecipe = recipes[cartItem.menuItem.id];
+            if (cartItemRecipe) {
+                cartItemRecipe.forEach(recipePart => {
+                    const currentDemand = ingredientDemand.get(recipePart.ingredientId) || 0;
+                    ingredientDemand.set(recipePart.ingredientId, currentDemand + (recipePart.quantity * cartItem.quantity));
+                });
+            }
+        });
+        
+        // Now check if adding one more of the current item is possible
+        for (const recipePart of recipe) {
+            const ingredient = ingredients.find(i => i.id === recipePart.ingredientId);
+            if (!ingredient) return true; // Ingredient definition missing, treat as out of stock
+
+            const currentDemandForIngredient = ingredientDemand.get(recipePart.ingredientId) || 0;
+            if (ingredient.stock < currentDemandForIngredient + recipePart.quantity) {
+                return true; // Not enough stock for this ingredient
+            }
+        }
+
+        return false; // Enough ingredients for one more
+    } else if (typeof item.stock === 'number') {
+        // Direct stock check
+        const cartQuantity = cart.filter(ci => ci.menuItem.id === item.id)
+                                 .reduce((sum, ci) => sum + ci.quantity, 0);
+        return item.stock <= cartQuantity;
+    }
+
+    return false;
+};
+
+
 export const generateZatcaQRCode = (order: {createdAt: number, total: number, tax: number}, location: { name: string, vatNumber?: string }): string => {
     const sellerName = location.name;
     const vatNumber = location.vatNumber || '';

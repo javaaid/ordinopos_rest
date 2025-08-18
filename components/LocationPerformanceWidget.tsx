@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { Order, Location, RecipeItem, Ingredient } from '../types';
 import BuildingStorefrontIcon from './icons/BuildingStorefrontIcon';
 import { calculateMenuItemCost } from '../utils/calculations';
+import { useAppContext } from '../contexts/AppContext';
 
 interface LocationPerformanceWidgetProps {
     orders: Order[];
@@ -21,6 +22,7 @@ interface LocationStat {
 }
 
 const LocationPerformanceWidget: React.FC<LocationPerformanceWidgetProps> = ({ orders, locations, ingredients, recipes }) => {
+    const { isAdvancedInventoryPluginActive } = useAppContext();
     
     const locationStats = useMemo<LocationStat[]>(() => {
         const statsMap = new Map<string, LocationStat>();
@@ -61,7 +63,7 @@ const LocationPerformanceWidget: React.FC<LocationPerformanceWidgetProps> = ({ o
                         <tr>
                             <th className={thClass}>Location</th>
                             <th className={thClass}>Total Revenue</th>
-                            <th className={thClass}>Total Profit</th>
+                            {isAdvancedInventoryPluginActive && <th className={thClass}>Total Profit</th>}
                             <th className={thClass}>Orders</th>
                         </tr>
                     </thead>
@@ -70,7 +72,7 @@ const LocationPerformanceWidget: React.FC<LocationPerformanceWidgetProps> = ({ o
                              <tr key={loc.id} className="hover:bg-muted/50">
                                 <td className="px-4 py-3 font-medium text-foreground">{loc.name}</td>
                                 <td className="px-4 py-3 font-mono text-foreground">${loc.revenue.toFixed(2)}</td>
-                                <td className="px-4 py-3 font-mono font-semibold text-green-500 dark:text-green-400">${loc.profit.toFixed(2)}</td>
+                                {isAdvancedInventoryPluginActive && <td className="px-4 py-3 font-mono font-semibold text-green-500 dark:text-green-400">${loc.profit.toFixed(2)}</td>}
                                 <td className="px-4 py-3 font-mono text-foreground">{loc.orderCount}</td>
                             </tr>
                         ))}

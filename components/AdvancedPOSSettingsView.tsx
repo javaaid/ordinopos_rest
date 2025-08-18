@@ -106,8 +106,6 @@ const AdvancedPOSSettingsView: React.FC = () => {
                 <SettingsGroup title="General & Security">
                      <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-8 md:divide-x md:divide-border">
                         <div className="md:pr-4 space-y-2 divide-y divide-border">
-                            <ToggleRow label="Inventory Management" description="Enable stock tracking for items with defined inventory." enabled={localSettings.inventoryManagement} onToggle={() => handleToggle('inventoryManagement')} />
-                            <ToggleRow label="Allow Negative Quantity" description="Allow selling items even if stock count is zero or less." enabled={localSettings.allowMinusQuantity} onToggle={() => handleToggle('allowMinusQuantity')} />
                             <ToggleRow label="Auto Clock Out" description="Automatically clock out staff after a period of inactivity." enabled={localSettings.autoClockOut} onToggle={() => handleToggle('autoClockOut')} />
                         </div>
                         <div className="md:pl-4 space-y-2 divide-y divide-border">

@@ -35,6 +35,7 @@ import ClipboardDocumentCheckIcon from '../components/icons/ClipboardDocumentChe
 import ExclamationTriangleIcon from '../components/icons/ExclamationTriangleIcon';
 import CpuChipIcon from '../components/icons/CpuChipIcon';
 import PrinterIcon from '../components/icons/PrinterIcon';
+import ArchiveBoxIcon from '../components/icons/ArchiveBoxIcon';
 
 export interface PluginModule {
     manifest: Omit<AppPlugin, 'status' | 'trialStartDate' | 'activationDate' | 'licenseDurationDays'>;
@@ -100,16 +101,6 @@ export const CORE_MODULE_DEFINITIONS: PluginModule[] = [
             children: [
                 { id: 'users', label: t('users'), icon: UsersIcon },
                 { id: 'roles', label: t('roles'), icon: ShieldCheckIcon },
-            ]
-        }),
-    },
-    {
-        manifest: { id: 'group-purchasing', name: 'Purchasing', description: 'Purchasing group', isFree: true, version: '1.0.0', sortOrder: 30 },
-        getManagementNavItem: (t) => ({
-            id: 'purchasing_group', label: t('purchasing'), icon: ShoppingCartIcon,
-            children: [
-                { id: 'purchasing', label: t('purchasing'), icon: ShoppingCartIcon },
-                { id: 'ingredients', label: 'Ingredients', icon: CubeIcon },
             ]
         }),
     },
@@ -208,6 +199,18 @@ export const OPTIONAL_PLUGIN_DEFINITIONS: PluginModule[] = [
         getManagementNavItem: (t) => ({ id: 'menu_pizza_builder', label: t('menu_pizza_builder'), icon: PizzaIcon, parentId: 'menu' }),
     },
     {
+        manifest: { id: 'advanced-inventory', name: 'Advanced Inventory', description: 'Track stock levels, manage suppliers, create purchase orders, and calculate profit margins.', isFree: false, version: '1.0.0', sortOrder: 110 },
+        getManagementNavItem: (t) => ({
+            id: 'inventory',
+            label: 'Inventory',
+            icon: ArchiveBoxIcon,
+            children: [
+                { id: 'purchasing', label: 'Purchase Orders', icon: ShoppingCartIcon },
+                { id: 'ingredients', label: 'Ingredients', icon: CubeIcon },
+            ]
+        }),
+    },
+    {
         manifest: { id: 'reservations', name: 'Reservations', description: 'Manage table reservations and bookings.', isFree: false, version: '1.0.0', sortOrder: 200 },
     },
     {
@@ -215,10 +218,11 @@ export const OPTIONAL_PLUGIN_DEFINITIONS: PluginModule[] = [
     },
     {
         manifest: { id: 'caller-id', name: 'Caller ID', description: 'Identify customers and view their history upon receiving a call.', isFree: false, version: '1.3.0', sortOrder: 505 },
-        getManagementNavItem: (t) => ({ id: 'call_log_group', label: t('telephony'), icon: PhoneIcon,
-            children: [
-                { id: 'call_log', label: t('call_log'), icon: PhoneIcon },
-            ]
+        getManagementNavItem: (t) => ({
+            id: 'call_log', 
+            label: t('call_log'), 
+            icon: PhoneIcon, 
+            parentId: 'contacts' // Changed from telephony to contacts
         }),
     },
 ];

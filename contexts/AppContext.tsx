@@ -126,6 +126,8 @@ const usePersistentState = <T,>(key: string, defaultValue: T): [T, React.Dispatc
 // #endregion
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    // #region ========== STATE DEFINITIONS ==========
+    // --- App State ---
     const [activeView, setActiveView] = usePersistentState<View>('activeView', 'landing');
     const [managementSubView, setManagementSubView] = usePersistentState<ManagementSubView>('managementSubView', 'menu_products');
     const [settingsSubView, setSettingsSubView] = usePersistentState<SettingsSubView>('settingsSubView', 'integrations');
@@ -133,24 +135,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [currentLocationId, setCurrentLocationId] = usePersistentState<string>('currentLocationId', LOCATIONS[0].id);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = usePersistentState('isSidebarCollapsed', true);
     const [theme, setTheme] = usePersistentState<Theme>('appTheme', 'light');
+    const [isSidebarHidden, setIsSidebarHidden] = usePersistentState('isSidebarHidden', false);
+
     const [settings, setSettings] = usePersistentState<AppSettings>('appSettings', {
-        paymentProvider: 'none',
-        paymentTerminalSecretKey: '',
-        terminalId: '',
-        accountingSoftware: 'none',
-        quickbooksApiKey: '',
-        xeroApiKey: '',
-        reservationSystem: 'none',
-        opentableApiKey: '',
-        googleReservationsApiKey: '',
-        orderSettings: {
-            gratuityOptions: [15, 18, 20],
-            invoicePrefix: 'INV-',
-            invoiceSuffix: '',
-            nextInvoiceNumber: 1,
-            nextDailyOrderNumber: 1,
-            dailyOrderSequenceLastReset: new Date().toISOString().split('T')[0],
-        },
+        paymentProvider: 'none', paymentTerminalSecretKey: '', terminalId: '', accountingSoftware: 'none', quickbooksApiKey: '', xeroApiKey: '',
+        reservationSystem: 'none', opentableApiKey: '', googleReservationsApiKey: '',
+        orderSettings: { gratuityOptions: [15, 18, 20], invoicePrefix: 'INV-', invoiceSuffix: '', nextInvoiceNumber: 1, nextDailyOrderNumber: 1, dailyOrderSequenceLastReset: new Date().toISOString().split('T')[0] },
         dualCurrency: { enabled: false, secondaryCurrency: 'USD', exchangeRate: 1 },
         zatca: { enabled: false, productionCert: '', productionCSR: '', isSandbox: true, fatooraApiKey: '', qrCodeSize: 128, qrCodePosition: 'bottom' },
         receipt: { logoUrl: 'https://raw.githubusercontent.com/ordino-pos/ordino-pos-media/main/logo-dark.png', promoMessage: 'Thank you!', showBarcode: true, template: 'standard' },
@@ -171,7 +161,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         preferences: { actionAfterSendOrder: 'order', actionAfterPayment: 'order', defaultPaymentMethod: 'Cash', enableOrderNotes: true, enableKitchenPrint: true, defaultOrderType: 'dine-in', enableOrderHold: true, resetOrderNumberDaily: true, dashboardWidgetOrder: ['stats', 'salesChart', 'quickActions', 'topItems', 'lowStock', 'recentTransactions'], }
     });
 
-    // Data states
+    // --- Data States ---
     const [locations, setLocations] = usePersistentState<Location[]>('locations', LOCATIONS);
     const [categories, setCategories] = usePersistentState<Category[]>('categories', CATEGORIES);
     const [menuItems, setMenuItems] = usePersistentState<MenuItem[]>('menuItems', MENU_ITEMS);
@@ -209,21 +199,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [callLog, setCallLog] = usePersistentState<CallLogEntry[]>('callLog', CALL_LOG);
     const [orders, setOrders] = usePersistentState<Order[]>('orders', []);
     const [heldOrders, setHeldOrders] = usePersistentState<HeldOrder[]>('heldOrders', []);
-    const [modal, setModal] = useState({ type: null, props: {} });
-    
-    const [printQueue, setPrintQueue] = usePersistentState<PrintJob[]>('printQueue', []);
-    const [isSidebarHidden, setIsSidebarHidden] = usePersistentState('isSidebarHidden', false);
-    const [calledOrderNumber, setCalledOrderNumber] = usePersistentState<string | null>('calledOrderNumber', null);
+    const [reportSchedules, setReportSchedules] = usePersistentState<ReportSchedule[]>('reportSchedules', []);
     const [lastCompletedOrder, setLastCompletedOrder] = usePersistentState<Order | null>('lastCompletedOrder', null);
     const [lastReservationSync, setLastReservationSync] = usePersistentState<number | null>('lastReservationSync', null);
     const [lastAccountingSync, setLastAccountingSync] = usePersistentState<number | null>('lastAccountingSync', null);
     const [notifications, setNotifications] = usePersistentState<Notification[]>('notifications', []);
-    const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
-    const [justAddedCategoryId, setJustAddedCategoryId] = useState<string | null>(null);
-    const [justAddedCustomer, setJustAddedCustomer] = useState<Customer | null>(null);
-    const [reportSchedules, setReportSchedules] = usePersistentState<ReportSchedule[]>('reportSchedules', []);
-    const isKsaPluginActive = useMemo(() => plugins.some((p: AppPlugin) => p.id === 'e-invoice-ksa' && (p.status === 'enabled' || p.status === 'trial')), [plugins]);
     
+    // --- POS State ---
     const [cart, setCart] = useState<CartItem[]>([]);
     const [activeCategory, setActiveCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -238,66 +220,93 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [activeOrderToSettle, setActiveOrderToSettle] = useState<Order | null>(null);
     const [activeTab, setActiveTab] = useState<Order | null>(null);
 
+    // --- Modal State ---
+    const [modal, setModal] = useState({ type: null, props: {} });
+    const [justAddedCategoryId, setJustAddedCategoryId] = useState<string | null>(null);
+    const [justAddedCustomer, setJustAddedCustomer] = useState<Customer | null>(null);
+
+    // --- Toast State ---
     const [toasts, setToasts] = useState<ToastNotification[]>([]);
     const toastId = useRef(0);
+    
+    // --- UI State ---
+    const [printQueue, setPrintQueue] = usePersistentState<PrintJob[]>('printQueue', []);
+    const [calledOrderNumber, setCalledOrderNumber] = usePersistentState<string | null>('calledOrderNumber', null);
+    const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
+    
+    // #endregion
 
-    const addToast = useCallback((toast: Omit<ToastNotification, 'id'>) => {
-        const newToast = { ...toast, id: toastId.current++ };
-        setToasts(prev => [...prev, newToast]);
-    }, [setToasts]);
-
-    const onSuggestRole = useCallback(async (jobTitle: string): Promise<AIRoleSuggestion | null> => {
-        if (!settings.ai.enableAIFeatures) return null;
-        try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            const availableRoles = (roles || []).map((r: Role) => ({ id: r.id, name: r.name }));
-
-            const prompt = `Given the job title "${jobTitle}", suggest the most appropriate role from this list: ${JSON.stringify(availableRoles)}. Also provide a brief reason for the suggestion.`;
-            
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: {
-                    responseMimeType: 'application/json',
-                    responseSchema: {
-                        type: Type.OBJECT,
-                        properties: {
-                            suggestedRoleId: { type: Type.STRING, description: 'The ID of the suggested role.' },
-                            reason: { type: Type.STRING, description: 'A brief explanation for the suggestion.' }
-                        },
-                        required: ['suggestedRoleId', 'reason']
-                    }
-                }
-            });
-
-            const result = JSON.parse(response.text) as AIRoleSuggestion;
-            return result;
-        } catch (e) {
-            console.error("AI role suggestion failed:", e);
-            addToast({type: 'error', title: 'AI Suggestion Failed', message: 'Could not connect to the AI service.'});
-        }
-        return null;
-    }, [settings.ai.enableAIFeatures, roles, addToast]);
+    // #region ========== DERIVED STATE & MEMOS ==========
+    const currentLocation = useMemo(() => {
+        const foundLocation = (locations || []).find((l: Location) => l.id === currentLocationId);
+        if (foundLocation) return foundLocation;
+        if ((locations || []).length > 0) return locations[0];
+        return LOCATIONS[0];
+    }, [locations, currentLocationId]);
+    
+    const isAdvancedInventoryPluginActive = useMemo(() => plugins.some((p: AppPlugin) => p.id === 'advanced-inventory' && (p.status === 'enabled' || p.status === 'trial')), [plugins]);
+    const isKsaPluginActive = useMemo(() => plugins.some((p: AppPlugin) => p.id === 'e-invoice-ksa' && (p.status === 'enabled' || p.status === 'trial')), [plugins]);
     
     const floors = useMemo(() => {
         if (!tables) return ['Main Floor'];
         const floorSet = new Set((tables as Table[]).map(t => t.floor).filter(Boolean));
         return floorSet.size > 0 ? Array.from(floorSet).sort() : ['Main Floor'];
     }, [tables]);
+
+    const categoriesWithCounts = useMemo(() => {
+        if (!menuItems || !categories) return [];
+        const locationMenuItems = menuItems.filter((item: MenuItem) => (item.locationIds || []).includes(currentLocation.id));
+        const counts = locationMenuItems.reduce((acc: Record<string, number>, item: MenuItem) => {
+            acc[item.category] = (acc[item.category] || 0) + 1;
+            return acc;
+        }, {});
+        return categories.map((cat: Category) => ({ ...cat, itemCount: counts[cat.id] || 0 })).filter((cat: Category) => cat.itemCount > 0);
+    }, [categories, menuItems, currentLocation.id]);
     
+    const availablePromotions = useMemo(() => {
+        const now = new Date();
+        const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+        const currentDay = now.getDay();
+        return (promotions || []).filter((p: Promotion) => p.isActive && p.daysOfWeek.includes(currentDay) && p.startTime <= currentTime && p.endTime >= currentTime);
+    }, [promotions]);
+
+    // #endregion
+
+    // #region ========== HOOKS & EFFECT ==========
     useEffect(() => {
         const root = window.document.documentElement;
         root.classList.remove('light', 'dark');
         root.classList.add(theme);
     }, [theme]);
-    
-    const onToggleTheme = useCallback(() => {
-        setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
-    }, [setTheme]);
-    
+    // #endregion
+
+    // #region ========== HANDLER FUNCTIONS ==========
+    const addToast = useCallback((toast: Omit<ToastNotification, 'id'>) => {
+        const newToast = { ...toast, id: toastId.current++ };
+        setToasts(prev => [...prev, newToast]);
+    }, [setToasts]);
     
     const openModal = (type: string, props = {}) => setModal({ type, props });
     const closeModal = () => setModal({ type: null, props: {} });
+    
+    // --- POS State Reset ---
+    const resetCartState = useCallback(() => {
+        setCart([]);
+        setAppliedDiscount(null);
+        setAppliedPromotion(null);
+        setAIUpsellSuggestions(null);
+    }, [setCart, setAppliedDiscount, setAppliedPromotion, setAIUpsellSuggestions]);
+
+    const resetPOSState = useCallback(() => {
+        resetCartState();
+        setSelectedCustomer(null);
+        setCurrentTable(null);
+        setActiveOrderToSettle(null);
+        setActiveTab(null);
+        setSelectedStaff(null);
+        setOrderType(settings.preferences.defaultOrderType);
+        setActiveCategory('all');
+    }, [resetCartState, settings.preferences.defaultOrderType, setActiveCategory]);
     
     const addLogEntry = useCallback((action: string) => {
         if (currentEmployee) {
@@ -311,64 +320,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     }, [setAuditLog, currentEmployee]);
     
-    const resetPOSState = useCallback(() => {
-        setCart([]);
-        setSelectedCustomer(null);
-        setCurrentTable(null);
-        setAppliedDiscount(null);
-        setAppliedPromotion(null);
-        setAIUpsellSuggestions(null);
-        setActiveOrderToSettle(null);
-        setActiveTab(null);
-        setSelectedStaff(null);
-        setOrderType(settings.preferences.defaultOrderType);
-    }, [settings.preferences.defaultOrderType]);
-
-    const onNewSaleClick = useCallback(() => {
-        if (cart.length > 0 || currentTable || activeOrderToSettle || activeTab) {
-            openModal('confirm', {
-                title: 'Start New Sale?',
-                message: 'This will clear the current order. Are you sure you want to continue?',
-                onConfirm: () => {
-                    resetPOSState();
-                    closeModal();
-                },
-            });
-        } else {
-            resetPOSState();
-        }
-    }, [cart.length, currentTable, activeOrderToSettle, activeTab, resetPOSState, openModal, closeModal]);
-    
-    const onAddItemWithModifiers = useCallback((item: MenuItem, modifiers: ModifierOption[]) => {
-        const newCartItem: CartItem = {
-            cartId: `${Date.now()}-${Math.random()}`,
-            menuItem: item,
-            quantity: 1,
-            selectedModifiers: modifiers,
-        };
-        
-        setCart((prevCart: CartItem[]) => {
-            const existingItem = (prevCart || []).find(ci => 
-                ci.menuItem.id === item.id && 
-                !ci.priceOverride && !ci.kitchenNote &&
-                JSON.stringify((ci.selectedModifiers || []).map(m=>m.name).sort()) === JSON.stringify((modifiers || []).map(m=>m.name).sort())
-            );
-            
-            if (existingItem) {
-                return prevCart.map(ci => 
-                    ci.cartId === existingItem.cartId ? { ...ci, quantity: ci.quantity + 1 } : ci
-                );
-            }
-            
-            return [...(prevCart || []), newCartItem];
-        });
-
-        closeModal();
-    }, [setCart, closeModal]);
+    const addPrintJobs = useCallback((jobs: Omit<PrintJob, 'id'|'timestamp'|'status'>[]) => {
+        const newJobs = jobs.map(job => ({ ...job, id: `job_${Date.now()}_${Math.random()}`, timestamp: Date.now(), status: 'pending' as PrintJobStatus }));
+        setPrintQueue(prev => [...(prev || []), ...newJobs]);
+    }, [setPrintQueue]);
 
     const onSelectItem = useCallback((item: MenuItem) => {
-        // ... (implementation is long, but it exists in the original file, so it's kept)
-         const addItemToCart = (finalizedItem: Omit<CartItem, 'cartId'>) => {
+        const addItemToCart = (finalizedItem: Omit<CartItem, 'cartId'>) => {
             const cartItem: CartItem = {
                 ...finalizedItem,
                 cartId: `${Date.now()}-${Math.random()}`,
@@ -483,20 +441,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             selectedModifiers: [],
         });
     }, [cart, openModal, closeModal, settings, addToast, modifierGroups]);
-    
-    const availablePromotions = useMemo(() => {
-        const now = new Date();
-        const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-        const currentDay = now.getDay();
-        
-        return (promotions || []).filter((p: Promotion) => 
-            p.isActive &&
-            p.daysOfWeek.includes(currentDay) &&
-            p.startTime <= currentTime &&
-            p.endTime >= currentTime
-        );
-    }, [promotions]);
 
+    const onNewSaleClick = useCallback(() => {
+        if (cart.length > 0 || currentTable || activeOrderToSettle || activeTab) {
+            openModal('confirm', {
+                title: 'Start New Sale?', message: 'This will clear the current order. Are you sure?',
+                onConfirm: () => { resetPOSState(); closeModal(); },
+            });
+        } else {
+            resetPOSState();
+        }
+    }, [cart.length, currentTable, activeOrderToSettle, activeTab, resetPOSState, openModal, closeModal]);
+    
     const onVoidOrder = useCallback(() => {
         openModal('voidOrder', { onConfirm: (reason: string) => {
             addLogEntry('Voided order with reason: ' + reason);
@@ -504,7 +460,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             closeModal();
         }});
     }, [addLogEntry, resetPOSState, openModal, closeModal]);
-
+    
     const handleHoldOrder = useCallback(() => {
         if ((cart || []).length === 0) return;
         const newHeldOrder: HeldOrder = {
@@ -559,251 +515,77 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             },
         });
     }, [setHeldOrders, openModal, closeModal]);
-    
-    const currentLocation = useMemo(() => {
-        const foundLocation = (locations || []).find((l: Location) => l.id === currentLocationId);
-        if (foundLocation) return foundLocation;
-        // If ALL locations are deleted, fall back to the default constant to prevent a crash.
-        if ((locations || []).length > 0) return locations[0];
-        return LOCATIONS[0];
-    }, [locations, currentLocationId]);
-
-    const categoriesWithCounts = useMemo(() => {
-        if (!menuItems || !categories) return [];
-        
-        const locationMenuItems = menuItems.filter((item: MenuItem) => 
-            (item.locationIds || []).includes(currentLocation.id)
-        );
-        
-        const counts = locationMenuItems.reduce((acc: Record<string, number>, item: MenuItem) => {
-            acc[item.category] = (acc[item.category] || 0) + 1;
-            return acc;
-        }, {});
-
-        return categories.map((cat: Category) => ({
-            ...cat,
-            itemCount: counts[cat.id] || 0,
-        })).filter((cat: Category) => cat.itemCount > 0);
-    }, [categories, menuItems, currentLocation.id]);
-
-    const handleTogglePlugin = useCallback((pluginId: string) => {
-        setPlugins((prevPlugins: AppPlugin[]) =>
-            (prevPlugins || []).map(p => {
-                if (p.id === pluginId) {
-                    if (p.id === 'plugins-viewer') {
-                        addToast({ type: 'info', title: 'Plugin Manager', message: 'This plugin cannot be disabled.' });
-                        return p;
-                    }
-    
-                    if (!p.isFree && p.status !== 'enabled' && p.status !== 'trial') {
-                        addToast({ type: 'info', title: 'Activation Required', message: 'Please activate a license to use this plugin.' });
-                        return p;
-                    }
-                    
-                    const newStatus = (p.status === 'enabled' || p.status === 'trial') ? 'disabled' : 'enabled';
-                    return { ...p, status: newStatus };
-                }
-                return p;
-            })
-        );
-    }, [setPlugins, addToast]);
-
-    const handleActivatePlugin = useCallback((pluginId: string, code: string) => {
-        if (ACTIVATION_CODES.has(code)) {
-            setPlugins((prevPlugins: AppPlugin[]) => (prevPlugins || []).map(p =>
-                p.id === pluginId ? {
-                    ...p,
-                    status: 'enabled',
-                    activationDate: Date.now(),
-                    licenseDurationDays: 365,
-                } : p
-            ));
-            const plugin = (plugins || []).find((p: AppPlugin) => p.id === pluginId);
-            addToast({ type: 'success', title: 'Plugin Activated', message: `${plugin?.name || 'Plugin'} is now active.` });
-            closeModal();
-        } else {
-            addToast({ type: 'error', title: 'Activation Failed', message: 'Invalid activation code.' });
-        }
-    }, [setPlugins, addToast, closeModal, plugins]);
-
-    const onUpdateCartQuantity = useCallback((cartId: string, newQuantity: number) => {
-        const cartItem = cart.find(ci => ci.cartId === cartId);
-        if (!cartItem) return;
-    
-        if (newQuantity <= 0) {
-            setCart(prev => prev.filter(item => item.cartId !== cartId));
-            return;
-        }
-    
-        const { menuItem } = cartItem;
-        if (menuItem.stopSaleAtZeroStock && typeof menuItem.stock === 'number') {
-            const otherItemsInCart = cart.filter(ci => ci.menuItem.id === menuItem.id && ci.cartId !== cartId);
-            const quantityOfOtherItems = otherItemsInCart.reduce((sum, item) => sum + item.quantity, 0);
-            
-            if (newQuantity + quantityOfOtherItems > menuItem.stock) {
-                addToast({ type: 'error', title: 'Stock Limit', message: `Only ${menuItem.stock} of ${menuItem.name} available.` });
-                return;
-            }
-        }
-    
-        setCart(prev =>
-          prev.map(item =>
-            item.cartId === cartId ? { ...item, quantity: newQuantity } : item
-          )
-        );
-    }, [cart, setCart, addToast]);
-
-    const onRemoveItem = useCallback((cartId: string) => {
-        setCart(prev => prev.filter(item => item.cartId !== cartId));
-    }, [setCart]);
-    
-    const addPrintJobs = useCallback((jobs: Omit<PrintJob, 'id'|'timestamp'|'status'>[]) => {
-        const newJobs = jobs.map(job => ({ ...job, id: `job_${Date.now()}_${Math.random()}`, timestamp: Date.now(), status: 'pending' as PrintJobStatus }));
-        setPrintQueue(prev => [...(prev || []), ...newJobs]);
-    }, [setPrintQueue]);
 
     const handleKitchenPrinting = useCallback((order: Order) => {
-        if (!settings.preferences.enableKitchenPrint || (order.cart || []).length === 0) {
-            return;
-        }
-        
-        const { kitchenPrinterId, barPrinterId } = settings.devices;
-    
-        if (!kitchenPrinterId) {
-            addToast({ type: 'info', title: 'Printer Not Configured', message: 'A default kitchen printer is not set in Settings > Devices.' });
-            return;
-        }
-    
-        const defaultKitchenPrinter = (printers || []).find((p: Printer) => p.id === kitchenPrinterId && p.isEnabled);
-        const barPrinter = barPrinterId ? (printers || []).find((p: Printer) => p.id === barPrinterId && p.isEnabled) : undefined;
-        
-        if (!defaultKitchenPrinter) {
-            addToast({ type: 'error', title: 'Printer Offline', message: 'The default kitchen printer is offline or not enabled.' });
-        }
-    
-        const itemsByPrinter = new Map<string, { printer: Printer; items: CartItem[] }>();
-    
-        for (const item of (order.cart || [])) {
-            let targetPrinter: Printer | undefined;
-    
-            if (item.menuItem.kitchenPrinterId) {
-                targetPrinter = (printers || []).find((p: Printer) => p.id === item.menuItem.kitchenPrinterId && p.isEnabled);
+        if (!settings.preferences.enableKitchenPrint) return;
+
+        const kitchenJobs: Omit<PrintJob, 'id'|'timestamp'|'status'>[] = [];
+        const itemsByPrinter = new Map<string, CartItem[]>();
+
+        order.cart.forEach(item => {
+            const printerId = item.menuItem.kitchenPrinterId || settings.devices.kitchenPrinterId;
+            if (printerId) {
+                if (!itemsByPrinter.has(printerId)) {
+                    itemsByPrinter.set(printerId, []);
+                }
+                itemsByPrinter.get(printerId)!.push(item);
             }
-    
-            if (!targetPrinter && item.menuItem.category === 'beverages' && barPrinter) {
-                targetPrinter = barPrinter;
+        });
+
+        itemsByPrinter.forEach((items, printerId) => {
+            const printer = printers.find((p: Printer) => p.id === printerId);
+            if (!printer) {
+                addToast({type: 'error', title: 'Print Error', message: `Kitchen printer with ID ${printerId} not found.`});
+                return;
             }
             
-            if (!targetPrinter && defaultKitchenPrinter) {
-                targetPrinter = defaultKitchenPrinter;
+            const orderForPrinter: Order = { ...order, cart: items };
+
+            if(printer.isProfileHub) {
+                // ... logic for profile hub printing
+            } else {
+                 kitchenJobs.push({
+                    component: 'KitchenReceiptContent',
+                    props: {
+                        order: orderForPrinter,
+                        settings: printer.kitchenProfiles?.kitchen_1 || DEFAULT_KITCHEN_PRINT_SETTINGS,
+                        profileName: printer.name,
+                    }
+                });
             }
-    
-            if (targetPrinter) {
-                const entry = itemsByPrinter.get(targetPrinter.id) || { printer: targetPrinter, items: [] };
-                entry.items.push(item);
-                itemsByPrinter.set(targetPrinter.id, entry);
-            }
+        });
+
+        if (kitchenJobs.length > 0) {
+            addPrintJobs(kitchenJobs);
         }
-    
-        if (itemsByPrinter.size === 0 && !defaultKitchenPrinter) {
-            addToast({ type: 'info', title: 'No Printer Found', message: 'No suitable online printer found for the items.' });
-            return;
-        }
-        
-        const jobsToQueue: Omit<PrintJob, 'id'|'timestamp'|'status'>[] = [];
-    
-        for (const { printer, items } of itemsByPrinter.values()) {
-            if (items.length === 0) continue;
-    
-            const partialOrder: Order = { ...order, cart: items };
-    
-            let profileKey: KitchenProfileType | undefined;
-            let profileName: string = printer.name;
-    
-            if (printer.kitchenProfiles) {
-                if (printer.id === barPrinter?.id && printer.kitchenProfiles.bar) {
-                    profileKey = 'bar';
-                } else {
-                    profileKey = Object.keys(printer.kitchenProfiles).find(k => k.startsWith('kitchen_')) as KitchenProfileType;
-                }
-    
-                if(profileKey && KITCHEN_PROFILE_NAMES[profileKey]) {
-                    profileName = KITCHEN_PROFILE_NAMES[profileKey];
-                }
-            }
-            
-            const printerSettings = (profileKey ? printer.kitchenProfiles?.[profileKey] : undefined) || DEFAULT_KITCHEN_PRINT_SETTINGS;
-            
-            const newJob: Omit<PrintJob, 'id'|'timestamp'|'status'> = {
-                component: 'KitchenReceiptContent',
-                props: {
-                    order: partialOrder,
-                    isPrintable: true,
-                    settings: printerSettings,
-                    profileName
-                }
-            };
-            jobsToQueue.push(newJob);
-        }
-        addPrintJobs(jobsToQueue);
     }, [printers, settings, addPrintJobs, addToast]);
     
-    const incrementOrderSequences = useCallback(() => {
-        const today = new Date().toISOString().split('T')[0];
-        const isNewDay = today !== settings.orderSettings.dailyOrderSequenceLastReset;
-        setSettings((prev: AppSettings) => ({
-            ...prev,
-            orderSettings: {
-                ...prev.orderSettings,
-                nextInvoiceNumber: prev.orderSettings.nextInvoiceNumber + 1,
-                nextDailyOrderNumber: isNewDay ? 2 : prev.orderSettings.nextDailyOrderNumber + 1,
-                dailyOrderSequenceLastReset: today,
-            }
-        }));
-    }, [settings.orderSettings, setSettings]);
-
     const createOrderObject = useCallback((finalCart: CartItem[], payments: Payment[], explicitOrderType: OrderType): Order => {
-        const { subtotal, tax, total, taxDetails, finalAppliedDiscount } = calculateOrderTotals(finalCart || [], currentLocation, appliedDiscount, appliedPromotion, explicitOrderType, settings, selectedCustomer, surcharges);
-        const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
-
-        const today = new Date().toISOString().split('T')[0];
-        let orderNumber = settings.orderSettings.nextDailyOrderNumber;
-        if(settings.orderSettings.dailyOrderSequenceLastReset !== today){
-            orderNumber = 1;
-        }
-
-        const isPaid = totalPaid >= total;
-        let status: OrderStatus = 'partially-paid';
-        if (isPaid) {
-            if (explicitOrderType === 'takeaway' || explicitOrderType === 'delivery' || explicitOrderType === 'kiosk') {
-                status = 'kitchen';
-            } else {
-                status = 'completed';
-            }
-        }
-
+        const { subtotal, tax, total, taxDetails, finalAppliedDiscount } = calculateOrderTotals(finalCart, currentLocation, appliedDiscount, appliedPromotion, explicitOrderType, settings, selectedCustomer, surcharges);
+        const now = Date.now();
+        
         return {
-            id: 'ord_' + Date.now(),
-            orderNumber: String(orderNumber),
-            invoiceNumber: '' + settings.orderSettings.invoicePrefix + settings.orderSettings.nextInvoiceNumber,
-            createdAt: Date.now(),
-            cart: finalCart || [],
-            customer: selectedCustomer || undefined,
-            employeeId: selectedStaff?.id || currentEmployee?.id,
-            subtotal: subtotal,
-            tax: tax,
-            total: total,
-            taxDetails: taxDetails,
-            payments: payments,
-            balanceDue: total - totalPaid,
+            id: `ord_${now}_${Math.random().toString(36).substring(2, 9)}`,
+            orderNumber: String(settings.orderSettings.nextDailyOrderNumber),
+            invoiceNumber: '', // will be set in onProcessFinalOrder
+            createdAt: now,
+            cart: finalCart,
+            subtotal,
+            tax,
+            total,
+            balanceDue: total - payments.reduce((sum, p) => sum + p.amount, 0),
+            taxDetails,
             orderType: explicitOrderType,
-            status: status,
+            status: 'completed', // Default status, can be changed
             source: 'in-store',
+            payments: payments,
             locationId: currentLocation.id,
             isTraining: false,
+            customer: selectedCustomer || undefined,
+            employeeId: (explicitOrderType === 'dine-in' ? selectedStaff?.id : currentEmployee?.id) || currentEmployee?.id,
             tableId: explicitOrderType === 'dine-in' ? currentTable?.id : undefined,
             appliedDiscount: finalAppliedDiscount,
-            appliedPromotion: appliedPromotion,
+            appliedPromotion: appliedPromotion || undefined,
         };
     }, [currentLocation, appliedDiscount, appliedPromotion, settings, selectedCustomer, currentEmployee, currentTable, selectedStaff, surcharges]);
 
@@ -815,213 +597,78 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ): Order => {
         const newOrder = createOrderObject(finalCart, payments, explicitOrderType);
         
-        const finalOrder: Order = {
-            ...newOrder,
-            id: sourceOrder?.id || newOrder.id,
-            createdAt: sourceOrder?.createdAt || newOrder.createdAt,
-            completedAt: Date.now(),
-            originalOrderIds: sourceOrder ? [sourceOrder.id, ...(sourceOrder.originalOrderIds || [])] : undefined,
-        };
-
-        if (!sourceOrder) {
-            incrementOrderSequences();
-        }
-        
-        if (finalOrder.status === 'kitchen') {
-            handleKitchenPrinting(finalOrder);
-        }
-        
-        setOrders((prev: Order[]) => {
-            const existingIds = new Set(sourceOrder?.originalOrderIds || []);
-            if(sourceOrder) existingIds.add(sourceOrder.id);
-
-            const withoutOriginals = (prev || []).filter(o => !existingIds.has(o.id));
-            return [...withoutOriginals, finalOrder];
-        });
-        
-        if (finalOrder.tableId) {
-             setTables((prev: Table[]) => (prev || []).map(t => t.id === finalOrder.tableId ? { ...t, status: 'available', orderId: undefined, occupiedSince: undefined, customerName: undefined, guestCount: undefined } : t));
+        let today = new Date().toISOString().split('T')[0];
+        if (settings.orderSettings.dailyOrderSequenceLastReset !== today && settings.preferences.resetOrderNumberDaily) {
+            setSettings(prev => ({
+                ...prev,
+                orderSettings: { ...prev.orderSettings, nextDailyOrderNumber: 1, dailyOrderSequenceLastReset: today }
+            }));
+            newOrder.orderNumber = '1';
+        } else {
+             setSettings(prev => ({
+                ...prev,
+                orderSettings: { ...prev.orderSettings, nextDailyOrderNumber: prev.orderSettings.nextDailyOrderNumber + 1 }
+            }));
         }
 
-        setLastCompletedOrder(finalOrder);
-        resetPOSState();
-        return finalOrder;
-    }, [createOrderObject, incrementOrderSequences, handleKitchenPrinting, setOrders, setTables, setLastCompletedOrder, resetPOSState]);
-    
-    const broadcastStateRef = useRef<BroadcastChannel | null>(null);
-
-    const broadcast = useCallback((type: string, payload: any) => {
-        broadcastStateRef.current?.postMessage({ type, payload });
-    }, []);
-
-    const handleCompleteKDSOrder = useCallback((orderId: string) => {
-        setOrders((prev: Order[]) =>
-            (prev || []).map(o => {
-                if (o.id === orderId && o.status === 'kitchen') {
-                    const newStatus: OrderStatus = o.orderType === 'dine-in' ? 'served' : 'completed';
-                    return { ...o, status: newStatus };
-                }
-                return o;
-            })
-        );
-    }, [setOrders]);
-
-    const handleTogglePreparedItem = useCallback((orderId: string, cartId: string) => {
-        setOrders((prev: Order[]) =>
-            (prev || []).map(o => {
-                if (o.id === orderId) {
-                    const preparedIds = o.preparedCartItemIds || [];
-                    const newPreparedIds = preparedIds.includes(cartId)
-                        ? preparedIds.filter(id => id !== cartId)
-                        : [...preparedIds, cartId];
-                    return { ...o, preparedCartItemIds: newPreparedIds };
-                }
-                return o;
-            })
-        );
-    }, [setOrders]);
-
-    const handleKioskOrderPlaced = useCallback((payload: { cart: CartItem[], customer: { name: string }, locationId: string }) => {
-        const { cart, customer, locationId } = payload;
-        const location = locations.find((l: Location) => l.id === locationId);
-        if (!location) return;
-
-        const tempCustomer: Customer = { id: `cust_kiosk_${Date.now()}`, name: customer.name, phone: '', email: '', address: '', locationId };
-        const { total } = calculateOrderTotals(cart, location, null, null, 'kiosk', settings, tempCustomer, surcharges);
+        newOrder.invoiceNumber = `${settings.orderSettings.invoicePrefix}${settings.orderSettings.nextInvoiceNumber}${settings.orderSettings.invoiceSuffix}`;
+        setSettings(prev => ({
+            ...prev,
+            orderSettings: { ...prev.orderSettings, nextInvoiceNumber: prev.orderSettings.nextInvoiceNumber + 1 }
+        }));
         
-        const newOrder = {
-            ...createOrderObject(cart, [{ method: 'Card', amount: total, timestamp: Date.now() }], 'kiosk'),
-            customer: tempCustomer,
-            source: 'kiosk' as OrderSource,
-            status: 'kitchen' as OrderStatus,
-        };
+        const finalOrders = [...(orders || [])];
+        if (sourceOrder && sourceOrder.originalOrderIds) {
+            sourceOrder.originalOrderIds.forEach(id => {
+                const index = finalOrders.findIndex(o => o.id === id);
+                if (index > -1) finalOrders.splice(index, 1);
+            });
+        }
         
-        incrementOrderSequences();
-        setOrders(prev => [...prev, newOrder]);
-        handleKitchenPrinting(newOrder);
-        broadcast('KIOSK_ORDER_CONFIRMED', { orderNumber: newOrder.orderNumber });
-
-    }, [locations, settings, createOrderObject, incrementOrderSequences, setOrders, handleKitchenPrinting, broadcast, surcharges]);
-
-    const handleQrOrderPlaced = useCallback((payload: { cart: CartItem[], customer: { name: string, phone: string }, tableId: string, locationId: string }) => {
-        const { cart, customer, tableId, locationId } = payload;
-        const location = locations.find((l: Location) => l.id === locationId);
-        if (!location) return;
-
-        const tempCustomer: Customer = { id: `cust_qr_${Date.now()}`, name: customer.name, phone: customer.phone, email: '', address: '', locationId };
-        const { total } = calculateOrderTotals(cart, location, null, null, 'dine-in', settings, tempCustomer, surcharges);
+        finalOrders.push(newOrder);
+        setOrders(finalOrders);
         
-        const newOrder = {
-            ...createOrderObject(cart, [], 'dine-in'),
-            customer: tempCustomer,
-            tableId: tableId,
-            source: 'qr_ordering' as OrderSource,
-            status: 'kitchen' as OrderStatus,
-            balanceDue: total,
-        };
-        
-        incrementOrderSequences();
-        setTables(prev => prev.map(t => t.id === tableId ? { ...t, status: 'occupied' as TableStatus, customerName: customer.name } : t));
-        setOrders(prev => [...prev, newOrder]);
-        handleKitchenPrinting(newOrder);
-        broadcast('QR_ORDER_CONFIRMED', { orderNumber: newOrder.orderNumber });
+        if (newOrder.tableId) {
+            setTables(prev => (prev || []).map(t => t.id === newOrder.tableId ? { ...t, status: 'available', orderId: undefined, occupiedSince: undefined, customerName: undefined } : t));
+        }
 
-    }, [locations, settings, createOrderObject, incrementOrderSequences, setOrders, setTables, handleKitchenPrinting, broadcast, surcharges]);
+        setLastCompletedOrder(newOrder);
 
-    useEffect(() => {
-        const channel = new BroadcastChannel('ordino_pos_sync');
-        broadcastStateRef.current = channel;
+        // Inventory Deduction
+        if (isAdvancedInventoryPluginActive) {
+            const newIngredients = [...ingredients];
+            const newMenuItems = [...menuItems];
 
-        const handleMessage = (event: MessageEvent) => {
-            const { type, payload } = event.data || {};
-            switch (type) {
-                case 'REQUEST_STATE':
-                    broadcast('STATE_SYNC', {
-                        currentCart: cart, allSettings: settings, lastCompletedOrder, calledOrderNumber,
-                        allOrders: orders, allTables: tables, allMenuItems: menuItems, allLocations: locations,
-                        allSignagePlaylists: signagePlaylists, allSignageContent: signageContent,
-                        currentLocationId,
+            finalCart.forEach(cartItem => {
+                const recipe = recipes[cartItem.menuItem.id];
+                if (recipe && recipe.length > 0) {
+                    // Deduct from ingredients
+                    recipe.forEach(recipeItem => {
+                        const ingIndex = newIngredients.findIndex(i => i.id === recipeItem.ingredientId);
+                        if (ingIndex > -1) {
+                            newIngredients[ingIndex].stock -= recipeItem.quantity * cartItem.quantity;
+                        }
                     });
-                    break;
-                case 'COMPLETE_KDS_ORDER':
-                    handleCompleteKDSOrder(payload.orderId);
-                    break;
-                case 'TOGGLE_PREPARED_ITEM':
-                    handleTogglePreparedItem(payload.orderId, payload.cartId);
-                    break;
-                case 'KIOSK_ORDER_PLACED':
-                    handleKioskOrderPlaced(payload);
-                    break;
-                case 'QR_ORDER_PLACED':
-                    handleQrOrderPlaced(payload);
-                    break;
-            }
-        };
-        channel.addEventListener('message', handleMessage);
-        
-        return () => {
-            channel.removeEventListener('message', handleMessage);
-            channel.close();
-        };
-    }, [
-        cart, settings, lastCompletedOrder, calledOrderNumber, orders, tables, menuItems, locations, signagePlaylists, signageContent, currentLocationId,
-        handleCompleteKDSOrder, handleTogglePreparedItem, handleKioskOrderPlaced, handleQrOrderPlaced, broadcast
-    ]);
-
-    // Effects for broadcasting individual updates
-    useEffect(() => { broadcast('CART_UPDATE', cart); }, [cart, broadcast]);
-    useEffect(() => { broadcast('SETTINGS_UPDATE', settings); }, [settings, broadcast]);
-    useEffect(() => { broadcast('LAST_COMPLETED_ORDER_UPDATE', lastCompletedOrder); }, [lastCompletedOrder, broadcast]);
-    useEffect(() => { broadcast('CALLED_ORDER_NUMBER_UPDATE', calledOrderNumber); }, [calledOrderNumber, broadcast]);
-    useEffect(() => { broadcast('ORDERS_UPDATE', orders); }, [orders, broadcast]);
-
-    const handleSendToKitchen = useCallback((orderType: OrderType) => {
-        if (cart.length === 0 || !currentTable) return;
-    
-        const itemsToProcess = [...cart];
-    
-        const orderForProcessing = createOrderObject(itemsToProcess, [], orderType);
-        orderForProcessing.status = 'kitchen';
-    
-        incrementOrderSequences();
-    
-        setOrders(prev => [...(prev || []), orderForProcessing]);
-    
-        setTables(prev => (prev || []).map(t =>
-            t.id === currentTable.id
-                ? {
-                    ...t,
-                    status: 'occupied',
-                    orderId: orderForProcessing.id,
-                    occupiedSince: t.occupiedSince || Date.now(),
-                    customerName: selectedCustomer?.name,
+                } else if (typeof cartItem.menuItem.stock === 'number') {
+                    // Deduct from menu item direct stock
+                     const itemIndex = newMenuItems.findIndex(i => i.id === cartItem.menuItem.id);
+                     if (itemIndex > -1) {
+                        newMenuItems[itemIndex].stock! -= cartItem.quantity;
+                     }
                 }
-                : t
-        ));
-    
-        handleKitchenPrinting(orderForProcessing);
-    
-        setCart([]);
-        setAppliedDiscount(null);
-        setAppliedPromotion(null);
-        setAIUpsellSuggestions(null);
-    }, [
-        cart, currentTable, selectedCustomer,
-        createOrderObject, handleKitchenPrinting, incrementOrderSequences,
-        setCart, setAppliedDiscount, setAppliedPromotion, setAIUpsellSuggestions, setOrders, setTables,
-    ]);
-    
-    const handleSettleBill = useCallback(() => {
-        if (!currentTable) return;
-        const pendingTableOrders = (orders || []).filter((o: Order) => o.tableId === currentTable.id && ['kitchen', 'served'].includes(o.status));
-        const allItems = [...pendingTableOrders.flatMap(o => o.cart), ...cart];
-        if (allItems.length === 0) return;
-        const consolidatedOrder = createOrderObject(allItems, [], 'dine-in');
-        consolidatedOrder.originalOrderIds = pendingTableOrders.map(o => o.id);
-        consolidatedOrder.orderNumber = pendingTableOrders[0]?.orderNumber || consolidatedOrder.orderNumber;
-        consolidatedOrder.invoiceNumber = pendingTableOrders[0]?.invoiceNumber || consolidatedOrder.invoiceNumber;
-        setActiveOrderToSettle(consolidatedOrder);
-    }, [currentTable, orders, cart, createOrderObject]);
+            });
+
+            setIngredients(newIngredients);
+            setMenuItems(newMenuItems);
+        }
+        
+        if (sourceOrder?.status !== 'partially-paid') {
+            handleKitchenPrinting(newOrder);
+        }
+        
+        resetPOSState();
+        return newOrder;
+    }, [createOrderObject, settings, setSettings, orders, setOrders, setTables, setLastCompletedOrder, resetPOSState, ingredients, setIngredients, menuItems, setMenuItems, recipes, handleKitchenPrinting, isAdvancedInventoryPluginActive]);
     
     const handlePrintA4 = useCallback((order: Order) => {
         const locationForOrder = locations.find((l: Location) => l.id === order.locationId) || locations[0];
@@ -1032,75 +679,107 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addPrintJobs([newJob]);
     }, [locations, settings, addPrintJobs]);
 
-    const onDirectPrintReceipt = useCallback((order: Order) => {
-        // Implementation provided by another fix
-    }, []);
+    const onUpdateCartQuantity = useCallback((cartId: string, newQuantity: number) => {
+        if (newQuantity <= 0) {
+            setCart(prev => prev.filter(item => item.cartId !== cartId));
+            return;
+        }
+
+        const itemToUpdate = cart.find(item => item.cartId === cartId);
+        if (itemToUpdate && itemToUpdate.menuItem.stopSaleAtZeroStock && typeof itemToUpdate.menuItem.stock === 'number') {
+            const cartQuantityOfItem = cart
+                .filter(item => item.menuItem.id === itemToUpdate.menuItem.id && item.cartId !== cartId)
+                .reduce((sum, item) => sum + item.quantity, 0);
+            
+            if (itemToUpdate.menuItem.stock < cartQuantityOfItem + newQuantity) {
+                addToast({
+                    type: 'error',
+                    title: 'Stock limit reached',
+                    message: `Only ${itemToUpdate.menuItem.stock} of ${itemToUpdate.menuItem.name} available.`
+                });
+                return;
+            }
+        }
+        
+        setCart(prev => prev.map(item =>
+            item.cartId === cartId
+                ? { ...item, quantity: newQuantity }
+                : item
+        ));
+    }, [cart, setCart, addToast]);
+
+    const onRemoveItem = useCallback((cartId: string) => {
+        setCart(prev => (prev || []).filter(item => item.cartId !== cartId));
+    }, [setCart]);
+
+    const onToggleTheme = useCallback(() => {
+      setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+    }, [setTheme]);
+
+    const handleMarkAllNotificationsAsRead = useCallback(() => {
+        setNotifications((prev: Notification[]) => (prev || []).map(n => ({...n, read: true})));
+    }, [setNotifications]);
+
+    const handleSendToKitchen = useCallback((orderType: OrderType) => {
+        if (cart.length === 0 || !currentTable) return;
+        const baseOrder = createOrderObject(cart, [], orderType);
+        const newOrder = { ...baseOrder, status: 'kitchen' as OrderStatus };
+        setOrders((prev: Order[]) => [...(prev || []), newOrder]);
+        setTables((prev: Table[]) => (prev || []).map(t => t.id === currentTable.id ? { ...t, status: 'occupied', orderId: newOrder.id, occupiedSince: Date.now(), customerName: selectedCustomer?.name } : t));
+        handleKitchenPrinting(newOrder);
+        resetCartState();
+    }, [cart, currentTable, createOrderObject, setOrders, setTables, handleKitchenPrinting, selectedCustomer, resetCartState]);
+    
+    const handleSettleBill = useCallback(() => {
+        if (!currentTable) return;
+        const pendingTableOrders = (orders || []).filter((o: Order) => o.tableId === currentTable.id && ['kitchen', 'served'].includes(o.status));
+        const allItems = [...pendingTableOrders.flatMap(o => o.cart), ...cart];
+        if (allItems.length === 0) return;
+        const consolidatedOrder = createOrderObject(allItems, [], 'dine-in');
+        consolidatedOrder.originalOrderIds = pendingTableOrders.map(o => o.id);
+        setActiveOrderToSettle(consolidatedOrder);
+    }, [currentTable, orders, cart, createOrderObject]);
     
     const handleInitiatePayment = useCallback((orderType: OrderType) => {
-        if (cart.length === 0) return;
-        const orderForPayment = createOrderObject(cart, [], orderType);
+        const orderToPay = createOrderObject(cart, [], orderType);
+        
         openModal('payment', {
-            orderToPay: [orderForPayment],
-            onProcessFinalOrder: (ordersToProcess: Order[], paymentMethod: PaymentMethod) => {
-                const finalCart = ordersToProcess[0].cart;
-                const finalPayments: Payment[] = [{ method: paymentMethod, amount: ordersToProcess[0].total, timestamp: Date.now() }];
-                const finalOrder = onProcessFinalOrder(finalCart, finalPayments, orderType);
-                closeModal();
-                return finalOrder;
-            },
-            onDirectPrintReceipt, onPrintA4: handlePrintA4, cardPlugin: plugins.find((p: AppPlugin) => p.id === 'payment-terminal'), allPaymentTypes: paymentTypes, currency: currentLocation.currency, settings, setSettings, addToast,
+            orderToPay: [orderToPay],
+            onFinalize: (payments: Payment[]) => onProcessFinalOrder(cart, payments, orderType),
+            onPrintA4: handlePrintA4,
+            cardPlugin: (plugins || []).find((p: AppPlugin) => p.id === 'payment-terminal'),
+            allPaymentTypes: paymentTypes,
+            currency: currentLocation.currency,
+            settings,
+            setSettings,
+            addToast,
         });
-    }, [cart, createOrderObject, openModal, closeModal, onProcessFinalOrder, onDirectPrintReceipt, handlePrintA4, plugins, paymentTypes, currentLocation, settings, setSettings, addToast]);
+    }, [cart, createOrderObject, openModal, closeModal, onProcessFinalOrder, handlePrintA4, plugins, paymentTypes, currentLocation, settings, setSettings, addToast]);
     
     const handleInitiateSettlePayment = useCallback(() => {
         if (!activeOrderToSettle) return;
         openModal('payment', {
             orderToPay: [activeOrderToSettle],
-            onProcessFinalOrder: (ordersToProcess: Order[], paymentMethod: PaymentMethod) => {
-                const orderToFinalize = ordersToProcess[0];
-                const finalPayments: Payment[] = [{ method: paymentMethod, amount: orderToFinalize.total, timestamp: Date.now() }];
-                const finalOrder = onProcessFinalOrder(orderToFinalize.cart, finalPayments, orderToFinalize.orderType, activeOrderToSettle);
-                closeModal();
-                return finalOrder;
-            },
-            onDirectPrintReceipt, onPrintA4: handlePrintA4, cardPlugin: plugins.find((p: AppPlugin) => p.id === 'payment-terminal'), allPaymentTypes: paymentTypes, currency: currentLocation.currency, settings, setSettings, addToast,
+            onFinalize: (payments: Payment[]) => onProcessFinalOrder(activeOrderToSettle.cart, payments, activeOrderToSettle.orderType, activeOrderToSettle),
+            onPrintA4: handlePrintA4,
         });
-    }, [activeOrderToSettle, openModal, closeModal, onProcessFinalOrder, onDirectPrintReceipt, handlePrintA4, plugins, paymentTypes, currentLocation, settings, setSettings, addToast]);
+    }, [activeOrderToSettle, openModal, onProcessFinalOrder, handlePrintA4]);
     
     const handleSaveTab = useCallback(() => {
-        if (!selectedCustomer) {
-            addToast({ type: 'error', title: 'Customer Required', message: 'Please select a customer to open or add to a tab.' });
-            return;
-        }
-    
-        const itemsToProcess = [...cart];
-        if (itemsToProcess.length === 0 && !activeTab) {
-             addToast({ type: 'info', title: 'Empty Cart', message: 'Add items before opening a new tab.' });
-            return;
-        }
-    
-        const existingTab = activeTab || (orders || []).find((o: Order) => o.customer?.id === selectedCustomer.id && o.status === 'partially-paid');
-    
+        if (!selectedCustomer) { addToast({ type: 'error', title: 'Customer Required', message: 'Please select a customer to open or add to a tab.' }); return; }
+        const existingTab = (orders || []).find((o: Order) => o.customer?.id === selectedCustomer.id && o.status === 'partially-paid');
         if (existingTab) {
-            const updatedCart = [...existingTab.cart, ...itemsToProcess];
-            const { subtotal, tax, total, finalAppliedDiscount } = calculateOrderTotals(updatedCart, currentLocation, appliedDiscount, appliedPromotion, 'tab', settings, selectedCustomer, surcharges);
-            const updatedTab: Order = { ...existingTab, cart: updatedCart, subtotal, tax, total, balanceDue: total, appliedDiscount: finalAppliedDiscount, appliedPromotion };
-            
+            const updatedCart = [...existingTab.cart, ...cart];
+            const { subtotal, tax, total, finalAppliedDiscount } = calculateOrderTotals(updatedCart, currentLocation, appliedDiscount, appliedPromotion, 'tab', settings, selectedCustomer);
+            const updatedTab: Order = { ...existingTab, cart: updatedCart, subtotal, tax, total, balanceDue: total, appliedDiscount: finalAppliedDiscount };
             setOrders((prev: Order[]) => prev.map(o => o.id === existingTab.id ? updatedTab : o));
-            setActiveTab(updatedTab);
         } else {
-            const newTab = createOrderObject(itemsToProcess, [], 'tab');
-            newTab.status = 'partially-paid';
-            incrementOrderSequences();
+            const newTab = createOrderObject(cart, [], 'tab');
             setOrders((prev: Order[]) => [...(prev || []), newTab]);
-            setActiveTab(newTab);
         }
-    
-        setCart([]);
-        setAppliedDiscount(null);
-        setAppliedPromotion(null);
-        setAIUpsellSuggestions(null);
-    }, [selectedCustomer, cart, orders, activeTab, appliedDiscount, appliedPromotion, settings, currentLocation, createOrderObject, incrementOrderSequences, setOrders, addToast, setCart, setActiveTab, setAppliedDiscount, setAppliedPromotion, surcharges]);
+        resetPOSState();
+        addToast({ type: 'success', title: 'Tab Updated', message: `Items added to ${selectedCustomer.name}'s tab.` });
+    }, [selectedCustomer, cart, orders, appliedDiscount, appliedPromotion, settings, currentLocation, createOrderObject, setOrders, resetPOSState, addToast]);
 
     const handleSettleTab = useCallback(() => {
         if (!activeTab) return;
@@ -1113,13 +792,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, [orders, resetPOSState]);
     
     const handleApplyManualDiscount = useCallback((discount: ManualDiscount) => {
-        const allItems = activeOrderToSettle?.cart || [...(activeTab?.cart || []), ...cart];
-        const { subtotal } = calculateOrderTotals(allItems, currentLocation, null, null, orderType, settings, selectedCustomer, surcharges);
-        const amount = subtotal * discount.percentage;
-        setAppliedDiscount({ name: discount.name, amount });
+        const orderItems = activeOrderToSettle ? activeOrderToSettle.cart : (activeTab ? [...activeTab.cart, ...cart] : cart);
+        
+        const discountableSubtotal = orderItems.reduce((sum, item) => {
+            if (item.menuItem.isDiscountable === false) {
+                return sum;
+            }
+            const modifiersTotal = item.selectedModifiers.reduce((acc, mod) => acc + mod.price, 0);
+            const itemBasePrice = item.priceOverride ?? getPriceForItem(item.menuItem, orderType, selectedCustomer);
+            const singleItemPrice = itemBasePrice + modifiersTotal;
+            return sum + (singleItemPrice * item.quantity);
+        }, 0);
+        
+        const discountAmount = discountableSubtotal * discount.percentage;
+
+        setAppliedDiscount({ name: discount.name, amount: discountAmount });
         setAppliedPromotion(null);
         closeModal();
-    }, [activeOrderToSettle, activeTab, cart, currentLocation, orderType, settings, selectedCustomer, closeModal, surcharges]);
+    }, [activeOrderToSettle, activeTab, cart, orderType, selectedCustomer, closeModal, setAppliedDiscount, setAppliedPromotion, currentLocation, settings]);
 
     const handleApplyPromotion = useCallback((promotion: Promotion) => {
         setAppliedPromotion(promotion);
@@ -1141,54 +831,63 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, [resetPOSState, addToast, setActiveView]);
     
     const handleAddPizzaToCart = useCallback((item: MenuItem, config: PizzaConfiguration, price: number) => {
-        const description = [
-            config.size.name, config.crust.name, config.sauce.name, config.cheese.name,
-            ...config.toppings.map(t => `${t.name} (${t.placement})`)
-        ].join(', ');
-
-        const modifiers: ModifierOption[] = [
-            { name: config.size.name, price: config.size.price },
-            { name: config.crust.name, price: config.crust.price },
-            { name: config.sauce.name, price: config.sauce.price },
-            { name: config.cheese.name, price: config.cheese.price },
+        const toppings = currentLocation.pizzaBuilder.toppings;
+        const selectedModifiers: ModifierOption[] = [
+            config.size,
+            config.crust,
+            config.sauce,
+            config.cheese,
             ...config.toppings.map(t => {
-                const toppingData = currentLocation.pizzaBuilder.toppings.find(ti => ti.id === t.id);
-                const toppingPrice = toppingData ? (t.placement === 'whole' ? toppingData.price : toppingData.price / 2) : 0;
-                return { name: `${t.name} (${t.placement})`, price: toppingPrice };
-            })
-        ];
-        
+                const toppingData = toppings.find((td: PizzaToppingItem) => td.id === t.id);
+                if (!toppingData) return null;
+                return {
+                    name: `${t.name} (${t.placement})`,
+                    price: t.placement === 'whole' ? toppingData.price : toppingData.price / 2,
+                };
+            }).filter(Boolean)
+        ].filter(Boolean) as ModifierOption[];
+
         const cartItem: CartItem = {
             cartId: `pizza_${Date.now()}`,
             menuItem: item,
             quantity: 1,
-            selectedModifiers: modifiers,
-            priceOverride: price - modifiers.reduce((sum, m) => sum + m.price, 0),
-            kitchenNote: description
+            selectedModifiers,
+            priceOverride: price,
+            kitchenNote: `Pizza: ${config.size.name}, ${config.crust.name}, ${config.sauce.name}, ${config.cheese.name}, Toppings: ${config.toppings.map(t => `${t.name}(${t.placement})`).join(', ')}`,
         };
         setCart(prev => [...prev, cartItem]);
         closeModal();
     }, [setCart, closeModal, currentLocation.pizzaBuilder.toppings]);
     
     const handleGetUpsellSuggestions = useCallback(async () => {
-        if (!settings.ai.enableAIFeatures || !settings.ai.enableUpsell || cart.length === 0) return;
+        if (!settings.ai.enableAIFeatures || !settings.ai.enableUpsell) {
+            addToast({type: 'info', title: 'AI Disabled', message: 'AI upsell features are not enabled in settings.'});
+            return;
+        }
+
         setIsSuggestingUpsell(true);
         setAIUpsellSuggestions(null);
         try {
-            if (!process.env.API_KEY) {
-                throw new Error("API key is not configured.");
-            }
+            if (!process.env.API_KEY) throw new Error("API key is not configured.");
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            const cartItemNames = cart.map(item => item.menuItem.name).join(', ');
-            const menuNames = menuItems.map(item => item.name).join(', ');
-    
-            const prompt = `Based on a customer's current order of [${cartItemNames}], suggest 2 relevant items to upsell from the following menu: [${menuNames}]. For each suggestion, provide a short, compelling reason. The customer has already shown interest in the items in their cart.`;
-    
+
+            const currentCartItems = (cart || []).map(item => item.menuItem.name).join(', ');
+            const availableItems = (menuItems || []).map(item => item.name).join(', ');
+
+            const prompt = `
+                Given a customer's current order: [${currentCartItems}], 
+                and the available menu items: [${availableItems}],
+                suggest 1 or 2 complementary items to upsell.
+                For each suggestion, provide a brief, compelling reason.
+                For example: "Since they have a burger, suggest Fries."
+                The response must be in JSON format.
+            `;
+            
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: {
-                    responseMimeType: 'application/json',
+                    responseMimeType: "application/json",
                     responseSchema: {
                         type: Type.OBJECT,
                         properties: {
@@ -1197,294 +896,432 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                                 items: {
                                     type: Type.OBJECT,
                                     properties: {
-                                        itemName: { type: Type.STRING, description: "Name of the suggested menu item." },
-                                        reason: { type: Type.STRING, description: "A short, compelling reason to add this item." }
-                                    }
+                                        itemName: { type: Type.STRING },
+                                        reason: { type: Type.STRING }
+                                    },
+                                     required: ['itemName', 'reason']
                                 }
                             }
-                        }
+                        },
+                        required: ['suggestions']
                     }
                 }
             });
-    
+
             const suggestions = JSON.parse(response.text) as AIResponse;
             setAIUpsellSuggestions(suggestions);
-    
         } catch (error) {
-            console.error("Error getting upsell suggestions:", error);
-            addToast({ type: 'error', title: 'AI Error', message: 'Could not fetch upsell suggestions.' });
-            setAIUpsellSuggestions(null);
+            console.error("AI upsell suggestion failed:", error);
+            addToast({type: 'error', title: 'AI Suggestion Error', message: 'Could not get suggestions.'});
         } finally {
             setIsSuggestingUpsell(false);
         }
-    }, [cart, menuItems, settings.ai.enableAIFeatures, settings.ai.enableUpsell, addToast]);
+    }, [cart, menuItems, settings.ai, addToast]);
 
-    const handleMarkAllNotificationsAsRead = useCallback(() => {
-        setNotifications(prev => (prev || []).map(n => ({ ...n, read: true })));
-    }, [setNotifications]);
-    
-    const onSelectUpsellSuggestion = (itemName: string) => {
-        // Implementation provided by another fix
+    const handleSaveUser = (userToSave: Employee, isNew: boolean) => {
+        setEmployees(prev => {
+            if (isNew) {
+                addLogEntry(`Created new user: ${userToSave.name}`);
+                return [...(prev || []), userToSave];
+            }
+            addLogEntry(`Edited user: ${userToSave.name}`);
+            return (prev || []).map(u => u.id === userToSave.id ? userToSave : u);
+        });
+        addToast({ type: 'success', title: 'User Saved', message: `${userToSave.name} has been saved.` });
     };
 
-    const onToggleClockStatus = useCallback((employeeId: string) => {
-        setEmployees((prev: Employee[]) => prev.map(e => {
-            if (e.id === employeeId) {
-                const isClockedIn = e.shiftStatus === 'clocked-in';
-                if (isClockedIn) {
-                    // Clocking out
-                    const lastShift = e.shifts[e.shifts.length - 1];
-                    if (lastShift && !lastShift.clockOut) {
-                        lastShift.clockOut = Date.now();
-                    }
-                    return { ...e, shiftStatus: 'clocked-out' };
-                } else {
-                    // Clocking in
-                    return { ...e, shiftStatus: 'clocked-in', shifts: [...e.shifts, { clockIn: Date.now() }] };
-                }
+    const handleDeleteUser = (userId: string) => {
+        setEmployees(prev => {
+            const user = (prev || []).find(u => u.id === userId);
+            if (user) {
+                addLogEntry(`Deleted user: ${user.name}`);
             }
-            return e;
-        }));
-    }, [setEmployees]);
+            return (prev || []).filter(u => u.id !== userId);
+        });
+    };
 
-    const onGenerateQRCode = useCallback((table: Table) => {
-        openModal('qrCode', { table });
-    }, []);
+    const handleSaveRole = (roleToSave: Role) => {
+        setRoles(prev => {
+            const isNew = !(prev || []).some(r => r.id === roleToSave.id);
+            if (isNew) {
+                addLogEntry(`Created new role: ${roleToSave.name}`);
+                return [...(prev || []), roleToSave];
+            }
+            addLogEntry(`Updated permissions for role: ${roleToSave.name}`);
+            return (prev || []).map(r => r.id === roleToSave.id ? roleToSave : r);
+        });
+        addToast({ type: 'success', title: 'Role Saved', message: `Role ${roleToSave.name} has been saved.` });
+        closeModal();
+    };
 
-    const onSuggestWaitTime = useCallback(async (partySize: number): Promise<string> => {
+    const handleDeleteRole = (roleId: string) => {
+        if ((employees || []).some(e => e.roleId === roleId)) {
+            addToast({ type: 'error', title: 'Cannot Delete Role', message: 'This role is currently assigned to one or more users.' });
+            return;
+        }
+        setRoles(prev => {
+            const role = (prev || []).find(r => r.id === roleId);
+            if (role) {
+                addLogEntry(`Deleted role: ${role.name}`);
+            }
+            return (prev || []).filter(r => r.id !== roleId)
+        });
+    };
+
+    const handleSaveLocation = (locationToSave: Location, isNew: boolean) => {
+        setLocations(prev => {
+            if (isNew) {
+                addLogEntry(`Created new location: ${locationToSave.name}`);
+                return [...(prev || []), locationToSave];
+            }
+            addLogEntry(`Edited location: ${locationToSave.name}`);
+            return (prev || []).map(l => l.id === locationToSave.id ? locationToSave : l);
+        });
+        closeModal();
+    };
+
+    const handleDeleteLocation = (locationId: string) => {
+        if (locations.length <= 1) {
+            addToast({ type: 'error', title: 'Cannot Delete', message: 'You must have at least one location.' });
+            return;
+        }
+        setLocations(prev => (prev || []).filter(l => l.id !== locationId));
+    };
+
+    const onSuggestRole = async (jobTitle: string): Promise<AIRoleSuggestion | null> => {
         if (!settings.ai.enableAIFeatures) {
             addToast({ type: 'info', title: 'AI Disabled', message: 'AI features are not enabled in settings.' });
-            return '15-20'; // Return a default value
+            return null;
         }
-    
         try {
-            if (!process.env.API_KEY) {
-                throw new Error("API key is not configured.");
-            }
+            if (!process.env.API_KEY) throw new Error("API key is not configured.");
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    
-            const occupiedTables = (tables || []).filter((t: Table) => t.status === 'occupied').length;
-            const totalTables = (tables || []).length;
-            const waitlistCount = (waitlist || []).length;
-    
-            const prompt = `
-                As a restaurant host AI, estimate the wait time.
-                Current conditions:
-                - Party size requesting a table: ${partySize}
-                - Parties currently on waitlist: ${waitlistCount}
-                - Tables occupied: ${occupiedTables} out of ${totalTables}
-                
-                Based on this, provide a concise wait time estimation string. For example: "10-15 minutes", "Around 30 minutes", "Over an hour".
-                Do not add any extra explanation. Just provide the time string.
-            `;
-    
+            const prompt = `Based on the job title "${jobTitle}", suggest a pre-defined role ID from this list: [${roles.map(r => `'${r.id}' (${r.name})`).join(', ')}]. Provide a brief reason for your choice.`;
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
+                config: {
+                    responseMimeType: 'application/json',
+                    responseSchema: {
+                        type: Type.OBJECT,
+                        properties: {
+                            suggestedRoleId: { type: Type.STRING },
+                            reason: { type: Type.STRING }
+                        },
+                        required: ['suggestedRoleId', 'reason']
+                    }
+                }
             });
-    
-            const suggestedTime = response.text.trim();
-            if (suggestedTime && suggestedTime.length < 30) {
-                return suggestedTime;
-            } else {
-                throw new Error("Invalid response from AI.");
-            }
-        } catch (error) {
-            console.error("Error suggesting wait time:", error);
-            addToast({ type: 'error', title: 'AI Error', message: 'Could not suggest a wait time.' });
-            return '15-20'; // Fallback
+            const suggestion = JSON.parse(response.text) as AIRoleSuggestion;
+            return suggestion;
+        } catch (e) {
+            console.error("AI role suggestion failed:", e);
+            addToast({ type: 'error', title: 'AI Suggestion Failed', message: 'Could not get a role suggestion.' });
+            return null;
         }
-    }, [settings.ai.enableAIFeatures, tables, waitlist, addToast]);
+    };
     
-    const onAddToWaitlist = useCallback(() => {
-        openModal('waitlist', {
-            onSave: (entry: Omit<WaitlistEntry, 'id' | 'status' | 'addedAt' | 'locationId'>) => {
-                const newEntry: WaitlistEntry = {
-                    ...entry,
-                    id: `wl_${Date.now()}`,
-                    status: 'Waiting',
-                    addedAt: Date.now(),
-                    locationId: currentLocationId,
+    const handleSaveTable = useCallback((tableToSave: Omit<Table, 'status' | 'orderId' | 'locationId' | 'x' | 'y'>, isNew: boolean) => {
+        setTables((prev: Table[]) => {
+            const prevTables = prev || [];
+            if (isNew) {
+                const existingPositions = new Set(prevTables.map(t => `${t.x}-${t.y}`));
+                let x = 10, y = 10;
+                while(existingPositions.has(`${x}-${y}`)) {
+                    x += 18;
+                    if (x > 80) {
+                        x = 10;
+                        y += 25;
+                    }
+                }
+                const newTable: Table = {
+                    ...tableToSave,
+                    status: 'available',
+                    locationId: currentLocation.id,
+                    x,
+                    y,
                 };
-                setWaitlist(prev => [...(prev || []), newEntry]);
-                closeModal();
-            },
-            onSuggestWaitTime: onSuggestWaitTime,
+                addLogEntry(`Added new table: ${newTable.name}`);
+                return [...prevTables, newTable];
+            }
+            addLogEntry(`Updated table: ${tableToSave.name}`);
+            return prevTables.map(t => t.id === tableToSave.id ? { ...t, name: tableToSave.name, capacity: tableToSave.capacity, shape: tableToSave.shape, floor: tableToSave.floor } : t);
         });
-    }, [openModal, setWaitlist, currentLocationId, onSuggestWaitTime]);
-    
-    // Placeholder functions to prevent crashes
-    const createPlaceholderToast = (name: string) => () => addToast({type: 'info', title: 'In Development', message: `${name} feature is not fully implemented yet.`});
-    const onEditTable = createPlaceholderToast('Table Editing');
-    const onAddFloor = createPlaceholderToast('Add Floor');
-    const onRenameFloor = createPlaceholderToast('Rename Floor');
-    const onDeleteFloor = createPlaceholderToast('Delete Floor');
-    const onAddReservation = createPlaceholderToast('Add Reservation');
-    const onEditReservation = createPlaceholderToast('Edit Reservation');
-    const onUpdateReservationStatus = createPlaceholderToast('Update Reservation Status');
-    const onSeatReservationParty = createPlaceholderToast('Seat Reservation Party');
-    const onUpdateWaitlistStatus = createPlaceholderToast('Update Waitlist Status');
-    const onSeatWaitlistParty = createPlaceholderToast('Seat Waitlist Party');
-    const onSyncReservations = async () => { createPlaceholderToast('Sync Reservations')(); return Promise.resolve()};
+        closeModal();
+    }, [setTables, currentLocation.id, addLogEntry, closeModal]);
 
+    const handleDeleteTable = useCallback((tableId: string) => {
+        setTables((prev: Table[]) => {
+            const tableToDelete = (prev || []).find(t => t.id === tableId);
+            if (tableToDelete) {
+                addLogEntry(`Deleted table: ${tableToDelete.name}`);
+            }
+            return (prev || []).filter(t => t.id !== tableId);
+        });
+        closeModal();
+    }, [setTables, addLogEntry, closeModal]);
+
+    const onAddFloor = useCallback((newFloorName: string): boolean => {
+        if (newFloorName && !floors.includes(newFloorName)) {
+            addToast({ type: 'success', title: 'Floor Ready', message: `You can now assign tables to the new floor '${newFloorName}'.` });
+            return true;
+        } else if (newFloorName) {
+            alert('A floor with this name already exists.');
+            return false;
+        }
+        return false;
+    }, [floors, addToast]);
+
+    const onRenameFloor = useCallback((oldName: string): boolean => {
+        const newName = prompt(`Rename floor "${oldName}" to:`, oldName);
+        if (newName && newName.trim() && newName !== oldName && !floors.includes(newName)) {
+            setTables((prev: Table[]) => prev.map(t => t.floor === oldName ? { ...t, floor: newName } : t));
+            addLogEntry(`Renamed floor "${oldName}" to "${newName}"`);
+            return true;
+        } else if (newName) {
+            alert('Invalid or duplicate floor name.');
+            return false;
+        }
+        return false;
+    }, [floors, setTables, addLogEntry]);
+    
+    const onDeleteFloor = useCallback((floorName: string) => {
+        const tablesOnFloor = (tables || []).filter((t: Table) => t.floor === floorName);
+        const tableCount = tablesOnFloor.length;
+
+        const confirmationMessage = tableCount > 0
+            ? `Are you sure you want to delete the floor "${floorName}" and all ${tableCount} tables on it? This cannot be undone.`
+            : `Are you sure you want to delete the floor "${floorName}"? This cannot be undone.`;
+        
+        if (window.confirm(confirmationMessage)) {
+            setTables((prev: Table[]) => (prev || []).filter(t => t.floor !== floorName));
+            addLogEntry(`Deleted floor: ${floorName} and ${tableCount} tables.`);
+            addToast({ type: 'success', title: 'Floor Deleted', message: `Floor "${floorName}" and its tables have been deleted.` });
+        }
+    }, [tables, setTables, addLogEntry, addToast]);
+
+    const onEditTable = useCallback((table: Table | null) => {
+        openModal('tableEdit', {
+            table,
+            floors,
+            isOccupied: table ? table.status !== 'available' : false,
+            onSave: handleSaveTable,
+            onDelete: handleDeleteTable,
+            onAddFloor: onAddFloor
+        });
+    }, [floors, openModal, handleSaveTable, handleDeleteTable, onAddFloor]);
+
+    const handleSaveManualDiscount = (discount: ManualDiscount) => {
+        setManualDiscounts(prev => {
+            const existing = (prev || []).find(d => d.id === discount.id);
+            if (existing) {
+                addLogEntry(`Updated discount: ${discount.name}`);
+                return (prev || []).map(d => d.id === discount.id ? discount : d);
+            } else {
+                addLogEntry(`Created new discount: ${discount.name}`);
+                return [...(prev || []), discount];
+            }
+        });
+    };
+
+    const handleDeleteManualDiscount = (id: string) => {
+        setManualDiscounts(prev => {
+            const discount = (prev || []).find(d => d.id === id);
+            if (discount) {
+                addLogEntry(`Deleted discount: ${discount.name}`);
+            }
+            return (prev || []).filter(d => d.id !== id);
+        });
+    };
+    
+    const handleSaveCustomer = useCallback((customerToSave: Customer, isNew: boolean) => {
+        setCustomers(prev => {
+            const prevCustomers = prev || [];
+            if (isNew) {
+                const newCustomer = { ...customerToSave, id: `cust_${Date.now()}`, locationId: currentLocationId };
+                addLogEntry(`Created new customer: ${newCustomer.name}`);
+                setJustAddedCustomer(newCustomer);
+                return [...prevCustomers, newCustomer];
+            }
+            addLogEntry(`Edited customer: ${customerToSave.name}`);
+            return prevCustomers.map(c => c.id === customerToSave.id ? customerToSave : c);
+        });
+        addToast({ type: 'success', title: 'Customer Saved', message: `${customerToSave.name} has been saved.` });
+    }, [setCustomers, addLogEntry, addToast, currentLocationId]);
+
+    const handleDeleteCustomer = useCallback((customerId: string) => {
+        setCustomers(prev => {
+            const customer = (prev || []).find(c => c.id === customerId);
+            if (customer) {
+                addLogEntry(`Deleted customer: ${customer.name}`);
+            }
+            return (prev || []).filter(c => c.id !== customerId);
+        });
+    }, [setCustomers, addLogEntry]);
+
+    const handleSaveSubscription = useCallback((subscription: Omit<Subscription, 'id' | 'locationId' | 'status'>) => {
+        const newSubscription: Subscription = {
+            ...subscription,
+            id: `sub_${Date.now()}`,
+            status: 'active',
+            locationId: currentLocationId,
+        };
+        setSubscriptions(prev => [...(prev || []), newSubscription]);
+        addToast({ type: 'success', title: 'Subscription Saved', message: `New subscription created for customer.` });
+        closeModal();
+    }, [setSubscriptions, addToast, closeModal, currentLocationId]);
+
+    const handleSaveProduct = useCallback((productToSave: MenuItem, isNew: boolean, recipeItems: RecipeItem[]) => {
+        setMenuItems(prev => {
+            const prevItems = prev || [];
+            if (isNew) {
+                const newProduct = { ...productToSave, id: Date.now() }; // Simple way to generate unique ID
+                addLogEntry(`Created new product: ${newProduct.name}`);
+                setRecipes(prevRecipes => ({ ...prevRecipes, [newProduct.id]: recipeItems }));
+                return [...prevItems, newProduct];
+            }
+            addLogEntry(`Edited product: ${productToSave.name}`);
+            setRecipes(prevRecipes => ({ ...prevRecipes, [productToSave.id]: recipeItems }));
+            return prevItems.map(p => p.id === productToSave.id ? productToSave : p);
+        });
+        addToast({ type: 'success', title: 'Product Saved', message: `${productToSave.name} has been saved.` });
+    }, [setMenuItems, setRecipes, addLogEntry, addToast]);
+
+    const handleDeleteProduct = useCallback((productId: number): void => {
+        setMenuItems(prev => {
+            const product = (prev || []).find(p => p.id === productId);
+            if (product) {
+                addLogEntry(`Deleted product: ${product.name}`);
+            }
+            return (prev || []).filter(p => p.id !== productId);
+        });
+        setRecipes(prev => {
+            const newRecipes = { ...prev };
+            delete newRecipes[productId];
+            return newRecipes;
+        });
+    }, [setMenuItems, setRecipes, addLogEntry]);
+    
+    const handleTogglePlugin = useCallback((pluginId: string) => {
+        setPlugins((prevPlugins: AppPlugin[]) => {
+            const newPlugins = (prevPlugins || []).map(p => {
+                if (p.id === pluginId) {
+                    const newPlugin = { ...p };
+                    const isCurrentlyActive = p.status === 'enabled' || p.status === 'trial';
+    
+                    if (isCurrentlyActive) {
+                        newPlugin.status = 'disabled';
+                        addLogEntry(`Disabled plugin: ${p.name}`);
+                    } else { // It's disabled or expired
+                        if (p.isFree) {
+                            newPlugin.status = 'enabled';
+                        } else {
+                            // Restart trial if it was disabled or expired
+                            newPlugin.status = 'trial';
+                            newPlugin.trialStartDate = Date.now();
+                        }
+                        addLogEntry(`Enabled plugin: ${p.name}`);
+                    }
+                    return newPlugin;
+                }
+                return p;
+            });
+            return newPlugins;
+        });
+    }, [setPlugins, addLogEntry]);
+
+    const cycleCalledOrderNumber = useCallback((direction: 'next' | 'prev') => {
+        setCalledOrderNumber(prev => {
+            const lastOrderNum = settings.orderSettings.nextDailyOrderNumber - 1;
+            if (prev === null) {
+                if (direction === 'next') return '1';
+                if (direction === 'prev' && lastOrderNum > 0) return String(lastOrderNum);
+                return null;
+            }
+            
+            const currentNum = parseInt(prev, 10);
+            if (isNaN(currentNum)) return '1';
+
+            if (direction === 'next') {
+                const nextNum = currentNum + 1;
+                return nextNum <= lastOrderNum ? String(nextNum) : prev;
+            } else { // prev
+                const prevNum = currentNum - 1;
+                return prevNum >= 1 ? String(prevNum) : prev;
+            }
+        });
+    }, [settings.orderSettings.nextDailyOrderNumber, setCalledOrderNumber]);
+
+    const clearCalledOrderNumber = useCallback(() => {
+        setCalledOrderNumber(null);
+    }, [setCalledOrderNumber]);
+    // #endregion
 
     const allContexts = {
-      // App Context
-      activeView, setView: setActiveView,
-      managementSubView, setManagementSubView,
-      settingsSubView, setSettingsSubView,
-      currentEmployee,
-      handlePinLogin: (employeeId: string, pin: string): boolean => {
-          const employee = (employees || []).find((e: Employee) => e.id === employeeId && e.pin === pin);
-          if (employee) {
-              setCurrentEmployee(employee);
-              if (employee.shiftStatus === 'clocked-out') {
-                   setEmployees((prev: Employee[]) => prev.map(e => e.id === employeeId ? { ...e, shiftStatus: 'clocked-in', shifts: [...e.shifts, { clockIn: Date.now() }] } : e));
-              }
-              addLogEntry('Logged in');
-              setActiveView('pos');
-              return true;
-          }
-          return false;
-      },
-      handleLogout: () => {
-          if(currentEmployee && currentEmployee.shiftStatus === 'clocked-in'){
-              setEmployees((prev: Employee[]) => prev.map(e => {
-                  if (e.id === currentEmployee.id) {
-                      const lastShift = e.shifts[e.shifts.length - 1];
-                      if (lastShift && !lastShift.clockOut) {
-                          lastShift.clockOut = Date.now();
-                      }
-                      return { ...e, shiftStatus: 'clocked-out' };
-                  }
-                  return e;
-              }));
-          }
-          setCurrentEmployee(null);
-          setActiveView('landing');
-      },
-      settings, setSettings,
-      theme, onToggleTheme,
-      isFullscreen,
-      onToggleFullScreen: () => {
-          if (!document.fullscreenElement) {
-              document.documentElement.requestFullscreen();
-              setIsFullscreen(true);
-          } else {
-              if (document.exitFullscreen) {
-                  document.exitFullscreen();
-                  setIsFullscreen(false);
-              }
-          }
-      },
-      currentLocation,
-      onLocationChange: setCurrentLocationId,
-      isMultiStorePluginActive: useMemo(() => plugins.some((p: AppPlugin) => p.id === 'multi-store' && (p.status === 'enabled' || p.status === 'trial')), [plugins]),
-      isKsaPluginActive,
-      isReservationPluginActive: useMemo(() => plugins.some((p: AppPlugin) => p.id === 'reservations' && (p.status === 'enabled' || p.status === 'trial')), [plugins]),
-      isWaitlistPluginActive: useMemo(() => plugins.some((p: AppPlugin) => p.id === 'waitlist' && (p.status === 'enabled' || p.status === 'trial')), [plugins]),
-      isOrderNumberDisplayPluginActive: useMemo(() => plugins.some((p: AppPlugin) => p.id === 'order_number_display' && (p.status === 'enabled' || p.status === 'trial')), [plugins]),
-      isPizzaBuilderPluginActive: useMemo(() => plugins.some((p: AppPlugin) => p.id === 'pizza-builder' && (p.status === 'enabled' || p.status === 'trial')), [plugins]),
-      isQRCodePluginActive: useMemo(() => plugins.some((p: AppPlugin) => p.id === 'qr-ordering' && (p.status === 'enabled' || p.status === 'trial')), [plugins]),
-      isCallerIdPluginActive: useMemo(() => plugins.some((p: AppPlugin) => p.id === 'caller-id' && (p.status === 'enabled' || p.status === 'trial')), [plugins]),
-      addPrintJobs,
-      printQueue,
-      updatePrintJobStatus: (id: string, status: PrintJobStatus) => setPrintQueue((prev: PrintJob[]) => prev.map(job => job.id === id ? { ...job, status } : job)),
-      clearPrintQueue: () => setPrintQueue([]),
-      isSidebarHidden,
-      onToggleSidebar: () => setIsSidebarHidden((p: any) => !p),
-      isSidebarCollapsed, 
-      onToggleSidebarCollapse: () => setIsSidebarCollapsed((p: any) => !p),
-      calledOrderNumber,
-      cycleCalledOrderNumber: () => {/* Logic here */},
-      clearCalledOrderNumber: () => setCalledOrderNumber(null),
-      onLaunchView: (view: View) => window.open(`#/${view}`, '_blank'),
-      justAddedCategoryId, onClearJustAddedCategoryId: () => setJustAddedCategoryId(null),
-      justAddedCustomer, onClearJustAddedCustomer: () => setJustAddedCustomer(null),
-      plugins,
-      handleTogglePlugin,
-      handleActivatePlugin,
-      handleIncomingCall: (phone: string) => {
-        const customer = customers.find((c: Customer) => c.phone === phone);
-        const lastOrder = customer ? orders.filter((o: Order) => o.customer?.id === customer.id).sort((a: Order, b: Order) => b.createdAt - a.createdAt)[0] || null : null;
-        openModal('callerID', { phoneNumber: phone, customer, lastOrder });
-        const logEntry: CallLogEntry = {
-            id: `call_${Date.now()}`,
-            timestamp: Date.now(),
-            phoneNumber: phone,
-            customerId: customer?.id || null,
-            orderId: null,
-        };
-        setCallLog((prev: CallLogEntry[]) => [logEntry, ...prev]);
-      },
-      notifications,
-      handleMarkAllNotificationsAsRead,
+        // App
+        activeView, setView: setActiveView, managementSubView, setManagementSubView, settingsSubView, setSettingsSubView,
+        currentEmployee, handleLogout: () => { setCurrentEmployee(null); setActiveView('landing'); },
+        handlePinLogin: (employeeId: string, pin: string) => {
+            const employee = employees.find(e => e.id === employeeId && e.pin === pin);
+            if(employee) { setCurrentEmployee(employee); setActiveView('pos'); return true; }
+            return false;
+        },
+        settings, setSettings, isFullscreen, onToggleFullScreen: () => setIsFullscreen(f => !f),
+        currentLocationId, onLocationChange: setCurrentLocationId, currentLocation, theme, onToggleTheme, isSidebarCollapsed,
+        onToggleSidebarCollapse: () => setIsSidebarCollapsed(c => !c), isSidebarHidden, onToggleSidebar: () => setIsSidebarHidden(h => !h),
+        plugins, notifications, handleMarkAllNotificationsAsRead, isKsaPluginActive, 
+        isAdvancedInventoryPluginActive,
+        isMultiStorePluginActive: true, isReservationPluginActive: true, isWaitlistPluginActive: true, 
+        isOrderNumberDisplayPluginActive: true, isPizzaBuilderPluginActive: true, isQRCodePluginActive: true, isCallerIdPluginActive: true,
+        onLaunchView: (view: View) => window.open(`#/${view}`, '_blank'),
+        justAddedCategoryId, onClearJustAddedCategoryId: () => setJustAddedCategoryId(null),
+        justAddedCustomer, onClearJustAddedCustomer: () => setJustAddedCustomer(null),
+        handleTogglePlugin,
+        cycleCalledOrderNumber, clearCalledOrderNumber, calledOrderNumber,
+        
+        // Data
+        locations, setLocations, categories, setCategories, menuItems, setMenuItems, customers, setCustomers,
+        drivers, setDrivers, employees, setEmployees, suppliers, setSuppliers, wastageLog, setWastageLog,
+        roles, setRoles, auditLog, setAuditLog, printers, setPrinters, tables, setTables,
+        subscriptions, setSubscriptions, purchaseOrders, setPurchaseOrders, schedule, setSchedule,
+        reservations, setReservations, ingredients, setIngredients, recipes, setRecipes,
+        signageDisplays, setSignageDisplays, signageContent, setSignageContent, signagePlaylists, setSignagePlaylists,
+        signageSchedule, setSignageSchedule, waitlist, setWaitlist, paymentTypes, setPaymentTypes,
+        promotions, setPromotions, modifierGroups, setModifierGroups, kitchenDisplays, setKitchenDisplays,
+        kitchenNotes, setKitchenNotes, voidReasons, setVoidReasons, manualDiscounts, setManualDiscounts, handleSaveManualDiscount, handleDeleteManualDiscount,
+        surcharges, setSurcharges, customerDisplays, setCustomerDisplays, scales, setScales, callLog, setCallLog,
+        orders, setOrders, heldOrders, setHeldOrders, reportSchedules, setReportSchedules,
+        lastCompletedOrder, lastReservationSync, lastAccountingSync,
+        categoriesWithCounts, floors,
+        handleSaveUser, handleDeleteUser, handleSaveRole, handleDeleteRole, handleSaveLocation, handleDeleteLocation,
+        onSuggestRole, onEditTable, onAddFloor, onRenameFloor, onDeleteFloor, handleSaveTable, handleDeleteTable,
+        handleSaveCustomer, handleDeleteCustomer, handleSaveSubscription, handleSaveProduct, handleDeleteProduct,
+        
+        // POS
+        cart, setCart, activeCategory, onSelectCategory: setActiveCategory, searchQuery, onSearchChange: setSearchQuery,
+        selectedCustomer, setSelectedCustomer, currentTable, setCurrentTable, orderType, setOrderType,
+        appliedDiscount, setAppliedDiscount, appliedPromotion, setAppliedPromotion,
+        aiUpsellSuggestions, isSuggestingUpsell, selectedStaff, setSelectedStaff, activeOrderToSettle,
+        activeTab, setActiveTab, availablePromotions,
+        resetPOSState, onNewSaleClick, onSelectItem,
+        onUpdateCartQuantity,
+        onRemoveItem, onVoidOrder, handleGetUpsellSuggestions, handleHoldOrder, handleReopenOrder,
+        handleDeleteHeldOrder, handleApplyManualDiscount, handleApplyPromotion, handleRemoveDiscount,
+        handleInitiatePayment, handleInitiateSettlePayment, handleSendToKitchen, handleSettleBill,
+        onProcessFinalOrder,
+        handleSaveTab, handleSettleTab, handleSelectTab, onLoadOrder, handleAddPizzaToCart,
+        handleKitchenPrinting, onPrintA4: handlePrintA4,
+        
+        // Modal
+        modal, openModal, closeModal,
+        
+        // Toast
+        toasts, addToast, dismissToast: (id: number) => setToasts(prev => prev.filter(t => t.id !== id)),
 
-      // Data Context
-      locations, setLocations, categories, setCategories, menuItems, setMenuItems, customers, setCustomers, drivers, setDrivers, employees, setEmployees, suppliers, setSuppliers, wastageLog, setWastageLog, roles, setRoles, auditLog, setAuditLog, printers, setPrinters, tables, setTables, floors, subscriptions, setSubscriptions, purchaseOrders, setPurchaseOrders, schedule, setSchedule, reservations, setReservations, ingredients, setIngredients, recipes, setRecipes, signageDisplays, setSignageDisplays, signageContent, setSignageContent, signagePlaylists, setSignagePlaylists, signageSchedule, setSignageSchedule, waitlist, setWaitlist, paymentTypes, setPaymentTypes, promotions, setPromotions, modifierGroups, setModifierGroups, kitchenDisplays, setKitchenDisplays, kitchenNotes, setKitchenNotes, voidReasons, setVoidReasons, manualDiscounts, setManualDiscounts, surcharges, setSurcharges, customerDisplays, setCustomerDisplays, scales, setScales, callLog, setCallLog, orders, setOrders, heldOrders, setHeldOrders, reportSchedules, setReportSchedules, lastCompletedOrder, lastReservationSync, lastAccountingSync, 
-      onSuggestRole,
-      onToggleClockStatus,
-      categoriesWithCounts,
-      onGenerateQRCode, onEditTable, onAddFloor, onRenameFloor, onDeleteFloor, onAddReservation, onEditReservation, onUpdateReservationStatus, onSeatReservationParty, onAddToWaitlist, onUpdateWaitlistStatus, onSeatWaitlistParty, onSyncReservations, onSuggestWaitTime,
-      // ... All other data context methods
-      handleSaveUser: () => {}, handleSaveRole: () => {}, handleSaveLocation: () => {}, // and so on
-
-      // POS Context
-      cart, setCart,
-      activeCategory, onSelectCategory: setActiveCategory,
-      searchQuery, onSearchChange: setSearchQuery,
-      selectedCustomer, setSelectedCustomer,
-      currentTable, setCurrentTable,
-      orderType, setOrderType,
-      appliedDiscount,
-      appliedPromotion,
-      aiUpsellSuggestions,
-      isSuggestingUpsell,
-      selectedStaff, setSelectedStaff,
-      activeOrderToSettle,
-      activeTab,
-      availablePromotions,
-      resetPOSState,
-      onNewSaleClick,
-      onSelectItem,
-      onAddItemWithModifiers,
-      onUpdateCartQuantity,
-      onRemoveItem,
-      onVoidOrder,
-      handleGetUpsellSuggestions,
-      onSelectUpsellSuggestion,
-      handleHoldOrder,
-      handleReopenOrder,
-      handleDeleteHeldOrder,
-      handleApplyManualDiscount,
-      handleApplyPromotion,
-      handleRemoveDiscount,
-      handleInitiatePayment,
-      handleInitiateSettlePayment,
-      handleSendToKitchen,
-      handleSettleBill,
-      handleSaveTab,
-      handleSettleTab,
-      handleSelectTab,
-      onLoadOrder,
-      handleAddPizzaToCart,
-      handleKitchenPrinting,
-      onPrintA4: handlePrintA4,
-      onDirectPrintReceipt,
-      setActiveTab,
-      setAppliedDiscount,
-      setAppliedPromotion,
-
-      // Modal Context
-      modal,
-      openModal,
-      closeModal,
-      
-      // Toast Context
-      toasts,
-      addToast,
-      dismissToast: (id: number) => setToasts(prev => prev.filter(t => t.id !== id)),
-  };
+        // Print
+        printQueue, addPrintJobs, clearPrintQueue: () => setPrintQueue([]),
+        updatePrintJobStatus: (id: string, status: PrintJobStatus) => setPrintQueue(prev => prev.map(job => job.id === id ? { ...job, status } : job)),
+    };
 
     const posContextValue = allContexts;
     const modalContextValue = allContexts;

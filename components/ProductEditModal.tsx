@@ -1,30 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { MenuItem, Category, ModifierGroup, KitchenNote, Printer, KitchenDisplay } from '../types';
+import { MenuItem, Category, ModifierGroup, KitchenNote, Printer, KitchenDisplay, RecipeItem, Ingredient } from '../types';
 import { useDataContext, useAppContext } from '../contexts/AppContext';
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/Modal';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
 import { Textarea } from './ui/Textarea';
 import { Select } from './ui/Select';
+import TrashIcon from './icons/TrashIcon';
+import { cn } from '../lib/utils';
 
 interface MenuItemEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (menuItem: MenuItem) => void;
-  product: MenuItem | null; // Renamed from product to menuItem for clarity
+  onSave: (menuItem: MenuItem, recipe: RecipeItem[]) => void;
+  product: MenuItem | null;
   onAddNewCategory: () => void;
   justAddedCategoryId?: string | null;
   onClearJustAddedCategoryId?: () => void;
 }
 
-type Tab = 'General' | 'Pricing' | 'Inventory' | 'Advanced';
+type Tab = 'General' | 'Pricing' | 'Inventory' | 'Recipe' | 'Advanced';
 
-const Toggle: React.FC<{ label: string; enabled: boolean; onToggle: () => void; }> = ({ label, enabled, onToggle }) => (
-    <label className="flex items-center justify-between p-2 rounded-md bg-secondary cursor-pointer">
+const Toggle: React.FC<{ label: string; enabled: boolean; onToggle: () => void; disabled?: boolean }> = ({ label, enabled, onToggle, disabled = false }) => (
+    <label className={cn("flex items-center justify-between p-2 rounded-md bg-secondary", disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer")}>
         <span className="text-sm font-medium text-secondary-foreground">{label}</span>
         <button
             type="button"
             onClick={onToggle}
+            disabled={disabled}
             className={`relative inline-flex items-center h-5 w-9 transition-colors rounded-full ${enabled ? 'bg-primary' : 'bg-muted'}`}
         >
             <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`}/>
@@ -34,53 +37,43 @@ const Toggle: React.FC<{ label: string; enabled: boolean; onToggle: () => void; 
 
 
 const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, onSave, product, onAddNewCategory, justAddedCategoryId, onClearJustAddedCategoryId }) => {
-    const { categories, modifierGroups, kitchenNotes, printers, kitchenDisplays } = useDataContext();
+    const { categories, modifierGroups, kitchenNotes, printers, kitchenDisplays, ingredients, recipes } = useDataContext();
+    const { isAdvancedInventoryPluginActive } = useAppContext();
     const [activeTab, setActiveTab] = useState<Tab>('General');
     const [formData, setFormData] = useState<Partial<MenuItem>>({});
+    const [recipeItems, setRecipeItems] = useState<RecipeItem[]>([]);
 
     useEffect(() => {
-        if (product) {
-            setFormData({
-                ...product,
-                isActive: product.isActive !== false,
-                isVeg: !!product.isVeg,
-                displayImage: !!product.displayImage,
-                askPrice: !!product.askPrice,
-                stopSaleAtZeroStock: !!product.stopSaleAtZeroStock,
-                isDiscountable: product.isDiscountable !== false,
-                hideName: !!product.hideName,
-                askQuantity: !!product.askQuantity,
-                useScale: !!product.useScale,
-                alwaysShowModifiers: !!product.alwaysShowModifiers,
-                promptForKitchenNote: !!product.promptForKitchenNote,
-            });
-        } else {
-            // Defaults for a new item
-            setFormData({
-                name: '',
-                price: 0,
-                category: categories[0]?.id || '',
-                isActive: true,
-                isVeg: false,
-                isDiscountable: true,
-                displayImage: false,
-                askPrice: false,
-                stopSaleAtZeroStock: false,
-                hideName: false,
-                askQuantity: false,
-                useScale: false,
-                alwaysShowModifiers: false,
-                promptForKitchenNote: false,
-                locationIds: [], // Should be handled on save
-                taxCategory: 'Standard',
-                kdsId: 'kds_1',
-                kitchenPrinterId: 'kp1',
-                memberPrice1: undefined,
-                memberPrice2: undefined,
-                memberPrice3: undefined,
-            });
+        if (isOpen) {
+            const initialRecipe = product ? recipes[product.id] || [] : [];
+            const cleanedRecipe = initialRecipe.filter(recipeItem =>
+                ingredients.find((ing: Ingredient) => ing.id === recipeItem.ingredientId)
+            );
+
+            if (product) {
+                setFormData({
+                    ...product,
+                    isActive: product.isActive !== false,
+                    isVeg: !!product.isVeg,
+                    displayImage: !!product.displayImage,
+                    askPrice: !!product.askPrice,
+                    stopSaleAtZeroStock: !!product.stopSaleAtZeroStock,
+                    isDiscountable: product.isDiscountable !== false,
+                    hideName: !!product.hideName,
+                    askQuantity: !!product.askQuantity,
+                    useScale: !!product.useScale,
+                    alwaysShowModifiers: !!product.alwaysShowModifiers,
+                    promptForKitchenNote: !!product.promptForKitchenNote,
+                });
+                setRecipeItems(cleanedRecipe);
+            } else {
+                setFormData({
+                    name: '', price: 0, category: categories[0]?.id || '', isActive: true, isVeg: false, isDiscountable: true, displayImage: false, askPrice: false, stopSaleAtZeroStock: false, hideName: false, askQuantity: false, useScale: false, alwaysShowModifiers: false, promptForKitchenNote: false, locationIds: [], taxCategory: 'Standard', kdsId: 'kds_1', kitchenPrinterId: 'kp1', memberPrice1: undefined, memberPrice2: undefined, memberPrice3: undefined,
+                });
+                setRecipeItems([]);
+            }
         }
-    }, [product, categories, isOpen]);
+    }, [product, categories, isOpen, recipes, ingredients]);
 
     useEffect(() => {
         if (isOpen && justAddedCategoryId && onClearJustAddedCategoryId) {
@@ -117,10 +110,10 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(formData as MenuItem);
+        onSave(formData as MenuItem, recipeItems);
         onClose();
     };
-
+    
     const renderGeneralTab = () => (
         <div className="space-y-4">
             <Input name="name" value={formData.name || ''} onChange={handleChange} placeholder="Product Name" required />
@@ -167,15 +160,103 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
         </div>
     );
 
+    const hasRecipe = recipeItems.length > 0;
+    
     const renderInventoryTab = () => (
-        <div className="space-y-4">
-             <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs text-muted-foreground">Stock</label><Input type="number" name="stock" value={formData.stock ?? ''} onChange={handleNumberChange} /></div>
-                <div><label className="text-xs text-muted-foreground">Warn Qty</label><Input type="number" name="warnQty" value={formData.warnQty ?? ''} onChange={handleNumberChange} /></div>
+            <div className="space-y-4">
+                 {hasRecipe ? (
+                    <p className="text-sm text-yellow-600 p-3 bg-yellow-500/10 rounded-md border border-yellow-500/20">
+                        <strong>Inventory is managed by recipe.</strong><br/>
+                        Stock levels are calculated from ingredients in the 'Recipe' tab. Any values entered here will be ignored during sales.
+                    </p>
+                ) : (
+                    <p className="text-sm text-muted-foreground p-2 bg-blue-500/10 rounded-md border border-blue-500/20">
+                        Use direct stock management for items that are sold as-is, like bottled drinks or pre-packaged snacks.
+                    </p>
+                )}
+
+                 <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="text-xs text-muted-foreground">Stock</label>
+                        <Input 
+                            type="number" 
+                            name="stock" 
+                            value={formData.stock ?? ''} 
+                            onChange={handleNumberChange}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-xs text-muted-foreground">Warn Qty</label>
+                        <Input 
+                            type="number" 
+                            name="warnQty" 
+                            value={formData.warnQty ?? ''} 
+                            onChange={handleNumberChange}
+                        />
+                    </div>
+                </div>
+                <Toggle 
+                    label="Stop sale at zero stock" 
+                    enabled={!!formData.stopSaleAtZeroStock} 
+                    onToggle={() => setFormData(p => ({...p, stopSaleAtZeroStock: !p.stopSaleAtZeroStock}))} 
+                />
             </div>
-            <Toggle label="Stop sale at zero stock" enabled={!!formData.stopSaleAtZeroStock} onToggle={() => setFormData(p => ({...p, stopSaleAtZeroStock: !p.stopSaleAtZeroStock}))} />
-        </div>
-    );
+        );
+    
+    const renderRecipeTab = () => {
+        const handleAddIngredient = (ingredientId: string) => {
+            if (ingredientId && !recipeItems.some(item => item.ingredientId === ingredientId)) {
+                setRecipeItems(prev => [...prev, { ingredientId, quantity: 1 }]);
+            }
+        };
+
+        const handleRemoveIngredient = (ingredientId: string) => {
+            setRecipeItems(prev => prev.filter(item => item.ingredientId !== ingredientId));
+        };
+
+        const handleQuantityChange = (ingredientId: string, quantity: number) => {
+            setRecipeItems(prev => prev.map(item => item.ingredientId === ingredientId ? { ...item, quantity } : item));
+        };
+
+        return (
+            <div className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium text-muted-foreground mb-1">Add Ingredient to Recipe</label>
+                    <Select onChange={e => handleAddIngredient(e.target.value)} value="">
+                        <option value="" disabled>-- Select an ingredient --</option>
+                        {ingredients.map((ing: Ingredient) => (
+                            <option key={ing.id} value={ing.id}>{ing.name} ({ing.unit})</option>
+                        ))}
+                    </Select>
+                </div>
+                <div className="space-y-2 max-h-60 overflow-y-auto p-2 bg-background rounded-md border">
+                    {recipeItems.map(item => {
+                        const ingredient = ingredients.find((i: Ingredient) => i.id === item.ingredientId);
+                        if (!ingredient) return null;
+                        return (
+                            <div key={item.ingredientId} className="flex items-center gap-2 p-2 bg-secondary rounded">
+                                <span className="flex-grow font-medium">{ingredient.name}</span>
+                                <Input
+                                    type="number"
+                                    value={item.quantity}
+                                    onChange={e => handleQuantityChange(item.ingredientId, parseFloat(e.target.value) || 0)}
+                                    className="w-24"
+                                    step="0.01"
+                                />
+                                <span className="text-sm text-muted-foreground w-8">{ingredient.unit}</span>
+                                <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveIngredient(item.ingredientId)}>
+                                    <TrashIcon className="w-4 h-4 text-destructive" />
+                                </Button>
+                            </div>
+                        );
+                    })}
+                </div>
+                {recipeItems.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">No ingredients in recipe. Stock will be tracked directly on this product via the 'Inventory' tab.</p>
+                )}
+            </div>
+        );
+    };
 
     const renderAdvancedTab = () => (
         <div className="space-y-4">
@@ -217,13 +298,35 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
             </div>
         </div>
     );
+    
+    const isInventoryTabDisabled = !isAdvancedInventoryPluginActive;
+    const inventoryTooltip = !isAdvancedInventoryPluginActive
+      ? "Enable the 'Advanced Inventory' plugin to manage stock."
+      : undefined;
+  
+    const isRecipeTabDisabled = !isAdvancedInventoryPluginActive;
+    const recipeTooltip = !isAdvancedInventoryPluginActive
+      ? "Enable the 'Advanced Inventory' plugin to manage recipes."
+      : undefined;
 
-    const tabs: { name: Tab; content: () => React.ReactNode; }[] = [
+    const tabs: { name: Tab; content: () => React.ReactNode; disabled?: boolean; tooltip?: string; }[] = [
         { name: 'General', content: renderGeneralTab },
         { name: 'Pricing', content: renderPricingTab },
-        { name: 'Inventory', content: renderInventoryTab },
+        { 
+            name: 'Inventory', 
+            content: renderInventoryTab, 
+            disabled: isInventoryTabDisabled,
+            tooltip: inventoryTooltip,
+        },
+        { 
+            name: 'Recipe', 
+            content: renderRecipeTab,
+            disabled: isRecipeTabDisabled,
+            tooltip: recipeTooltip,
+        },
         { name: 'Advanced', content: renderAdvancedTab },
     ];
+
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl">
@@ -237,8 +340,18 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
                             <button
                                 type="button"
                                 key={tab.name}
-                                onClick={() => setActiveTab(tab.name)}
-                                className={`px-4 py-3 text-sm font-semibold -mb-px border-b-2 ${activeTab === tab.name ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                                onClick={() => !tab.disabled && setActiveTab(tab.name)}
+                                title={tab.tooltip}
+                                className={cn(
+                                    'px-4 py-3 text-sm font-semibold -mb-px border-b-2',
+                                    activeTab === tab.name 
+                                        ? 'border-primary text-primary' 
+                                        : 'border-transparent text-muted-foreground',
+                                    tab.disabled 
+                                        ? 'cursor-not-allowed opacity-50' 
+                                        : 'hover:text-foreground'
+                                )}
+                                disabled={tab.disabled}
                             >
                                 {tab.name}
                             </button>
