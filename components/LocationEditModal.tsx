@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Location } from '../types';
-import { COUNTRIES, PIZZA_OPTIONS } from '../constants';
+import { COUNTRIES, PIZZA_OPTIONS, BURGER_OPTIONS } from '../constants';
 import TrashIcon from './icons/TrashIcon';
 
 interface LocationEditModalProps {
@@ -70,6 +70,7 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({ isOpen, onClose, 
             phone,
             vatNumber: countryCode === 'SA' ? vatNumber : undefined,
             pizzaBuilder: location?.pizzaBuilder || PIZZA_OPTIONS,
+            burgerBuilder: location?.burgerBuilder || BURGER_OPTIONS,
         });
     };
     

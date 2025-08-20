@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
-import { DashboardWidgetId } from '../types';
+
+import React, { useState, useEffect } from 'react';
+import { SalesDashboardWidgetId } from '../types';
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/Modal';
 import { Button } from './ui/Button';
 import ArrowUpIcon from './icons/ArrowUpIcon';
@@ -9,21 +10,23 @@ import ArrowDownIcon from './icons/ArrowDownIcon';
 interface DashboardCustomizeModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (newOrder: DashboardWidgetId[]) => void;
-    widgetOrder: DashboardWidgetId[];
+    onSave: (visibleWidgets: SalesDashboardWidgetId[]) => void;
+    widgetOrder: SalesDashboardWidgetId[];
 }
 
-const widgetLabels: Record<DashboardWidgetId, string> = {
-    stats: "Stat Cards",
-    salesChart: "Sales Chart",
+const widgetLabels: Record<SalesDashboardWidgetId, string> = {
+    stats: "Key Stat Cards",
+    chart: "Sales Trend Chart",
+    payment: "Payment Breakdown",
+    topItems: "Top Selling Items",
+    locationPerformance: "Location Performance",
     quickActions: "Quick Actions",
-    topItems: "Top Selling Products",
     lowStock: "Low Stock Alerts",
     recentTransactions: "Recent Transactions",
 };
 
 const DashboardCustomizeModal: React.FC<DashboardCustomizeModalProps> = ({ isOpen, onClose, onSave, widgetOrder }) => {
-    const [orderedWidgets, setOrderedWidgets] = useState<DashboardWidgetId[]>(widgetOrder);
+    const [orderedWidgets, setOrderedWidgets] = useState<SalesDashboardWidgetId[]>(widgetOrder);
 
     const moveWidget = (index: number, direction: 'up' | 'down') => {
         const newOrder = [...orderedWidgets];

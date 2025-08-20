@@ -7,14 +7,20 @@ interface MenuItemCardProps {
   cartQuantity: number;
   onSelectItem: (item: MenuItem) => void;
   isOutOfStock: boolean;
+  onContextMenu: (event: React.MouseEvent) => void;
 }
 
-const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, cartQuantity, onSelectItem, isOutOfStock }) => {
+const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, cartQuantity, onSelectItem, isOutOfStock, onContextMenu }) => {
   
   const handleAction = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isOutOfStock) return;
     onSelectItem(item);
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onContextMenu(e);
   };
 
   const isInCart = cartQuantity > 0;
@@ -36,6 +42,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, cartQuantity, onSelec
   return (
     <div
       onClick={handleAction}
+      onContextMenu={handleContextMenu}
       style={hasImage ? cardStyleWithImage : cardStyleWithColor}
       className={`rounded-lg overflow-hidden flex flex-col justify-end p-1.5 h-24 relative transition-all duration-200 group shadow-md
         ${!hasImage && !hasColor ? 'bg-card border border-border' : ''}

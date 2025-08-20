@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { AppPlugin, ManagementSubView, NavItem, SettingsSubView, Category } from '../types';
 
@@ -36,6 +37,8 @@ import ExclamationTriangleIcon from '../components/icons/ExclamationTriangleIcon
 import CpuChipIcon from '../components/icons/CpuChipIcon';
 import PrinterIcon from '../components/icons/PrinterIcon';
 import ArchiveBoxIcon from '../components/icons/ArchiveBoxIcon';
+import StarIcon from '../components/icons/StarIcon';
+import BurgerIcon from '../components/icons/BurgerIcon';
 
 export interface PluginModule {
     manifest: Omit<AppPlugin, 'status' | 'trialStartDate' | 'activationDate' | 'licenseDurationDays'>;
@@ -75,22 +78,13 @@ export const CORE_MODULE_DEFINITIONS: PluginModule[] = [
         })
     },
     {
-        manifest: { id: 'group-advanced-pos', name: 'Advanced POS', description: 'Advanced POS settings group', isFree: true, version: '1.0.0', sortOrder: 18 },
-        getManagementNavItem: (t) => ({
-            id: 'advanced_pos', label: 'Advanced', icon: WrenchScrewdriverIcon,
-            children: [
-                { id: 'advanced_pos_settings', label: t('advanced'), icon: WrenchScrewdriverIcon },
-                { id: 'preferences_settings', label: t('preferences'), icon: Cog6ToothIcon },
-            ]
-        })
-    },
-    {
         manifest: { id: 'group-contacts', name: 'Contacts', description: 'Contacts group', isFree: true, version: '1.0.0', sortOrder: 20 },
         getManagementNavItem: (t) => ({
             id: 'contacts', label: t('contacts'), icon: UserCircleIcon,
             children: [
                 { id: 'customers', label: t('customers'), icon: UserCircleIcon },
                 { id: 'suppliers', label: t('suppliers'), icon: TruckIcon },
+                { id: 'loyalty', label: t('loyalty_program'), icon: StarIcon },
             ]
         }),
     },
@@ -130,9 +124,9 @@ export const CORE_MODULE_DEFINITIONS: PluginModule[] = [
 
     // --- SETTINGS VIEW GROUPS ---
     {
-        manifest: { id: 'group-settings-general', name: 'General', description: 'General settings group', isFree: true, version: '1.0.0', sortOrder: 10 },
-        getSettingsNavItem: (t) => ({
-            id: 'general', label: t('customization'), icon: SwatchIcon,
+        manifest: { id: 'group-settings-general', name: 'Branding & Localization', description: 'Branding & Localization settings group', isFree: true, version: '1.0.0', sortOrder: 10 },
+        getSettingsNavItem: (t) => ({ 
+            id: 'branding_localization', label: t('branding_localization'), icon: SwatchIcon,
             children: [
                 { id: 'customization', label: t('customization'), icon: SwatchIcon },
                 { id: 'numbering', label: t('numbering'), icon: DocumentDuplicateIcon },
@@ -140,7 +134,17 @@ export const CORE_MODULE_DEFINITIONS: PluginModule[] = [
         }),
     },
     {
-        manifest: { id: 'group-settings-hardware', name: 'Hardware', description: 'Hardware settings group', isFree: true, version: '1.0.0', sortOrder: 20 },
+        manifest: { id: 'group-settings-pos', name: 'POS Configuration', description: 'POS Configuration settings group', isFree: true, version: '1.0.0', sortOrder: 20 },
+        getSettingsNavItem: (t) => ({
+            id: 'pos_configuration', label: t('pos_configuration'), icon: WrenchScrewdriverIcon,
+            children: [
+                { id: 'preferences_settings', label: t('preferences'), icon: Cog6ToothIcon },
+                { id: 'advanced_pos_settings', label: t('advanced_pos'), icon: WrenchScrewdriverIcon },
+            ]
+        }),
+    },
+    {
+        manifest: { id: 'group-settings-hardware', name: 'Hardware', description: 'Hardware settings group', isFree: true, version: '1.0.0', sortOrder: 30 },
         getSettingsNavItem: (t) => ({
             id: 'hardware', label: t('devices'), icon: ServerStackIcon,
             children: [
@@ -150,7 +154,7 @@ export const CORE_MODULE_DEFINITIONS: PluginModule[] = [
         }),
     },
     {
-        manifest: { id: 'group-settings-integrations', name: 'Integrations', description: 'Integrations settings group', isFree: true, version: '1.0.0', sortOrder: 30 },
+        manifest: { id: 'group-settings-integrations', name: 'Integrations', description: 'Integrations settings group', isFree: true, version: '1.0.0', sortOrder: 40 },
         getSettingsNavItem: (t) => ({
             id: 'integrations_group', label: t('integrations'), icon: LinkIcon,
             children: [
@@ -160,12 +164,12 @@ export const CORE_MODULE_DEFINITIONS: PluginModule[] = [
         }),
     },
     {
-        manifest: { id: 'group-settings-system', name: 'System', description: 'System settings group', isFree: true, version: '1.0.0', sortOrder: 40 },
+        manifest: { id: 'group-settings-system', name: 'System & Data', description: 'System & Data settings group', isFree: true, version: '1.0.0', sortOrder: 50 },
         getSettingsNavItem: (t) => ({
-            id: 'system', label: 'System', icon: ShieldCheckIcon,
+            id: 'system_and_data', label: t('system_and_data'), icon: ShieldCheckIcon,
             children: [
                 { id: 'activity', label: t('activity_log'), icon: ClipboardDocumentCheckIcon },
-                { id: 'advanced', label: t('advanced'), icon: ExclamationTriangleIcon },
+                { id: 'advanced', label: t('backup_restore'), icon: ExclamationTriangleIcon },
             ]
         }),
     },
@@ -175,6 +179,10 @@ export const OPTIONAL_PLUGIN_DEFINITIONS: PluginModule[] = [
     // Free plugins
     {
         manifest: { id: 'payment-terminal', name: 'Advanced Card Payments', description: 'Integrate with physical card terminals (Stripe, Adyen, etc).', isFree: true, version: '1.0.0', sortOrder: 10 },
+    },
+    {
+        manifest: { id: 'pizza-builder', name: 'Pizza Builder', description: 'Advanced interface for creating customizable pizzas with various toppings, crusts, and sizes.', isFree: true, version: '1.2.0', sortOrder: 105 },
+        getManagementNavItem: (t) => ({ id: 'menu_pizza_builder', label: t('menu_pizza_builder'), icon: PizzaIcon, parentId: 'menu' }),
     },
     {
         manifest: { id: 'qr-ordering', name: 'QR Code Ordering', description: 'Allow customers to order and pay via QR codes at their table.', isFree: true, version: '1.0.0', sortOrder: 210 },
@@ -195,8 +203,8 @@ export const OPTIONAL_PLUGIN_DEFINITIONS: PluginModule[] = [
         manifest: { id: 'multi-store', name: 'Multi-Store Management', description: 'Manage multiple locations from a single interface.', isFree: false, version: '1.0.0', sortOrder: 100 },
     },
     {
-        manifest: { id: 'pizza-builder', name: 'Pizza Builder', description: 'Advanced interface for creating customizable pizzas.', isFree: false, version: '1.2.0', sortOrder: 105 },
-        getManagementNavItem: (t) => ({ id: 'menu_pizza_builder', label: t('menu_pizza_builder'), icon: PizzaIcon, parentId: 'menu' }),
+        manifest: { id: 'burger-builder', name: 'Burger Builder', description: 'Advanced interface for creating customizable burgers with various buns, patties, and toppings.', isFree: false, version: '1.0.0', sortOrder: 106 },
+        getManagementNavItem: (t) => ({ id: 'menu_burger_builder', label: t('menu_burger_builder'), icon: BurgerIcon, parentId: 'menu' }),
     },
     {
         manifest: { id: 'advanced-inventory', name: 'Advanced Inventory', description: 'Track stock levels, manage suppliers, create purchase orders, and calculate profit margins.', isFree: false, version: '1.0.0', sortOrder: 110 },
@@ -204,6 +212,7 @@ export const OPTIONAL_PLUGIN_DEFINITIONS: PluginModule[] = [
             id: 'inventory',
             label: 'Inventory',
             icon: ArchiveBoxIcon,
+            parentId: 'management', // Corrected parent
             children: [
                 { id: 'purchasing', label: 'Purchase Orders', icon: ShoppingCartIcon },
                 { id: 'ingredients', label: 'Ingredients', icon: CubeIcon },
@@ -222,7 +231,7 @@ export const OPTIONAL_PLUGIN_DEFINITIONS: PluginModule[] = [
             id: 'call_log', 
             label: t('call_log'), 
             icon: PhoneIcon, 
-            parentId: 'contacts' // Changed from telephony to contacts
+            parentId: 'contacts'
         }),
     },
 ];

@@ -6,16 +6,33 @@ import ChevronDownIcon from './icons/ChevronDownIcon';
 import { hexToHsl } from '../lib/utils';
 import ArrowsPointingOutIcon from './icons/ArrowsPointingOutIcon';
 import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
-import { useAppContext } from '../contexts/AppContext';
 
 const KDSView: React.FC = () => {
-    const { isFullscreen, onToggleFullScreen } = useAppContext();
+    const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
     const [isTipsOpen, setIsTipsOpen] = useState(false);
     const [orders, setOrders] = useState<Order[]>([]);
     const [tables, setTables] = useState<Table[]>([]);
     const [settings, setSettings] = useState<AppSettings | null>(null);
     const [currentLocationId, setCurrentLocationId] = useState<string | null>(null);
     const channelRef = useRef<BroadcastChannel | null>(null);
+
+    const onToggleFullScreen = () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    };
+
+    useEffect(() => {
+        const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, []);
 
     useEffect(() => {
         const channel = new BroadcastChannel('ordino_pos_sync');

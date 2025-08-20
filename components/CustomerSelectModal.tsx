@@ -28,6 +28,11 @@ const CustomerSelectModal: React.FC<CustomerSelectModalProps> = ({ isOpen, onClo
 
   if (!isOpen) return null;
 
+  const handleAddNew = () => {
+    onClose();
+    onAddNewCustomer();
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 p-4">
       <div className="bg-card rounded-lg shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col border border-border">
@@ -62,7 +67,7 @@ const CustomerSelectModal: React.FC<CustomerSelectModalProps> = ({ isOpen, onClo
         </div>
         <div className="p-4 border-t border-border flex justify-between items-center">
             <button
-                onClick={onAddNewCustomer}
+                onClick={handleAddNew}
                 className="flex items-center gap-2 bg-green-500/20 text-green-500 font-bold py-2 px-4 rounded-lg text-sm"
             >
                 <UserPlusIcon className="w-5 h-5"/> Add New Customer

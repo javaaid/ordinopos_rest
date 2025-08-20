@@ -30,6 +30,9 @@ const widgetClasses: Record<SalesDashboardWidgetId, string> = {
     payment: 'lg:col-span-2',
     topItems: 'lg:col-span-2',
     locationPerformance: 'lg:col-span-4',
+    quickActions: 'lg:col-span-1',
+    lowStock: 'lg:col-span-1',
+    recentTransactions: 'lg:col-span-2',
 };
 
 // --- Widget Components ---
@@ -172,6 +175,9 @@ const SalesDashboard: React.FC<SalesDashboardProps> = (props) => {
         payment: <PaymentWidget orders={orders} totalRevenue={stats.totalRevenue} allPaymentTypes={allPaymentTypes} />,
         topItems: <TopItemsWidget orders={orders} />,
         locationPerformance: <LocationPerformanceWidget orders={orders} locations={locations} ingredients={ingredients} recipes={recipes} />,
+        quickActions: <></>,
+        lowStock: <></>,
+        recentTransactions: <></>,
     };
 
     return (

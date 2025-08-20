@@ -87,6 +87,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay
       setPaymentStatus('success');
     }
   }, [remainingDue, payments, paymentStatus, onFinalize, orderToPay, isOpen]);
+  
+  useEffect(() => {
+    if (finalizedOrder && settings.advancedPOS.printReceiptAfterPayment) {
+        const timer = setTimeout(() => {
+            onDirectPrintReceipt(finalizedOrder);
+        }, 500);
+        return () => clearTimeout(timer);
+    }
+  }, [finalizedOrder, settings.advancedPOS.printReceiptAfterPayment, onDirectPrintReceipt]);
 
 
   if (!isOpen || !orderToPay) return null;
@@ -180,22 +189,24 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay
               </Button>
           </div>
 
-          <div className="space-y-2 text-left">
-              <label className="text-sm font-medium text-muted-foreground">Send Email Receipt</label>
-              <div className="flex gap-2">
-                  <Input 
-                    type="email" 
-                    placeholder="customer@example.com" 
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    disabled={emailSent}
-                  />
-                  <Button onClick={handleSendEmail} disabled={!email || emailSent}>
-                     <EnvelopeIcon className="w-5 h-5"/>
-                  </Button>
-              </div>
-               {emailSent && <p className="text-xs text-green-400 text-center">Receipt sent to {email}</p>}
-          </div>
+          {settings.advancedPOS.emailReceipt && (
+            <div className="space-y-2 text-left">
+                <label className="text-sm font-medium text-muted-foreground">Send Email Receipt</label>
+                <div className="flex gap-2">
+                    <Input 
+                      type="email" 
+                      placeholder="customer@example.com" 
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      disabled={emailSent}
+                    />
+                    <Button onClick={handleSendEmail} disabled={!email || emailSent}>
+                       <EnvelopeIcon className="w-5 h-5"/>
+                    </Button>
+                </div>
+                 {emailSent && <p className="text-xs text-green-400 text-center">Receipt sent to {email}</p>}
+            </div>
+          )}
           
           <div className="mt-8">
               <Button onClick={onClose} className="w-full">

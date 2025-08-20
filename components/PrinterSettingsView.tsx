@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Printer, PrinterReceiptSettings, Order, Location, PrinterConnectionType, KitchenPrintSettings, KitchenProfileType, PrintJob } from '../types';
 import ArrowLeftIcon from './icons/ArrowLeftIcon';
@@ -60,7 +61,7 @@ const ReceiptPreview: React.FC<{ settings: PrinterReceiptSettings, paperWidth: n
     return (
         <div style={textStyle} className="p-4 bg-white text-black font-mono text-xs w-full h-full">
             <div className="text-center mb-2">
-                {settings.headerLogoUrl && <img src={settings.headerLogoUrl} alt="Header Logo" className="mx-auto h-12 w-auto object-contain mb-2" />}
+                {settings.logoUrl && <img src={settings.logoUrl} alt="Header Logo" className="mx-auto h-12 w-auto object-contain mb-2" />}
                 {settings.headerLines.map((line, i) => line && <p key={i}>{line}</p>)}
             </div>
             <p className="whitespace-pre">{line}</p>
@@ -307,7 +308,7 @@ const PrinterSettingsView: React.FC<PrinterSettingsViewProps> = ({ printer, onBa
         }
     };
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'headerLogoUrl' | 'footerLogoUrl') => {
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'logoUrl' | 'footerLogoUrl') => {
         const file = e.target.files?.[0];
         if (file) {
             if (file.size > 2 * 1024 * 1024) { // 2MB limit
@@ -385,25 +386,25 @@ const PrinterSettingsView: React.FC<PrinterSettingsViewProps> = ({ printer, onBa
                 {!isKitchenPrinter && (
                     <div className="pt-4 border-t border-border">
                         <label className="block text-sm font-semibold text-foreground mb-2">Header Logo</label>
-                        {(currentSettings as PrinterReceiptSettings).headerLogoUrl && (
+                        {(currentSettings as PrinterReceiptSettings).logoUrl && (
                             <div className="mb-2 p-2 bg-background rounded border border-border flex justify-center">
-                                <img src={(currentSettings as PrinterReceiptSettings).headerLogoUrl!} alt="Header Preview" className="h-12 w-auto object-contain" />
+                                <img src={(currentSettings as PrinterReceiptSettings).logoUrl!} alt="Header Preview" className="h-12 w-auto object-contain" />
                             </div>
                         )}
                         <div className="flex items-center gap-2 mt-1">
                             <Input 
                                 placeholder="Paste image URL or browse..." 
-                                value={(currentSettings as PrinterReceiptSettings).headerLogoUrl || ''} 
-                                onChange={e => handleLayoutChange({ headerLogoUrl: e.target.value })} 
+                                value={(currentSettings as PrinterReceiptSettings).logoUrl || ''} 
+                                onChange={e => handleLayoutChange({ logoUrl: e.target.value })} 
                             />
                             <Button asChild variant="outline" size="sm" className="shrink-0">
                                 <label className="cursor-pointer">
                                     Browse
-                                    <input type="file" accept="image/png, image/jpeg, image/gif" className="hidden" onChange={e => handleImageUpload(e, 'headerLogoUrl')} />
+                                    <input type="file" accept="image/png, image/jpeg, image/gif" className="hidden" onChange={e => handleImageUpload(e, 'logoUrl')} />
                                 </label>
                             </Button>
-                            {(currentSettings as PrinterReceiptSettings).headerLogoUrl && (
-                                <Button variant="ghost" size="sm" onClick={() => handleLayoutChange({ headerLogoUrl: '' })}>Clear</Button>
+                            {(currentSettings as PrinterReceiptSettings).logoUrl && (
+                                <Button variant="ghost" size="sm" onClick={() => handleLayoutChange({ logoUrl: '' })}>Clear</Button>
                             )}
                         </div>
                     </div>
@@ -421,7 +422,7 @@ const PrinterSettingsView: React.FC<PrinterSettingsViewProps> = ({ printer, onBa
                         <label className="block text-sm font-semibold text-foreground mb-2">Footer Logo</label>
                         {(currentSettings as PrinterReceiptSettings).footerLogoUrl && (
                             <div className="mb-2 p-2 bg-background rounded border border-border flex justify-center">
-                                <img src={(currentSettings as PrinterReceiptSettings).footerLogoUrl!} alt="Footer Preview" className="h-12 w-auto object-contain" />
+                                <img src={(currentSettings as PrinterReceiptSettings).footerLogoUrl!} alt="Footer Logo" className="h-12 w-auto object-contain" />
                             </div>
                         )}
                         <div className="flex items-center gap-2 mt-1">

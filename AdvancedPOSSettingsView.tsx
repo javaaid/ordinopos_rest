@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { useAppContext, useToastContext } from '../contexts/AppContext';
 import { AppSettings, AdvancedPOSSettings } from '../types';
@@ -68,15 +67,15 @@ const AdvancedPOSSettingsView: React.FC = () => {
     );
 
     return (
-        <div className="h-full flex flex-col">
-            <header className="p-6 shrink-0 border-b border-border">
+        <div className="p-6 h-full flex flex-col">
+            <div className="shrink-0">
                 <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2">
                     <WrenchScrewdriverIcon className="w-6 h-6" /> Advanced POS Settings
                 </h3>
-                <p className="text-sm text-muted-foreground">Fine-tune specific point-of-sale behaviors.</p>
-            </header>
+                <p className="text-sm text-muted-foreground mb-6">Fine-tune specific point-of-sale behaviors.</p>
+            </div>
 
-            <main className="flex-grow overflow-y-auto p-6">
+            <div className="flex-grow overflow-y-auto -mr-6 pr-6">
                 <div className="space-y-6 max-w-4xl">
                     <SettingsGroup title="Ordering">
                         <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-8 md:divide-x md:divide-border">
@@ -134,15 +133,16 @@ const AdvancedPOSSettingsView: React.FC = () => {
                         </div>
                     </SettingsGroup>
                 </div>
-            </main>
+            </div>
 
-            <footer className="p-6 shrink-0 border-t border-border text-right">
+            <div className="shrink-0 pt-6 text-right">
                 <Button onClick={handleSave} className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors shadow-lg">
                     Save Advanced Settings
                 </Button>
-            </footer>
+            </div>
         </div>
     );
 };
 
 export default AdvancedPOSSettingsView;
+  

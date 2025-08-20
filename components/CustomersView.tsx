@@ -16,7 +16,7 @@ const CustomersView: React.FC = () => {
     const { addToast } = useToastContext();
     const [selectedCustomers, setSelectedCustomers] = useState<Set<string>>(new Set());
     const [isFullScreen, setIsFullScreen] = useState(false);
-    const [columnWidths, setColumnWidths] = useState([250, 150, 250, 150, 120]);
+    const [columnWidths, setColumnWidths] = useState([250, 150, 250, 150, 120, 120]);
     const tableContainerRef = useRef<HTMLDivElement>(null);
     const resizingColumnIndex = useRef<number | null>(null);
     const startX = useRef(0);
@@ -63,8 +63,8 @@ const CustomersView: React.FC = () => {
     };
 
      const handleCsvExport = () => {
-        const headers = ["ID", "Name", "Phone", "Email", "Address"];
-        const rows = (customers || []).map((c: Customer) => [c.id, `"${c.name}"`, c.phone, c.email, `"${c.address}"`].join(','));
+        const headers = ["ID", "Name", "Phone", "Email", "Address", "LoyaltyPoints"];
+        const rows = (customers || []).map((c: Customer) => [c.id, `"${c.name}"`, c.phone, c.email, `"${c.address}"`, c.loyaltyPoints || 0].join(','));
         const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
         const link = document.createElement("a");
         link.setAttribute("href", encodeURI(csvContent));
@@ -153,6 +153,7 @@ const CustomersView: React.FC = () => {
                             <col style={{ width: `${columnWidths[2]}px` }} />
                             <col style={{ width: `${columnWidths[3]}px` }} />
                             <col style={{ width: `${columnWidths[4]}px` }} />
+                            <col style={{ width: `${columnWidths[5]}px` }} />
                         </colgroup>
                         <thead className="bg-card sticky top-0 z-10 border-b border-border">
                             <tr className="no-print">
@@ -163,6 +164,7 @@ const CustomersView: React.FC = () => {
                                 <th className={`${thClass} relative`}>Phone <div onMouseDown={e => onMouseDown(1, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
                                 <th className={`${thClass} relative`}>Email <div onMouseDown={e => onMouseDown(2, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
                                 <th className={`${thClass} relative`}>Total Spent <div onMouseDown={e => onMouseDown(3, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                                <th className={`${thClass} relative`}>Loyalty Points <div onMouseDown={e => onMouseDown(4, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
                                 <th className={`${thClass} text-right`}>Actions</th>
                             </tr>
                         </thead>
@@ -179,6 +181,7 @@ const CustomersView: React.FC = () => {
                                         <td className="p-3 text-muted-foreground truncate">{customer.phone}</td>
                                         <td className="p-3 text-muted-foreground truncate">{customer.email}</td>
                                         <td className="p-3 text-green-500 font-semibold truncate">${totalSpent.toFixed(2)}</td>
+                                        <td className="p-3 text-blue-500 font-semibold truncate">{customer.loyaltyPoints || 0}</td>
                                         <td className="p-3 text-right no-print">
                                             <div className="flex justify-end items-center gap-2">
                                                 <button onClick={() => onAddSubscription(customer)} className="text-sm font-semibold text-primary hover:underline">Subscribe</button>

@@ -11,8 +11,8 @@ const LocationSettings: React.FC = () => {
     const { locations, handleSaveLocation, handleDeleteLocation } = useDataContext();
     const { openModal } = useModalContext();
 
-    const onAddNew = () => openModal('locationEdit', { onSave: handleSaveLocation });
-    const onEdit = (location: Location) => openModal('locationEdit', { location, onSave: handleSaveLocation });
+    const onAddNew = () => openModal('locationEdit', { onSave: (loc: Location) => handleSaveLocation(loc, true) });
+    const onEdit = (location: Location) => openModal('locationEdit', { location, onSave: (loc: Location) => handleSaveLocation(loc, false) });
 
     const thClass = "px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider";
 

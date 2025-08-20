@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MenuItem, Category, CartItem, ModifierOption, Order, AIResponse, Language, AppSettings } from '../types';
 import CategoryTabs from './CategoryTabs';
@@ -29,7 +27,6 @@ const PAYMENT_STEPS = [
 ];
 
 const KIOSKView: React.FC<KIOSKViewProps> = () => {
-    const { openModal, closeModal } = useModalContext();
     const [step, setStep] = useState<KioskStep>('welcome');
     const [cart, setCart] = useState<CartItem[]>([]);
     const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -208,24 +205,28 @@ const KIOSKView: React.FC<KIOSKViewProps> = () => {
 
     const handleConfirmOrder = () => {
         setStep('payment');
-        openModal('livePayment', {
-            amount: total,
-            provider: settings?.paymentProvider || 'stripe',
-            terminalId: settings?.terminalId || 'Simulated Terminal',
-            onApprove: () => {
-                closeModal();
-                channelRef.current?.postMessage({ type: 'KIOSK_ORDER_PLACED', payload: cart });
-                setStep('confirmation');
-            },
-            onDecline: () => {
-                closeModal();
-                alert('Payment Declined. Please try again.');
-                setStep('ordering');
-            }
-        });
     };
 
-    // AI is not implemented for Kiosk yet, but hooks are here
+    const handlePaymentComplete = () => {
+        channelRef.current?.postMessage({ type: 'KIOSK_ORDER_PLACED', payload: cart });
+        setStep('confirmation');
+    };
+    
+    useEffect(() => {
+        if (step === 'payment') {
+            const timer = setInterval(() => {
+                setPaymentStep(prev => {
+                    if (prev >= PAYMENT_STEPS.length - 1) {
+                        clearInterval(timer);
+                        handlePaymentComplete();
+                        return prev;
+                    }
+                    return prev + 1;
+                });
+            }, 1500);
+            return () => clearInterval(timer);
+        }
+    }, [step]);
     
     // Effect to auto-reset after confirmation
     useEffect(() => {
@@ -272,6 +273,7 @@ const KIOSKView: React.FC<KIOSKViewProps> = () => {
                                     cartQuantity={cartQuantity}
                                     onSelectItem={handleSelectItem}
                                     isOutOfStock={isOutOfStockMap.get(item.id) || false} 
+                                    onContextMenu={(e) => e.preventDefault()}
                                 />
                             )
                         })}
@@ -353,8 +355,7 @@ const KIOSKView: React.FC<KIOSKViewProps> = () => {
         switch(step) {
             case 'welcome': return renderWelcomeScreen();
             case 'ordering': return renderOrderingScreen();
-            // The payment step is now handled by the LivePaymentModal
-            case 'payment': return null;
+            case 'payment': return renderPaymentScreen();
             case 'confirmation': return renderConfirmationScreen();
             default: return <h1>Something went wrong</h1>
         }

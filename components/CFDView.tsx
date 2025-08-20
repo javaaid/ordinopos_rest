@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { CartItem, AppliedDiscount, AIResponse, Order, Language, MenuItem, AppSettings, SignagePlaylist, SignageContentItem, Location, Theme } from '../types';
 import SparklesIcon from './icons/SparklesIcon';
@@ -81,6 +80,11 @@ const CFDView: React.FC = () => {
                 setAllLocations(payload.allLocations || []);
             } else if (type === 'CART_UPDATE') {
                 setCart(payload || []);
+                 if ((payload || []).length === 0 && !lastCompletedOrder) {
+                    // Cart was cleared from POS, maybe a new sale was started.
+                    // Reset the lastCompletedOrder as well to go back to attract screen.
+                    setLastCompletedOrder(null);
+                }
             } else if (type === 'SETTINGS_UPDATE') {
                 setSettings(payload || null);
             } else if (type === 'LAST_COMPLETED_ORDER_UPDATE') {
@@ -95,7 +99,7 @@ const CFDView: React.FC = () => {
             channel.removeEventListener('message', handleMessage);
             channel.close();
         };
-    }, []);
+    }, [lastCompletedOrder]);
 
     const language = settings?.language.customer || 'en';
     const t = useTranslations(language);

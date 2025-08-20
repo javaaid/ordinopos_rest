@@ -3,6 +3,7 @@
 
 
 
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Order, Location, CartItem, AppSettings, ReceiptSettings, Language, Employee, Printer, PrintJob } from '../types';
 import PrinterIcon from './icons/PrinterIcon';

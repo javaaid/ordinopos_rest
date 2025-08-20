@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from './ui/Button';
 import { AppSettings, Language } from '../types';

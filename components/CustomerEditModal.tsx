@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Customer } from '../types';
-import { COUNTRIES } from '../constants';
 import { Select } from './ui/Select';
+import { COUNTRIES } from '../constants';
+
 
 interface CustomerEditModalProps {
     isOpen: boolean;

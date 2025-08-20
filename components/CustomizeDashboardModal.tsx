@@ -16,7 +16,10 @@ const widgetLabels: Record<SalesDashboardWidgetId, string> = {
     chart: "Sales Trend Chart",
     payment: "Payment Breakdown",
     topItems: "Top Selling Items",
-    locationPerformance: "Location Performance"
+    locationPerformance: "Location Performance",
+    quickActions: "Quick Actions",
+    lowStock: "Low Stock Alerts",
+    recentTransactions: "Recent Transactions"
 };
 
 const CustomizeDashboardModal: React.FC<CustomizeDashboardModalProps> = ({ isOpen, onClose, onSave, allWidgets, visibleWidgets }) => {

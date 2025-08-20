@@ -10,8 +10,8 @@ const IngredientsView: React.FC = () => {
     const { ingredients, handleSaveIngredient, handleDeleteIngredient } = useDataContext();
     const { openModal } = useModalContext();
 
-    const onAddNew = () => openModal('ingredientEdit', { onSave: handleSaveIngredient });
-    const onEdit = (ingredient: Ingredient) => openModal('ingredientEdit', { ingredient, onSave: handleSaveIngredient });
+    const onAddNew = () => openModal('ingredientEdit', { onSave: (ing: Ingredient) => handleSaveIngredient(ing, true) });
+    const onEdit = (ingredient: Ingredient) => openModal('ingredientEdit', { ingredient, onSave: (ing: Ingredient) => handleSaveIngredient(ing, false) });
     
     const thClass = "px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider";
 

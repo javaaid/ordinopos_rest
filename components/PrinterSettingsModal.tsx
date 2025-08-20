@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Printer, PrinterReceiptSettings, Order, Location, PrinterConnectionType } from '../types';
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/Modal';
@@ -26,7 +28,7 @@ const ReceiptPreview: React.FC<{ settings: PrinterReceiptSettings, paperWidth: n
     return (
         <div style={textStyle} className="p-2 bg-white text-black font-mono w-full h-full">
             <div className="text-center mb-1">
-                {settings.headerLogoUrl && <img src={settings.headerLogoUrl} alt="Header Logo" className="mx-auto h-12 w-auto mb-2" />}
+                {settings.logoUrl && <img src={settings.logoUrl} alt="Header Logo" className="mx-auto h-12 w-auto mb-2" />}
                 {settings.headerLines.map((line, i) => line && <p key={i}>{line}</p>)}
             </div>
             <p className="whitespace-pre-wrap">{line}</p>
@@ -148,8 +150,8 @@ const PrinterSettingsModal: React.FC<PrinterSettingsModalProps> = ({ isOpen, onC
                 ))}
             </div>
             <div>
-                <label className="text-sm font-medium text-muted-foreground">Header Logo URL</label>
-                <Input value={formData.receiptSettings?.headerLogoUrl || ''} onChange={e => handleLayoutChange({ headerLogoUrl: e.target.value })} />
+                <label className="text-sm font-medium text-muted-foreground">Logo URL</label>
+                <Input value={formData.receiptSettings?.logoUrl || ''} onChange={e => handleLayoutChange({ logoUrl: e.target.value })} />
             </div>
             <div>
                 <label className="text-sm font-medium text-muted-foreground">Header Lines</label>

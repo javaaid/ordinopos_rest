@@ -4,6 +4,8 @@ import SearchIcon from './icons/SearchIcon';
 import CurrencyDollarIcon from './icons/CurrencyDollarIcon';
 import DocumentArrowDownIcon from './icons/DocumentArrowDownIcon';
 import ReceiptRefundIcon from './icons/ReceiptRefundIcon';
+import PrinterIcon from './icons/PrinterIcon';
+import MapPinIcon from './icons/MapPinIcon';
 import { useAppContext, useDataContext } from '../contexts/AppContext';
 import { useTranslations } from '../hooks/useTranslations';
 
@@ -42,8 +44,8 @@ const typeColors: Record<OrderType, string> = {
 };
 
 const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ orders, onApproveRefund, onDenyRefund, currentRole, onLoadOrder, onPrintA4, onInitiateRefund, onViewReceipt }) => {
-    const { settings } = useAppContext();
-    const { tables } = useDataContext();
+    const { settings, setView } = useAppContext();
+    const { tables, onSelectTable: onSetCurrentTable } = useDataContext();
     const t = useTranslations(settings.language.staff);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterDate, setFilterDate] = useState(new Date());
@@ -72,6 +74,14 @@ const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ orders, onApproveRe
         );
     }, [sortedOrders, searchQuery, filterDate]);
 
+    const handleViewOnFloor = (tableId: string) => {
+        const table = tables.find((t: Table) => t.id === tableId);
+        if (table) {
+            onSetCurrentTable(table);
+            setView('tables');
+        }
+    };
+
     const renderActions = (order: Order) => {
         if (!currentRole) return null;
 
@@ -81,18 +91,15 @@ const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ orders, onApproveRe
         
         return (
             <div className="flex items-center justify-end gap-2">
-                <button
-                    onClick={() => onViewReceipt(order)}
-                    className="text-muted-foreground hover:text-foreground p-1"
-                    title="View Receipt"
-                >
-                    <ReceiptRefundIcon className="w-5 h-5" />
+                <button onClick={() => onViewReceipt(order)} className="text-muted-foreground hover:text-foreground p-1" title="Print Receipt">
+                    <PrinterIcon className="w-5 h-5" />
                 </button>
-                <button
-                    onClick={() => onPrintA4(order)}
-                    className="text-muted-foreground hover:text-foreground p-1"
-                    title="Download PDF Invoice"
-                >
+                {order.orderType === 'dine-in' && order.tableId && (
+                    <button onClick={() => handleViewOnFloor(order.tableId!)} className="text-muted-foreground hover:text-foreground p-1" title="View on Floor Plan">
+                        <MapPinIcon className="w-5 h-5" />
+                    </button>
+                )}
+                <button onClick={() => onPrintA4(order)} className="text-muted-foreground hover:text-foreground p-1" title="Download PDF Invoice">
                     <DocumentArrowDownIcon className="w-5 h-5" />
                 </button>
                 {isPartiallyPaid && (

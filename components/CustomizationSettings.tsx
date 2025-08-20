@@ -1,6 +1,7 @@
 
+
 import React, { useState, useEffect } from 'react';
-import { AppSettings, ReceiptSettings, ThemeSettings, LanguageSettings, Language, NotificationSettings, ReceiptTemplateId, InvoiceTemplateId } from '../types';
+import { AppSettings, PrinterReceiptSettings, ThemeSettings, LanguageSettings, Language, NotificationSettings, ReceiptTemplateId, InvoiceTemplateId, ReceiptSettings } from '../types';
 import SwatchIcon from './icons/SwatchIcon';
 import ProBadge from './ProBadge';
 import { useAppContext, useToastContext } from '../contexts/AppContext';
@@ -232,28 +233,41 @@ const CustomizationSettings: React.FC = () => {
                     <div className="bg-secondary p-4 rounded-lg">
                         <h4 className="font-bold text-foreground mb-2">Notification Settings</h4>
                         <div className="space-y-4">
+                             <div>
+                                <label htmlFor="duration" className="block text-sm font-medium text-muted-foreground mb-1">Display Duration (seconds)</label>
+                                <input type="number" id="duration" name="duration" value={localSettings.notificationSettings.duration} onChange={handleNotificationChange} className="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground" min="1" max="30" />
+                            </div>
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">Theme</label>
-                                <select name="theme" value={localSettings.notificationSettings.theme} onChange={handleNotificationChange} className="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground">
+                                <label htmlFor="position" className="block text-sm font-medium text-muted-foreground mb-1">Position on Screen</label>
+                                <select id="position" name="position" value={localSettings.notificationSettings.position} onChange={handleNotificationChange} className="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground">
+                                    <option value="top-right">Top Right</option>
+                                    <option value="top-left">Top Left</option>
+                                    <option value="bottom-right">Bottom Right</option>
+                                    <option value="bottom-left">Bottom Left</option>
+                                </select>
+                            </div>
+                             <div>
+                                <label htmlFor="theme" className="block text-sm font-medium text-muted-foreground mb-1">Notification Theme</label>
+                                <select id="theme" name="theme" value={localSettings.notificationSettings.theme} onChange={handleNotificationChange} className="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground">
                                     <option value="dark">Dark</option>
                                     <option value="transparent">Transparent</option>
                                 </select>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
 
-            <div className="mt-auto pt-6 text-right shrink-0">
+            <div className="mt-auto pt-6 text-right">
                 <button
                     onClick={handleSave}
                     className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors shadow-lg"
                 >
-                    Save Customizations
+                    Save Customization Settings
                 </button>
             </div>
         </div>
     );
 };
-
 export default CustomizationSettings;

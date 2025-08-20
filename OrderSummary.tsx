@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { CartItem, Customer, OrderType, Employee, AppliedDiscount, Language, Table, Location, Order, AppSettings, AIResponse, AISettings, Promotion, ManualDiscount, Surcharge } from '../types';
 import OrderItem from './OrderItem';
@@ -7,7 +6,7 @@ import UserCircleIcon from './icons/UserCircleIcon';
 import { calculateOrderTotals } from '../utils/calculations';
 import SparklesIcon from './icons/SparklesIcon';
 import AISuggestions from './AISuggestions';
-import { useAppContext, useDataContext, usePOSContext, useModalContext } from '../contexts/AppContext';
+import { useAppContext, useDataContext, usePOSContext, useModalContext } from './contexts/AppContext';
 import { Button } from './ui/Button';
 import TrashIcon from './icons/TrashIcon';
 import PauseIcon from './icons/PauseIcon';
@@ -434,3 +433,4 @@ export default function OrderSummary() {
     </div>
   );
 }
+  

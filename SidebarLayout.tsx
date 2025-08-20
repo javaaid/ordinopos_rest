@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo } from 'react';
 import { ManagementSubView, SettingsSubView, PermissionSet, Role, NavItem, AppPlugin } from '../types';
 import { useDataContext, useAppContext } from '../contexts/AppContext';
@@ -118,10 +117,10 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ title, activeItem, onNavI
         }`;
 
     return (
-        <div className="h-screen flex flex-col md:flex-row gap-6 p-6 bg-background">
+        <div className="h-full flex flex-col md:flex-row gap-6 p-6 bg-background">
             <aside className="w-full md:w-64 bg-card rounded-xl p-4 shrink-0 flex flex-col border border-border shadow-md">
                 <h2 className="text-xl font-bold text-foreground px-2 mb-6">{title}</h2>
-                <nav className="space-y-1 overflow-y-auto">
+                <nav className="space-y-1">
                     {navItems.map(item => {
                         if (Array.isArray(item.children)) {
                             const isOpen = openSubMenu === item.id;
@@ -174,3 +173,4 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ title, activeItem, onNavI
 };
 
 export default SidebarLayout;
+  

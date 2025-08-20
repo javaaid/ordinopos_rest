@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, KeyboardEvent } from 'react';
 import { MenuItem, Category, ModifierGroup, KitchenNote, Printer, KitchenDisplay, RecipeItem, Ingredient } from '../types';
 import { useDataContext, useAppContext } from '../contexts/AppContext';
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/Modal';
@@ -8,6 +8,9 @@ import { Textarea } from './ui/Textarea';
 import { Select } from './ui/Select';
 import TrashIcon from './icons/TrashIcon';
 import { cn } from '../lib/utils';
+import ArrowPathIcon from './icons/ArrowPathIcon';
+import PlusIcon from './icons/PlusIcon';
+import XMarkIcon from './icons/XMarkIcon';
 
 interface MenuItemEditModalProps {
   isOpen: boolean;
@@ -42,6 +45,7 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
     const [activeTab, setActiveTab] = useState<Tab>('General');
     const [formData, setFormData] = useState<Partial<MenuItem>>({});
     const [recipeItems, setRecipeItems] = useState<RecipeItem[]>([]);
+    const [barcodeInput, setBarcodeInput] = useState('');
 
     useEffect(() => {
         if (isOpen) {
@@ -68,10 +72,11 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
                 setRecipeItems(cleanedRecipe);
             } else {
                 setFormData({
-                    name: '', price: 0, category: categories[0]?.id || '', isActive: true, isVeg: false, isDiscountable: true, displayImage: false, askPrice: false, stopSaleAtZeroStock: false, hideName: false, askQuantity: false, useScale: false, alwaysShowModifiers: false, promptForKitchenNote: false, locationIds: [], taxCategory: 'Standard', kdsId: 'kds_1', kitchenPrinterId: 'kp1', memberPrice1: undefined, memberPrice2: undefined, memberPrice3: undefined,
+                    name: '', price: 0, category: categories[0]?.id || '', isActive: true, isVeg: false, isDiscountable: true, displayImage: false, askPrice: false, stopSaleAtZeroStock: false, hideName: false, askQuantity: false, useScale: false, alwaysShowModifiers: false, promptForKitchenNote: false, locationIds: [], taxCategory: 'Standard', kdsId: 'kds_1', kitchenPrinterId: 'kp1', memberPrice1: undefined, memberPrice2: undefined, memberPrice3: undefined, barcodes: [],
                 });
                 setRecipeItems([]);
             }
+             setBarcodeInput('');
         }
     }, [product, categories, isOpen, recipes, ingredients]);
 
@@ -113,6 +118,38 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
         onSave(formData as MenuItem, recipeItems);
         onClose();
     };
+
+    const addBarcode = (barcode: string) => {
+        const cleanedBarcode = barcode.trim();
+        if (cleanedBarcode && !(formData.barcodes || []).includes(cleanedBarcode)) {
+            setFormData(prev => ({ ...prev, barcodes: [...(prev.barcodes || []), cleanedBarcode] }));
+        }
+        setBarcodeInput('');
+    };
+
+    const handleBarcodeKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            addBarcode(barcodeInput);
+        }
+    };
+
+    const removeBarcode = (index: number) => {
+        setFormData(prev => ({ ...prev, barcodes: (prev.barcodes || []).filter((_, i) => i !== index) }));
+    };
+
+    const generateBarcode = () => {
+        // Generate a random 12-digit number for EAN-13
+        const randomNumber = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+        // Calculate EAN-13 check digit
+        let sum = 0;
+        for (let i = 0; i < 12; i++) {
+            sum += parseInt(randomNumber[i], 10) * (i % 2 === 0 ? 1 : 3);
+        }
+        const checkDigit = (10 - (sum % 10)) % 10;
+        const newBarcode = randomNumber + checkDigit;
+        addBarcode(newBarcode);
+    };
     
     const renderGeneralTab = () => (
         <div className="space-y-4">
@@ -126,7 +163,32 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
             </div>
             <Input name="course" value={formData.course || ''} onChange={handleChange} placeholder="Course (e.g., Appetizer, Main)" />
             <Input name="kitchenName" value={formData.kitchenName || ''} onChange={handleChange} placeholder="Kitchen Name (for KDS/printers)" />
-            <Input name="barcode" value={formData.barcode || ''} onChange={handleChange} placeholder="Barcode Number" />
+             <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Barcodes</label>
+                 <div className="flex items-center flex-wrap gap-2 p-2 bg-input border border-border rounded-md">
+                     {(formData.barcodes || []).map((barcode, index) => (
+                        <div key={index} className="flex items-center gap-1.5 bg-secondary text-secondary-foreground text-sm font-mono px-2 py-1 rounded">
+                            <span>{barcode}</span>
+                            <button type="button" onClick={() => removeBarcode(index)} className="text-muted-foreground hover:text-foreground">
+                                <XMarkIcon className="w-3 h-3"/>
+                            </button>
+                        </div>
+                    ))}
+                     <input
+                        type="text"
+                        value={barcodeInput}
+                        onChange={(e) => setBarcodeInput(e.target.value)}
+                        onKeyDown={handleBarcodeKeyDown}
+                        placeholder="Add barcode..."
+                        className="bg-transparent outline-none flex-grow text-sm"
+                    />
+                 </div>
+                 <div className="flex items-center gap-2 mt-2">
+                     <Button type="button" variant="outline" size="sm" onClick={generateBarcode} className="flex items-center gap-2">
+                        <ArrowPathIcon className="w-4 h-4" /> Generate EAN-13
+                    </Button>
+                </div>
+            </div>
             <Input name="imageUrl" value={formData.imageUrl || ''} onChange={handleChange} placeholder="Image URL" />
              <div>
                 <label className="text-xs text-muted-foreground">Display Order</label>

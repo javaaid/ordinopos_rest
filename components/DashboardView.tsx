@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Order, Ingredient, View, ManagementSubView, DashboardWidgetId, AppSettings } from '../types';
+import { Order, Ingredient, View, ManagementSubView, SalesDashboardWidgetId, AppSettings } from '../types';
 import CurrencyDollarIcon from './icons/CurrencyDollarIcon';
 import RectangleStackIcon from './icons/RectangleStackIcon';
 import ChartBarIcon from './icons/ChartBarIcon';
@@ -172,9 +172,9 @@ const DashboardView: React.FC = () => {
     const currentLocation = useAppContext().currentLocation;
     const currency = currentLocation?.currency || '$';
 
-    const widgetOrder = settings.preferences.dashboardWidgetOrder || ['stats', 'salesChart', 'quickActions', 'topItems', 'lowStock', 'recentTransactions'];
+    const widgetOrder = settings.preferences.dashboardWidgetOrder || ['stats', 'chart', 'quickActions', 'topItems', 'lowStock', 'recentTransactions'];
 
-    const widgetComponents: Record<DashboardWidgetId, React.ReactNode> = {
+    const widgetComponents: Record<SalesDashboardWidgetId, React.ReactNode> = {
         stats: (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                  <StatCard icon={<CurrencyDollarIcon className="w-7 h-7"/>} title="Today's Revenue" value={`${currency}${todaysRevenue.toFixed(2)}`} color="#2563eb" />
@@ -182,26 +182,30 @@ const DashboardView: React.FC = () => {
                 <StatCard icon={<ChartBarIcon className="w-7 h-7"/>} title="Avg. Order Value" value={`${currency}${avgOrderValue.toFixed(2)}`} color="#9333ea"/>
             </div>
         ),
-        salesChart: <SalesChartWidget orders={todaysOrders} currency={currency} />,
+        chart: <SalesChartWidget orders={todaysOrders} currency={currency} />,
         quickActions: <QuickActionsWidget />,
         topItems: <TopProductsWidget orders={todaysOrders} currency={currency} />,
         lowStock: <LowStockAlertsWidget ingredients={ingredients} />,
         recentTransactions: <RecentTransactionsWidget orders={todaysOrders} currency={currency} />,
+        payment: <div></div>,
+        locationPerformance: <div></div>,
     };
 
-    const widgetSpans: Record<DashboardWidgetId, string> = {
+    const widgetSpans: Record<SalesDashboardWidgetId, string> = {
         stats: 'lg:col-span-3',
-        salesChart: 'lg:col-span-2',
+        chart: 'lg:col-span-2',
         quickActions: 'lg:col-span-1',
         topItems: 'lg:col-span-1',
         lowStock: 'lg:col-span-1',
         recentTransactions: 'lg:col-span-2',
+        locationPerformance: 'lg:col-span-3',
+        payment: 'lg:col-span-3',
     };
 
     const handleCustomize = () => {
         openModal('dashboardCustomize', {
             widgetOrder: widgetOrder,
-            onSave: (newOrder: DashboardWidgetId[]) => {
+            onSave: (newOrder: SalesDashboardWidgetId[]) => {
                 setSettings((prev: AppSettings) => ({
                     ...prev,
                     preferences: { ...prev.preferences, dashboardWidgetOrder: newOrder }

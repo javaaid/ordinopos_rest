@@ -14,22 +14,65 @@ interface OrderItemProps {
 }
 
 const calculateItemTotal = (item: CartItem, orderType: OrderType, customer: Customer | null): number => {
-    const itemBasePrice = item.priceOverride ?? getPriceForItem(item.menuItem, orderType, customer);
+    if (item.priceOverride) {
+        return item.priceOverride * item.quantity;
+    }
+    const itemBasePrice = getPriceForItem(item.menuItem, orderType, customer);
     const modifiersTotal = item.selectedModifiers.reduce((acc, mod) => acc + mod.price, 0);
     return (itemBasePrice + modifiersTotal) * item.quantity;
 }
 
 const OrderItem: React.FC<OrderItemProps> = ({ cartItem, onRemoveItem, onUpdateCartQuantity, orderType, customer }) => {
+  const handleQuantityChange = (delta: number) => {
+    const newQuantity = cartItem.quantity + delta;
+    onUpdateCartQuantity(cartItem.cartId, newQuantity);
+  };
+  
+  const handleManualQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newQuantity = parseInt(e.target.value, 10);
+    if (!isNaN(newQuantity)) {
+        onUpdateCartQuantity(cartItem.cartId, newQuantity);
+    }
+  }
+  
+  const renderPizzaConfig = () => {
+    if (!cartItem.pizzaConfiguration) return null;
+    const { size, crust, toppings } = cartItem.pizzaConfiguration;
+    const toppingNames = toppings.map(t => `${t.name} (${t.placement})`).join(', ');
+    return (
+      <p className="text-xs text-muted-foreground truncate mt-1">
+        {size.name}, {crust.name}, {toppingNames}
+      </p>
+    )
+  }
+
+  const renderBurgerConfig = () => {
+      if (!cartItem.burgerConfiguration) return null;
+      const { bun, patty, cheese, toppings, sauces, extras } = cartItem.burgerConfiguration;
+      const allAddons = [...toppings, ...sauces, ...extras].map(a => a.name).join(', ');
+      return (
+          <p className="text-xs text-muted-foreground truncate mt-1">
+              {bun.name}, {patty.name}, {cheese?.name}, {allAddons}
+          </p>
+      );
+  };
+
   return (
     <div className="flex items-center p-1.5 bg-accent rounded-md gap-2">
       <div className="flex-grow">
         <p className="font-bold text-xs text-foreground leading-tight">{cartItem.menuItem.name}</p>
         <div className="flex items-center gap-1.5 mt-0.5">
-            <button onClick={() => onUpdateCartQuantity(cartItem.cartId, cartItem.quantity - 1)} className="p-0.5 text-muted-foreground bg-background rounded-full hover:bg-muted border border-border">
+            <button onClick={() => handleQuantityChange(-1)} className="p-0.5 text-muted-foreground bg-background rounded-full hover:bg-muted border border-border">
                 <MinusIcon className="w-2.5 h-2.5"/>
             </button>
-            <span className="text-xs font-bold w-4 text-center text-foreground">{cartItem.quantity}</span>
-            <button onClick={() => onUpdateCartQuantity(cartItem.cartId, cartItem.quantity + 1)} className="p-0.5 text-muted-foreground bg-background rounded-full hover:bg-muted border border-border">
+            <input 
+              type="number" 
+              value={cartItem.quantity} 
+              onChange={handleManualQuantityChange}
+              className="text-xs font-bold w-6 text-center text-foreground bg-transparent border-none focus:ring-0 p-0"
+              aria-label={`Quantity for ${cartItem.menuItem.name}`}
+            />
+            <button onClick={() => handleQuantityChange(1)} className="p-0.5 text-muted-foreground bg-background rounded-full hover:bg-muted border border-border">
                 <PlusIcon className="w-2.5 h-2.5"/>
             </button>
         </div>
@@ -38,6 +81,8 @@ const OrderItem: React.FC<OrderItemProps> = ({ cartItem, onRemoveItem, onUpdateC
              + {cartItem.selectedModifiers.map(m => m.name).join(', ')}
            </p>
         )}
+        {renderPizzaConfig()}
+        {renderBurgerConfig()}
         {cartItem.kitchenNote && (
             <p className="text-xs text-yellow-600 italic mt-1">
                 Note: {cartItem.kitchenNote}

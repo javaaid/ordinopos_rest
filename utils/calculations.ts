@@ -25,7 +25,8 @@ export const calculateOrderTotals = (
     orderType: OrderType = 'dine-in',
     settings: AppSettings | undefined,
     customer: Customer | null | undefined,
-    surcharges: Surcharge[] = []
+    surcharges: Surcharge[] = [],
+    appliedLoyaltyPoints: number = 0
 ) => {
     const safeCart = cart || [];
     let subtotal = 0;
@@ -39,11 +40,11 @@ export const calculateOrderTotals = (
         subtotal += lineItemTotal;
     });
     
-    let totalDiscountAmount = 0;
+    let promoDiscountAmount = 0;
     let finalAppliedDiscount: AppliedDiscount | null = null;
 
     if (appliedDiscount) {
-        totalDiscountAmount = appliedDiscount.amount;
+        promoDiscountAmount = appliedDiscount.amount;
         finalAppliedDiscount = { ...appliedDiscount };
     } else if (promotion) {
         let promotionDiscount = 0;
@@ -73,7 +74,7 @@ export const calculateOrderTotals = (
             }
         }
         
-        totalDiscountAmount = promotionDiscount;
+        promoDiscountAmount = promotionDiscount;
         finalAppliedDiscount = { name: promotion.name, amount: promotionDiscount };
     }
     
@@ -87,11 +88,18 @@ export const calculateOrderTotals = (
         return sum + (singleItemPrice * item.quantity);
     }, 0);
     
-    totalDiscountAmount = Math.max(0, Math.min(discountableSubtotal, totalDiscountAmount));
+    promoDiscountAmount = Math.max(0, Math.min(discountableSubtotal, promoDiscountAmount));
     if (finalAppliedDiscount) {
-        finalAppliedDiscount.amount = totalDiscountAmount;
+        finalAppliedDiscount.amount = promoDiscountAmount;
+    }
+
+    let loyaltyDiscountAmount = 0;
+    if (settings && settings.loyalty.enabled && appliedLoyaltyPoints > 0) {
+        const potentialDiscount = appliedLoyaltyPoints / settings.loyalty.redemptionRate;
+        loyaltyDiscountAmount = Math.min(subtotal - promoDiscountAmount, potentialDiscount);
     }
     
+    const totalDiscountAmount = promoDiscountAmount + loyaltyDiscountAmount;
     const discountedSubtotal = subtotal - totalDiscountAmount;
 
     safeCart.forEach(item => {
@@ -101,7 +109,7 @@ export const calculateOrderTotals = (
         const lineItemTotal = singleItemPrice * item.quantity;
         
         const itemIsDiscountable = item.menuItem.isDiscountable !== false;
-        const itemDiscount = (itemIsDiscountable && discountableSubtotal > 0) ? (lineItemTotal / discountableSubtotal) * totalDiscountAmount : 0;
+        const itemDiscount = (itemIsDiscountable && subtotal > 0) ? (lineItemTotal / subtotal) * totalDiscountAmount : 0;
         const taxableAmount = lineItemTotal - itemDiscount;
         
         const taxCategory = item.menuItem.taxCategory || 'Standard';
@@ -120,12 +128,12 @@ export const calculateOrderTotals = (
     if (settings) {
         if (orderType === 'dine-in' && settings.dineIn.surcharge.enabled) {
             const { name, type, value } = settings.dineIn.surcharge;
-            surchargeAmount = type === 'percentage' ? subtotal * (value / 100) : value;
+            surchargeAmount = type === 'percentage' ? discountedSubtotal * (value / 100) : value;
             surchargeDetails = { name, amount: surchargeAmount };
         } else if (orderType === 'delivery' && settings.delivery.surcharge.enabled && settings.delivery.surcharge.surchargeId) {
             const surcharge = surcharges.find(s => s.id === settings.delivery.surcharge.surchargeId);
             if (surcharge) {
-                surchargeAmount = surcharge.type === 'percentage' ? subtotal * surcharge.value : surcharge.value;
+                surchargeAmount = surcharge.type === 'percentage' ? discountedSubtotal * surcharge.value : surcharge.value;
                 surchargeDetails = { name: surcharge.name, amount: surchargeAmount };
             }
         }
@@ -133,14 +141,15 @@ export const calculateOrderTotals = (
 
     const totalTax = Object.values(taxDetails).reduce((sum, tax) => sum + tax, 0);
     let total = discountedSubtotal + totalTax + surchargeAmount;
-
+    
     if (settings && orderType === 'dine-in' && settings.dineIn.minCharge.enabled && total < settings.dineIn.minCharge.amount) {
         total = settings.dineIn.minCharge.amount;
     }
 
     return {
         subtotal,
-        discountAmount: totalDiscountAmount,
+        discountAmount: promoDiscountAmount,
+        loyaltyDiscountAmount,
         tax: totalTax,
         taxDetails,
         total,

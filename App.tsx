@@ -1,3 +1,5 @@
+
+
 import React, { useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import MenuGrid from './components/MenuGrid';
 import OrderSummary from './components/OrderSummary';
@@ -66,6 +68,7 @@ import NumberingSettingsView from './components/NumberingSettingsView';
 import ProductsView from './components/ProductsView';
 import OrderNumberDisplayView from './components/OrderNumberDisplayView';
 import PizzaBuilderSettingsView from './components/PizzaBuilderSettingsView';
+import BurgerBuilderSettingsView from './components/BurgerBuilderSettingsView';
 import LandingPage from './components/LandingPage';
 import QRCode from "react-qr-code";
 import CallLogView from './components/CallLogView';
@@ -76,6 +79,7 @@ import ChevronDoubleLeftIcon from './components/icons/ChevronDoubleLeftIcon';
 import ChevronDoubleRightIcon from './components/icons/ChevronDoubleRightIcon';
 import PrintersView from './components/PrintersView';
 import POSSubHeader from './components/POSSubHeader';
+import LoyaltySettingsView from './components/LoyaltySettingsView';
 
 const App: React.FC = () => {
   const { 
@@ -167,18 +171,18 @@ const App: React.FC = () => {
     
     const effectivePermissions = { ...currentRole.permissions };
 
-    if (!isReservationPluginActive) {
-        effectivePermissions.viewReservations = false;
-    }
-    if (!isWaitlistPluginActive) {
-        effectivePermissions.viewWaitlist = false;
-    }
-    if (!isOrderNumberDisplayPluginActive) {
-        effectivePermissions.viewOrderNumberDisplay = false;
+    // Plugin-based overrides
+    if (!isReservationPluginActive) effectivePermissions.viewReservations = false;
+    if (!isWaitlistPluginActive) effectivePermissions.viewWaitlist = false;
+    if (!isOrderNumberDisplayPluginActive) effectivePermissions.viewOrderNumberDisplay = false;
+    
+    // Explicit setting overrides. A setting of `false` should always override a `true` permission.
+    if (settings.advancedPOS.enableTimeClock === false) {
+        effectivePermissions.viewTimeClock = false;
     }
     
     return effectivePermissions;
-  }, [currentRole, isReservationPluginActive, isWaitlistPluginActive, isOrderNumberDisplayPluginActive]);
+}, [currentRole, isReservationPluginActive, isWaitlistPluginActive, isOrderNumberDisplayPluginActive, settings]);
   
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
@@ -292,19 +296,19 @@ const App: React.FC = () => {
           case 'delivery_settings': return permissions.canPerformManagerFunctions ? <DeliverySettingsView /> : <PermissionDenied />;
           case 'take_away_settings': return permissions.canPerformManagerFunctions ? <TakeAwaySettingsView /> : <PermissionDenied />;
           case 'tab_settings': return permissions.canPerformManagerFunctions ? <TabSettingsView /> : <PermissionDenied />;
-          case 'advanced_pos_settings': return permissions.canPerformManagerFunctions ? <AdvancedPOSSettingsView /> : <PermissionDenied />;
-          case 'preferences_settings': return permissions.canPerformManagerFunctions ? <PreferencesSettingsView /> : <PermissionDenied />;
           case 'menu_products': return canManageMenu ? <ProductsView /> : <PermissionDenied />;
           case 'menu_categories': return canManageMenu ? <div className="p-6 h-full"><CategoryManagementTab categories={categories} onAddNew={handleAddNewCategory} onEdit={handleEditCategory} onDelete={handleDeleteCategory} /></div> : <PermissionDenied />;
           case 'menu_modifiers': return canManageMenu ? <div className="h-full"><ModifierManagementTab /></div> : <PermissionDenied />;
           case 'menu_promotions': return canManageMenu ? <PromotionsView /> : <PermissionDenied />;
           case 'menu_pizza_builder': return canManageMenu ? <PizzaBuilderSettingsView /> : <PermissionDenied />;
+          case 'menu_burger_builder': return canManageMenu ? <BurgerBuilderSettingsView /> : <PermissionDenied />;
           case 'menu_kitchen_notes': return canManageMenu ? <KitchenNoteManagementTab /> : <PermissionDenied />;
           case 'menu_void_reasons': return canManageMenu ? <VoidReasonManagementTab /> : <PermissionDenied />;
           case 'menu_discounts': return canManageMenu ? <DiscountManagementTab /> : <PermissionDenied />;
           case 'menu_surcharges': return canManageMenu ? <SurchargeManagementTab /> : <PermissionDenied />;
           case 'menu_gratuity': return canManageMenu ? <GratuityManagementTab /> : <PermissionDenied />;
           case 'call_log': return permissions.viewCustomers ? <CallLogView /> : <PermissionDenied />;
+          case 'loyalty': return permissions.canPerformManagerFunctions ? <LoyaltySettingsView /> : <PermissionDenied />;
           default: return <PermissionDenied />;
       }
     };
@@ -320,6 +324,8 @@ const App: React.FC = () => {
             case 'numbering': return permissions.canPerformManagerFunctions ? <NumberingSettingsView /> : <PermissionDenied />;
             case 'device_settings': return permissions.canPerformManagerFunctions ? <DeviceSettingsView /> : <PermissionDenied />;
             case 'printers': return permissions.canPerformManagerFunctions ? <PrintersView /> : <PermissionDenied />;
+            case 'advanced_pos_settings': return permissions.canPerformManagerFunctions ? <AdvancedPOSSettingsView /> : <PermissionDenied />;
+            case 'preferences_settings': return permissions.canPerformManagerFunctions ? <PreferencesSettingsView /> : <PermissionDenied />;
             default: return null;
         }
     };

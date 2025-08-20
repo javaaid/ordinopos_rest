@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { Order, Driver } from '../types';
 import DeliveryOrderCard from './DeliveryOrderCard';
@@ -34,6 +32,7 @@ const DeliveryView: React.FC = () => {
     const { orders, drivers, onAssignDriver, onCompleteDelivery, onSyncDeliveryOrders, onAcceptDeliveryOrder } = useDataContext();
 
     const incomingOrders = (orders || []).filter(o => (o.source === 'uber-eats' || o.source === 'doordash') && o.status === 'pending');
+    const preparingOrders = (orders || []).filter(o => o.orderType === 'delivery' && o.status === 'kitchen');
     const readyForDelivery = (orders || []).filter(o => o.orderType === 'delivery' && o.status === 'completed');
     const outForDelivery = (orders || []).filter(o => o.status === 'out-for-delivery');
     const availableDrivers = (drivers || []).filter(d => d.status === 'available');
@@ -50,7 +49,7 @@ const DeliveryView: React.FC = () => {
                     Sync Delivery Orders
                 </button>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-grow overflow-hidden">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 flex-grow overflow-hidden">
                 {/* Incoming Column */}
                 <div className="bg-card rounded-lg p-4 flex flex-col border border-border">
                     <h2 className="text-xl font-bold text-cyan-500 mb-4 sticky top-0 bg-card pb-2">Incoming ({incomingOrders.length})</h2>
@@ -63,6 +62,27 @@ const DeliveryView: React.FC = () => {
                             <div className="text-center text-muted-foreground py-10">
                                 <p>No new delivery orders.</p>
                                 <p className="text-xs">Click "Sync" to check again.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                
+                 {/* Preparing Column */}
+                <div className="bg-card rounded-lg p-4 flex flex-col border border-border">
+                    <h2 className="text-xl font-bold text-orange-500 mb-4 sticky top-0 bg-card pb-2">Preparing ({preparingOrders.length})</h2>
+                    <div className="flex-grow overflow-y-auto space-y-4 pr-2 -mr-2">
+                        {preparingOrders.length > 0 ? (
+                             preparingOrders.map(order => (
+                                <DeliveryOrderCard
+                                    key={order.id}
+                                    order={order}
+                                    drivers={drivers}
+                                    onCompleteDelivery={onCompleteDelivery}
+                                />
+                            ))
+                        ) : (
+                            <div className="text-center text-muted-foreground py-10">
+                                <p>No orders are being prepared.</p>
                             </div>
                         )}
                     </div>

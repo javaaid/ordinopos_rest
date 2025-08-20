@@ -43,6 +43,12 @@ const DeliveryOrderCard: React.FC<DeliveryOrderCardProps> = ({ order, drivers, a
             ))}
             </ul>
 
+            {order.status === 'kitchen' && (
+                <div className="text-center p-2 bg-orange-500/10 rounded-md">
+                    <p className="font-semibold text-sm text-orange-500">Preparing in kitchen...</p>
+                </div>
+            )}
+
             {order.status === 'completed' && onAssignDriver && availableDrivers && (
                 <div className="flex gap-2 items-center">
                     <select

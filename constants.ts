@@ -1,4 +1,4 @@
-import { Category, MenuItem, Customer, Driver, Employee, Location, Supplier, WastageEntry, Role, PermissionSet, AuditLogEntry, Printer, Table, Subscription, PurchaseOrder, AppPlugin, ScheduleEntry, Reservation, WaitlistEntry, Ingredient, RecipeItem, SignageDisplay, SignageContentItem, SignagePlaylist, SignageScheduleEntry, PaymentType, PizzaSize, PizzaCrust, PizzaSauce, PizzaCheese, PizzaToppingItem, Promotion, ModifierGroup, KitchenDisplay, KitchenNote, VoidReason, ManualDiscount, Surcharge, GenericDevice, PrinterReceiptSettings, KitchenPrintSettings, CustomerDisplay, CallLogEntry, KitchenProfileType } from './types';
+import { Category, MenuItem, Customer, Driver, Employee, Location, Supplier, WastageEntry, Role, PermissionSet, AuditLogEntry, Printer, Table, Subscription, PurchaseOrder, AppPlugin, ScheduleEntry, Reservation, WaitlistEntry, Ingredient, RecipeItem, SignageDisplay, SignageContentItem, SignagePlaylist, SignageScheduleEntry, PaymentType, PizzaSize, PizzaCrust, PizzaSauce, PizzaCheese, PizzaToppingItem, Promotion, ModifierGroup, KitchenDisplay, KitchenNote, VoidReason, ManualDiscount, Surcharge, GenericDevice, PrinterReceiptSettings, KitchenPrintSettings, CustomerDisplay, CallLogEntry, KitchenProfileType, BurgerBuilderSettings, BurgerBun, BurgerPatty, BurgerCheese, BurgerToppingItem, BurgerSauce, BurgerExtras } from './types';
 import { OPTIONAL_PLUGIN_DEFINITIONS } from './plugins/definitions';
 
 // New Pizza Builder Settings
@@ -61,6 +61,47 @@ export const PIZZA_OPTIONS_SUBURBIA = {
     ],
 };
 
+export const BURGER_BUNS: BurgerBun[] = [
+    { id: 'bun_brioche', name: 'Brioche Bun', price: 0 },
+    { id: 'bun_sesame', name: 'Sesame Seed Bun', price: 0 },
+    { id: 'bun_pretzel', name: 'Pretzel Bun', price: 1.0 },
+];
+export const BURGER_PATTIES: BurgerPatty[] = [
+    { id: 'patty_beef', name: 'Beef Patty', price: 0, weight: '1/3 lb' },
+    { id: 'patty_chicken', name: 'Grilled Chicken', price: 0 },
+    { id: 'patty_veggie', name: 'Veggie Patty', price: 0 },
+];
+export const BURGER_CHEESES: BurgerCheese[] = [
+    { id: 'bcheese_american', name: 'American Cheese', price: 1.0 },
+    { id: 'bcheese_cheddar', name: 'Cheddar', price: 1.0 },
+    { id: 'bcheese_swiss', name: 'Swiss', price: 1.0 },
+];
+export const BURGER_TOPPINGS: BurgerToppingItem[] = [
+    { id: 'btop_lettuce', name: 'Lettuce', price: 0 },
+    { id: 'btop_tomato', name: 'Tomato', price: 0 },
+    { id: 'btop_onion', name: 'Onion', price: 0 },
+    { id: 'btop_bacon', name: 'Bacon', price: 2.0 },
+    { id: 'btop_avocado', name: 'Avocado', price: 2.5 },
+];
+export const BURGER_SAUCES: BurgerSauce[] = [
+    { id: 'bsauce_ketchup', name: 'Ketchup', price: 0 },
+    { id: 'bsauce_mayo', name: 'Mayonnaise', price: 0 },
+    { id: 'bsauce_bbq', name: 'BBQ Sauce', price: 0.5 },
+];
+export const BURGER_EXTRAS: BurgerExtras[] = [
+    { id: 'bextra_fries', name: 'Side of Fries', price: 3.0 },
+    { id: 'bextra_rings', name: 'Onion Rings', price: 4.0 },
+];
+
+export const BURGER_OPTIONS: BurgerBuilderSettings = {
+    buns: BURGER_BUNS,
+    patties: BURGER_PATTIES,
+    cheeses: BURGER_CHEESES,
+    toppings: BURGER_TOPPINGS,
+    sauces: BURGER_SAUCES,
+    extras: BURGER_EXTRAS,
+};
+
 export const PAYMENT_TYPES: PaymentType[] = [
     { id: 'cash', name: 'Cash', isEnabled: true },
     { id: 'card', name: 'Card', isEnabled: true },
@@ -110,6 +151,7 @@ export const LOCATIONS: Location[] = [
         countryCode: 'US',
         currency: '$',
         pizzaBuilder: PIZZA_OPTIONS,
+        burgerBuilder: BURGER_OPTIONS,
     },
     { 
         id: 'loc_2', 
@@ -122,6 +164,7 @@ export const LOCATIONS: Location[] = [
         countryCode: 'US',
         currency: '$',
         pizzaBuilder: PIZZA_OPTIONS_SUBURBIA,
+        burgerBuilder: BURGER_OPTIONS,
     },
     { 
         id: 'loc_3', 
@@ -134,6 +177,7 @@ export const LOCATIONS: Location[] = [
         countryCode: 'US',
         currency: '$',
         pizzaBuilder: PIZZA_OPTIONS,
+        burgerBuilder: BURGER_OPTIONS,
     },
     { 
         id: 'loc_4', 
@@ -147,6 +191,7 @@ export const LOCATIONS: Location[] = [
         countryCode: 'SA',
         currency: 'SAR',
         pizzaBuilder: PIZZA_OPTIONS,
+        burgerBuilder: BURGER_OPTIONS,
     },
 ];
 
@@ -255,8 +300,7 @@ export const COUNTRIES = [
     { code: 'PL', name: 'Poland' }, { code: 'PT', name: 'Portugal' }, { code: 'PR', name: 'Puerto Rico' }, { code: 'QA', name: 'Qatar' },
     { code: 'CG', name: 'Republic of the Congo' }, { code: 'RE', name: 'Reunion' }, { code: 'RO', name: 'Romania' }, { code: 'RU', name: 'Russia' },
     { code: 'RW', name: 'Rwanda' }, { code: 'BL', name: 'Saint Barthelemy' }, { code: 'SH', name: 'Saint Helena' }, { code: 'KN', name: 'Saint Kitts and Nevis' },
-    { code: 'LC', name: 'Saint Lucia' }, { code: 'MF', name: 'Saint Martin' }, { code: 'PM', name: 'Saint Pierre and Miquelon' },
-    { code: 'VC', name: 'Saint Vincent and the Grenadines' }, { code: 'WS', name: 'Samoa' }, { code: 'SM', name: 'San Marino' },
+    { code: 'LC', name: 'Saint Lucia' }, { code: 'MF', name: 'Saint Martin' }, { code: 'PM', name: 'Saint Pierre and Miquelon' }, { code: 'VC', name: 'Saint Vincent and the Grenadines' }, { code: 'WS', name: 'Samoa' }, { code: 'SM', name: 'San Marino' },
     { code: 'ST', name: 'Sao Tome and Principe' }, { code: 'SA', name: 'Saudi Arabia' }, { code: 'SN', name: 'Senegal' }, { code: 'RS', name: 'Serbia' },
     { code: 'SC', name: 'Seychelles' }, { code: 'SL', name: 'Sierra Leone' }, { code: 'SG', name: 'Singapore' }, { code: 'SX', name: 'Sint Maarten' },
     { code: 'SK', name: 'Slovakia' }, { code: 'SI', name: 'Slovenia' }, { code: 'SB', name: 'Solomon Islands' }, { code: 'SO', name: 'Somalia' },
@@ -372,8 +416,8 @@ export const MENU_ITEMS: MenuItem[] = [
 ];
 
 export const CUSTOMERS: Customer[] = [
-    { id: 'cust_1', name: 'John Doe', phone: '555-1234', email: 'john.d@example.com', address: '123 Main St', locationId: 'loc_1' },
-    { id: 'cust_2', name: 'Jane Smith', phone: '555-5678', email: 'jane.s@example.com', address: '456 Oak Ave', locationId: 'loc_2' },
+    { id: 'cust_1', name: 'John Doe', phone: '555-1234', email: 'john.d@example.com', address: '123 Main St', locationId: 'loc_1', loyaltyPoints: 1250 },
+    { id: 'cust_2', name: 'Jane Smith', phone: '555-5678', email: 'jane.s@example.com', address: '456 Oak Ave', locationId: 'loc_2', loyaltyPoints: 540 },
 ];
 
 export const DRIVERS: Driver[] = [
@@ -422,8 +466,9 @@ export const DEFAULT_RECEIPT_SETTINGS: PrinterReceiptSettings = {
     showTotalQuantity: true,
     showTipGuide: false,
     showBarcode: true,
-    headerLogoUrl: '',
+    logoUrl: '',
     footerLogoUrl: '',
+    promoMessage: 'Thank you for your visit!',
 };
 
 export const DEFAULT_KITCHEN_PRINT_SETTINGS: KitchenPrintSettings = {
@@ -582,7 +627,7 @@ export const PRINTERS: Printer[] = [
     },
     { id: 'p5', name: 'Order Printer (Dine In, Tab)', type: 'thermal', connection: 'PDF Printer', model: 'Generic Thermal', paperWidth: 80, initialCommand: '1b,40', cutterCommand: '1d,56,30', useRasterImage: false, hasDrawer: false, isEnabled: true, status: 'connected', kitchenProfiles: { order: { ...DEFAULT_KITCHEN_PRINT_SETTINGS } }, isDefault: false },
     { id: 'p3', name: 'Pickup (takeaway) Printer', type: 'thermal', connection: 'PDF Printer', isEnabled: true, status: 'connected', model: 'Generic Thermal', paperWidth: 80, initialCommand: '1b,40', cutterCommand: '1d,56,30', useRasterImage: false, hasDrawer: false, kitchenProfiles: { takeaway: { ...DEFAULT_KITCHEN_PRINT_SETTINGS } }, isDefault: false },
-    { id: 'p4', name: 'Report Printer', type: 'a4', connection: 'PDF Printer', isEnabled: true, status: 'connected', kitchenProfiles: { report: { ...DEFAULT_KITCHEN_PRINT_SETTINGS } }, isDefault: false },
+    { id: 'p4', name: 'Report Printer', type: 'a4', connection: 'PDF Printer', isEnabled: true, status: 'connected', kitchenProfiles: { report: { ...DEFAULT_KITCHEN_PRINT_SETTINGS, paperWidth: 80 } as any }, paperWidth: 80, isDefault: false },
 ];
 
 export const TABLES: Table[] = [

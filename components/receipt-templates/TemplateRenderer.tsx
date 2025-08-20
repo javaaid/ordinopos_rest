@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 import { Order, Location, AppSettings, CartItem } from '../../types';
 import { getPriceForItem, generateZatcaQRCode } from '../../utils/calculations';
@@ -69,7 +71,16 @@ const StandardTemplate: React.FC<TemplateProps> = ({ format, order, location, se
             <p className="whitespace-pre">{line}</p>
             <div className="text-xs space-y-0.5">
                 <div className="flex justify-between"><span>Subtotal:</span><span>{currency}{order.subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span>Tax:</span><span>{currency}{order.tax.toFixed(2)}</span></div>
+                {settings.advancedPOS.showTaxOnReceipt && order.taxDetails ? (
+                    Object.entries(order.taxDetails).map(([name, value]) => (
+                        <div key={name} className="flex justify-between">
+                            <span>{name}</span>
+                            <span>{currency}{Number(value).toFixed(2)}</span>
+                        </div>
+                    ))
+                ) : (
+                    <div className="flex justify-between"><span>Tax:</span><span>{currency}{order.tax.toFixed(2)}</span></div>
+                )}
                 <div className="flex justify-between font-bold text-base mt-1"><span>TOTAL:</span><span>{currency}{order.total.toFixed(2)}</span></div>
             </div>
              <div className="text-xs text-center mt-2"><p>{settings.receipt.promoMessage}</p></div>

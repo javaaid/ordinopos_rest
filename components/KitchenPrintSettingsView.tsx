@@ -243,16 +243,9 @@ const KitchenPrintSettingsView: React.FC<KitchenPrintSettingsViewProps> = ({ pri
                 <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">Content Options</label>
                     <div className="grid grid-cols-2 gap-2">
-                        <Toggle label="Show Order #" enabled={!!currentSettings.showOrderNumber} onToggle={() => handleToggle('showOrderNumber')} />
-                        <Toggle label="Show Staff" enabled={!!currentSettings.showStaff} onToggle={() => handleToggle('showStaff')} />
-                        <Toggle label="Show Order Time" enabled={!!currentSettings.showOrderTime} onToggle={() => handleToggle('showOrderTime')} />
-                        <Toggle label="Show Table" enabled={!!currentSettings.showTable} onToggle={() => handleToggle('showTable')} />
-                        <Toggle label="Show Guests" enabled={!!currentSettings.showGuests} onToggle={() => handleToggle('showGuests')} />
-                        <Toggle label="Show Total Quantity" enabled={!!currentSettings.showTotalQuantity} onToggle={() => handleToggle('showTotalQuantity')} />
-                        <Toggle label="Show Kitchen Note" enabled={!!currentSettings.showKitchenNote} onToggle={() => handleToggle('showKitchenNote')} />
-                        <Toggle label="Show Customer Name" enabled={!!currentSettings.showCustomer} onToggle={() => handleToggle('showCustomer')} />
-                        <Toggle label="Show Invoice #" enabled={!!currentSettings.showInvoiceNumber} onToggle={() => handleToggle('showInvoiceNumber')} />
-                        <Toggle label="Show Barcode" enabled={!!currentSettings.showBarcode} onToggle={() => handleToggle('showBarcode')} />
+                        {Object.keys(currentSettings).filter(k => k.startsWith('show')).map(key => (
+                           <Toggle key={key} label={key.replace('show', '').replace(/([A-Z])/g, ' $1').trim()} enabled={!!currentSettings[key as keyof typeof currentSettings]} onToggle={() => handleToggle(key as keyof KitchenPrintSettings)} />
+                        ))}
                     </div>
                 </div>
                  <div>

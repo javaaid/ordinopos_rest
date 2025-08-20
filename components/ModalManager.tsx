@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useModalContext } from '../contexts/AppContext';
@@ -5,6 +7,7 @@ import { useModalContext } from '../contexts/AppContext';
 // Import all modal components
 import ModifierModal from './ModifierModal';
 import PizzaBuilder from './PizzaBuilder';
+import BurgerBuilder from './BurgerBuilder';
 import PaymentModal from './PaymentModal';
 import ReceiptModal from './ReceiptModal';
 import ReservationModal from './ReservationModal';
@@ -59,6 +62,9 @@ import PrintServerGuideModal from './PrintServerGuideModal';
 import NumberInputModal from './NumberInputModal';
 import ConfirmModal from './ConfirmModal';
 import DashboardCustomizeModal from './DashboardCustomizeModal';
+import LoyaltyRedemptionModal from './LoyaltyRedemptionModal';
+import BarcodeScannerModal from './BarcodeScannerModal';
+import BurgerOptionEditModal from './BurgerOptionEditModal';
 
 const ModalManager: React.FC = () => {
     const { modal, closeModal } = useModalContext();
@@ -69,6 +75,8 @@ const ModalManager: React.FC = () => {
     const MODAL_COMPONENTS: { [key: string]: React.FC<any> } = {
         modifier: ModifierModal,
         pizzaBuilder: PizzaBuilder,
+        burgerBuilder: BurgerBuilder,
+        burgerOptionEdit: BurgerOptionEditModal,
         payment: PaymentModal,
         receipt: ReceiptModal,
         reservation: ReservationModal,
@@ -123,6 +131,8 @@ const ModalManager: React.FC = () => {
         numberInput: NumberInputModal,
         confirm: ConfirmModal,
         dashboardCustomize: DashboardCustomizeModal,
+        loyaltyRedemption: LoyaltyRedemptionModal,
+        barcodeScanner: BarcodeScannerModal,
     };
 
     const SpecificModal = type ? MODAL_COMPONENTS[type] : null;

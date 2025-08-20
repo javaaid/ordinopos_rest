@@ -28,6 +28,7 @@ const ProductsView: React.FC = () => {
 
     const { openModal, closeModal } = useModalContext();
     const { justAddedCategoryId, onClearJustAddedCategoryId } = useAppContext();
+    const importInputRef = useRef<HTMLInputElement>(null);
 
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
     const [searchTerm, setSearchTerm] = useState('');
@@ -80,7 +81,7 @@ const ProductsView: React.FC = () => {
         handleSaveProduct(newItemData as MenuItem, true, null);
     };
 
-    const handleExportToCSV = () => {
+    const handleExportToCSV = (filename: string = 'products.csv') => {
         const headers = ["Name", "Category", "Kitchen Name", "Barcode 1", "Price", "Takeout Price", "Delivery Price", "Member Price 1", "Member Price 2", "Member Price 3", "Cost", "Qty", "Warn Qty", "Stop Sale(QTY=0)", "Ask Price", "Ask Quantity", "Hide Name", "Kitchen Note(Must)", "Modifier Popup", "Discountable", "Scale", "Kitchen/Tab Printer", "Kitchen Display", "Background", "Sequence", "Enabled", "Image URL"];
         
         const rows = menuItems.map((item: MenuItem) => {
@@ -99,7 +100,7 @@ const ProductsView: React.FC = () => {
                 escapeCSV(item.name),
                 escapeCSV(categoryName),
                 escapeCSV(item.kitchenName),
-                escapeCSV(item.barcode),
+                escapeCSV(item.barcodes?.[0]), // Exporting only the first barcode
                 item.price ?? 0,
                 item.takeawayPrice ?? 0,
                 item.deliveryPrice ?? 0,
@@ -130,7 +131,7 @@ const ProductsView: React.FC = () => {
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "products.csv");
+        link.setAttribute("download", filename);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -138,86 +139,22 @@ const ProductsView: React.FC = () => {
 
     const handlePrint = () => window.print();
 
-    const handleFileImport = (event: Event) => {
-        const target = event.target as HTMLInputElement;
-        const file = target.files?.[0];
+    const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             const text = e.target?.result as string;
-            if (!text) return;
-            
-            const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
-            if (lines.length < 2) {
-                alert("CSV file is empty or has no data rows.");
-                return;
+            if (text) {
+                await handleImportMenuItems(text);
             }
-
-            const headerLine = lines[0];
-            const cleanedHeaderLine = headerLine.charCodeAt(0) === 0xFEFF ? headerLine.substring(1) : headerLine;
-            const headers = cleanedHeaderLine.split(',').map(h => h.trim().replace(/"/g, ''));
-            
-            const requiredHeaders = ["Name", "Price"];
-            if (!requiredHeaders.every(h => headers.includes(h))) {
-                alert(`CSV must contain at least the following headers: ${requiredHeaders.join(', ')}`);
-                return;
-            }
-
-            const itemsToImport: Partial<MenuItem>[] = [];
-            for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-                const rowData: { [key: string]: string } = headers.reduce((obj, header, index) => {
-                    obj[header] = values[index];
-                    return obj;
-                }, {} as { [key: string]: string });
-
-                const toBoolean = (val: string) => val?.toLowerCase() === 'true' || val === '1';
-                
-                const item: Partial<MenuItem> = {
-                    name: rowData["Name"],
-                    category: rowData["Category"],
-                    kitchenName: rowData["Kitchen Name"],
-                    barcode: rowData["Barcode 1"],
-                    price: parseFloat(rowData["Price"]) || 0,
-                    takeawayPrice: parseFloat(rowData["Takeout Price"]) || undefined,
-                    deliveryPrice: parseFloat(rowData["Delivery Price"]) || undefined,
-                    memberPrice1: parseFloat(rowData["Member Price 1"]) || undefined,
-                    memberPrice2: parseFloat(rowData["Member Price 2"]) || undefined,
-                    memberPrice3: parseFloat(rowData["Member Price 3"]) || undefined,
-                    cost: parseFloat(rowData["Cost"]) || undefined,
-                    stock: parseFloat(rowData["Qty"]) || undefined,
-                    warnQty: parseFloat(rowData["Warn Qty"]) || undefined,
-                    stopSaleAtZeroStock: toBoolean(rowData["Stop Sale(QTY=0)"]),
-                    askPrice: toBoolean(rowData["Ask Price"]),
-                    askQuantity: toBoolean(rowData["Ask Quantity"]),
-                    hideName: toBoolean(rowData["Hide Name"]),
-                    promptForKitchenNote: toBoolean(rowData["Kitchen Note(Must)"]),
-                    alwaysShowModifiers: toBoolean(rowData["Modifier Popup"]),
-                    isDiscountable: toBoolean(rowData["Discountable"]),
-                    useScale: toBoolean(rowData["Scale"]),
-                    kitchenPrinterId: rowData["Kitchen/Tab Printer"],
-                    kdsId: rowData["Kitchen Display"],
-                    color: rowData["Background"],
-                    displayOrder: parseInt(rowData["Sequence"]) || undefined,
-                    isActive: toBoolean(rowData["Enabled"]),
-                    imageUrl: rowData["Image URL"],
-                };
-                itemsToImport.push(item);
-            }
-            handleImportMenuItems(itemsToImport);
         };
-        
         reader.readAsText(file);
-        target.value = '';
     };
 
     const triggerImport = () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.csv';
-        input.onchange = handleFileImport;
-        input.click();
+        importInputRef.current?.click();
     };
 
     const handleBulkEdit = () => {
@@ -258,8 +195,9 @@ const ProductsView: React.FC = () => {
                     <Button onClick={handleBulkEdit} variant="outline" size="sm" className="flex items-center gap-2" disabled={selectedIds.size === 0}>
                         <PencilSquareIcon className="w-5 h-5" /> Bulk Edit ({selectedIds.size})
                     </Button>
+                    <input type="file" ref={importInputRef} onChange={handleFileImport} className="hidden" accept=".csv" />
                     <Button onClick={triggerImport} variant="outline" size="sm" className="flex items-center gap-2">
-                        <ArrowUpTrayIcon className="w-5 h-5" /> Import
+                        <ArrowUpTrayIcon className="w-5 h-5" /> Import CSV
                     </Button>
                     <ExportButtons onCsvExport={handleExportToCSV} onPrint={handlePrint} />
                      <button onClick={() => setIsFullScreen(fs => !fs)} title={isFullScreen ? "Exit Full Screen" : "Enter Full Screen"} className="p-2 bg-secondary rounded-lg text-muted-foreground hover:text-foreground">

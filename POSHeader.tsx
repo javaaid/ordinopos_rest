@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Role } from '../types';
 import ChefHatIcon from './icons/ChefHatIcon';
@@ -22,7 +23,7 @@ import { cn } from '../lib/utils';
 import SunIcon from './icons/SunIcon';
 import MoonIcon from './icons/MoonIcon';
 import NotificationsPanel from './NotificationsPanel';
-
+import BarcodeScannerIcon from './icons/BarcodeScannerIcon';
 
 interface POSHeaderProps {
 }
@@ -34,7 +35,8 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
         onLaunchView, settings, isOrderNumberDisplayPluginActive,
         isCallerIdPluginActive, handleIncomingCall,
         setView, currentEmployee, handleLogout, notifications,
-        theme, onToggleTheme, handleMarkAllNotificationsAsRead
+        theme, onToggleTheme, handleMarkAllNotificationsAsRead,
+        handleBarcodeScanned
     } = useAppContext();
     const { locations, menuItems, heldOrders, roles } = useDataContext();
     const { searchQuery, onSearchChange, handleReopenOrder, handleDeleteHeldOrder } = usePOSContext();
@@ -83,6 +85,10 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
         openModal('heldOrders', { heldOrders, onReopenOrder: handleReopenOrder, onDeleteHeldOrder: handleDeleteHeldOrder });
     };
 
+    const handleOpenBarcodeScanner = () => {
+        openModal('barcodeScanner', { onScan: handleBarcodeScanned });
+    };
+
     const dropdownItemClass = "w-full flex items-center gap-3 px-3 py-2 text-left text-sm rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground";
     const unreadNotificationCount = (notifications || []).filter((n: any) => !n.read).length;
 
@@ -99,6 +105,9 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
                         className="w-full bg-background rounded-lg ps-9 pe-4 h-9 text-sm text-foreground border border-border focus:border-primary focus:ring-0"
                     />
                 </div>
+                <button onClick={handleOpenBarcodeScanner} className="flex-shrink-0 flex items-center justify-center bg-secondary hover:bg-muted text-secondary-foreground font-semibold h-9 w-9 rounded-lg text-sm transition-colors" title="Scan Barcode">
+                    <BarcodeScannerIcon className="w-5 h-5" />
+                </button>
                 <button onClick={handleOpenHeldOrders} className="flex items-center gap-2 bg-secondary hover:bg-muted text-secondary-foreground font-semibold h-9 px-3 rounded-lg text-sm transition-colors relative">
                     {t('held_orders')}
                     {heldOrders.length > 0 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">{heldOrders.length}</span>}
@@ -184,3 +193,4 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
 };
 
 export default POSHeader;
+  

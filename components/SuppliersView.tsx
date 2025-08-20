@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { Supplier } from '../types';
 import UserPlusIcon from './icons/UserPlusIcon';
@@ -19,8 +20,8 @@ const SuppliersView: React.FC = () => {
     const startX = useRef(0);
     const startWidths = useRef<number[]>([]);
 
-    const onAddNew = () => openModal('supplierEdit', { onSave: handleSaveSupplier });
-    const onEdit = (supplier: Supplier) => openModal('supplierEdit', { supplier, onSave: handleSaveSupplier });
+    const onAddNew = () => openModal('supplierEdit', { onSave: (sup: Supplier) => handleSaveSupplier(sup, true) });
+    const onEdit = (supplier: Supplier) => openModal('supplierEdit', { supplier, onSave: (sup: Supplier) => handleSaveSupplier(sup, false) });
     
     const handleCsvExport = () => {
         const headers = ["ID", "Name", "Phone", "Email", "Address"];
@@ -72,14 +73,14 @@ const SuppliersView: React.FC = () => {
             window.removeEventListener('mouseup', onMouseUp);
         };
     }, [onMouseMove, onMouseUp]);
-    
+
     const thClass = "px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider";
 
     return (
         <div className={cn("p-6 h-full flex flex-col", isFullScreen && "fixed inset-0 z-50 bg-card")}>
             <div className="flex justify-between items-center mb-4 no-print">
                 <h2 className="text-2xl font-bold text-foreground">Manage Suppliers</h2>
-                <div className="flex items-center gap-2">
+                 <div className="flex items-center gap-2">
                     <ExportButtons onCsvExport={handleCsvExport} onPrint={handlePrint} />
                     <button
                         onClick={onAddNew}
@@ -95,48 +96,35 @@ const SuppliersView: React.FC = () => {
             </div>
             <div ref={tableContainerRef} className="overflow-auto bg-card rounded-lg flex-grow border border-border printable-area">
                 <table className="min-w-full divide-y divide-border" style={{ tableLayout: 'fixed' }}>
-                    <colgroup>
-                        <col style={{ width: `${columnWidths[0]}px` }} />
-                        <col style={{ width: `${columnWidths[1]}px` }} />
-                        <col style={{ width: `${columnWidths[2]}px` }} />
-                        <col style={{ width: `${columnWidths[3]}px` }} />
-                        <col style={{ width: `${columnWidths[4]}px` }} />
+                     <colgroup>
+                        {columnWidths.map((width, i) => <col key={i} style={{ width: `${width}px` }} />)}
                     </colgroup>
                     <thead className="bg-card sticky top-0 z-10 border-b border-border">
                         <tr>
-                            <th className={`${thClass} relative`}>Supplier Name <div onMouseDown={e => onMouseDown(0, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                            <th className={`${thClass} relative`}>Phone <div onMouseDown={e => onMouseDown(1, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                            <th className={`${thClass} relative`}>Email <div onMouseDown={e => onMouseDown(2, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                            <th className={`${thClass} relative`}>Address <div onMouseDown={e => onMouseDown(3, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                            <th className={`${thClass} no-print`}>Actions</th>
+                            <th className={`${thClass} relative`}>Name<div onMouseDown={e => onMouseDown(0, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                            <th className={`${thClass} relative`}>Phone<div onMouseDown={e => onMouseDown(1, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                            <th className={`${thClass} relative`}>Email<div onMouseDown={e => onMouseDown(2, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                            <th className={`${thClass} relative`}>Address<div onMouseDown={e => onMouseDown(3, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                            <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider no-print">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="bg-card divide-y divide-border">
-                        {suppliers.map(supplier => (
-                            <tr key={supplier.id} className="hover:bg-muted/50">
+                        {(suppliers || []).map((supplier: Supplier) => (
+                            <tr key={supplier.id}>
                                 <td className="px-4 py-3 whitespace-nowrap text-foreground font-medium truncate">{supplier.name}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground truncate">{supplier.phone}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground truncate">{supplier.email}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground truncate">{supplier.address}</td>
-                                <td className="px-4 py-3 whitespace-nowrap no-print">
-                                    <div className="flex gap-4">
-                                        <button onClick={() => onEdit(supplier)} className="text-primary hover:opacity-80">
-                                            <PencilSquareIcon className="w-5 h-5" />
-                                        </button>
-                                        <button onClick={() => handleDeleteSupplier(supplier.id)} className="text-destructive hover:opacity-80">
-                                            <TrashIcon className="w-5 h-5" />
-                                        </button>
+                                <td className="px-4 py-3 whitespace-nowrap text-right no-print">
+                                    <div className="flex gap-2 justify-end">
+                                        <button onClick={() => onEdit(supplier)} className="p-1 text-primary hover:opacity-80"><PencilSquareIcon className="w-5 h-5"/></button>
+                                        <button onClick={() => handleDeleteSupplier(supplier.id)} className="p-1 text-destructive hover:opacity-80"><TrashIcon className="w-5 h-5"/></button>
                                     </div>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-                 {suppliers.length === 0 && (
-                    <div className="text-center text-muted-foreground py-20">
-                        <p>No suppliers have been added yet.</p>
-                    </div>
-                )}
             </div>
         </div>
     );

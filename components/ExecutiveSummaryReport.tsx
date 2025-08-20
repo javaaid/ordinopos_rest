@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Order, MenuItem, Employee, AIExecutiveSummary, AISettings } from '../types';
@@ -56,8 +55,8 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                     period: `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`,
                     totalRevenue: totalRevenue.toFixed(2),
                     totalOrders: orders.length,
-                    topSaleDay: topDay ? { day: topDay[0], amount: topDay[1].toFixed(2) } : null,
-                    bestSellingItems: topItems.map(([name, revenue]) => ({ name, revenue: revenue.toFixed(2) })),
+                    topSaleDay: topDay ? { day: topDay[0], amount: Number(topDay[1]).toFixed(2) } : null,
+                    bestSellingItems: topItems.map(([name, revenue]) => ({ name, revenue: Number(revenue).toFixed(2) })),
                     topPerformingStaff: topStaff,
                 };
 
@@ -106,7 +105,7 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
         const timeoutId = setTimeout(fetchSummary, 500);
         return () => clearTimeout(timeoutId);
 
-    }, [dataSignature, aiSettings]);
+    }, [dataSignature, aiSettings, orders, employees, startDate, endDate]);
     
     const renderContent = () => {
         if (isLoading) {
