@@ -6,7 +6,7 @@ import DocumentArrowDownIcon from './icons/DocumentArrowDownIcon';
 import ReceiptRefundIcon from './icons/ReceiptRefundIcon';
 import PrinterIcon from './icons/PrinterIcon';
 import MapPinIcon from './icons/MapPinIcon';
-import { useAppContext, useDataContext } from '../contexts/AppContext';
+import { useAppContext, useDataContext, usePOSContext } from '../contexts/AppContext';
 import { useTranslations } from '../hooks/useTranslations';
 
 interface OrderHistoryViewProps {
@@ -45,7 +45,8 @@ const typeColors: Record<OrderType, string> = {
 
 const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ orders, onApproveRefund, onDenyRefund, currentRole, onLoadOrder, onPrintA4, onInitiateRefund, onViewReceipt }) => {
     const { settings, setView } = useAppContext();
-    const { tables, onSelectTable: onSetCurrentTable } = useDataContext();
+    const { tables } = useDataContext();
+    const { setCurrentTable } = usePOSContext();
     const t = useTranslations(settings.language.staff);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterDate, setFilterDate] = useState(new Date());
@@ -77,7 +78,7 @@ const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ orders, onApproveRe
     const handleViewOnFloor = (tableId: string) => {
         const table = tables.find((t: Table) => t.id === tableId);
         if (table) {
-            onSetCurrentTable(table);
+            setCurrentTable(table);
             setView('tables');
         }
     };
@@ -218,5 +219,4 @@ const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ orders, onApproveRe
         </div>
     );
 };
-
 export default OrderHistoryView;

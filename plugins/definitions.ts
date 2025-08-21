@@ -1,5 +1,6 @@
 
 
+
 import React from 'react';
 import { AppPlugin, ManagementSubView, NavItem, SettingsSubView, Category } from '../types';
 
@@ -129,6 +130,7 @@ export const CORE_MODULE_DEFINITIONS: PluginModule[] = [
             id: 'branding_localization', label: t('branding_localization'), icon: SwatchIcon,
             children: [
                 { id: 'customization', label: t('customization'), icon: SwatchIcon },
+                { id: 'fonts', label: t('fonts'), icon: SwatchIcon },
                 { id: 'numbering', label: t('numbering'), icon: DocumentDuplicateIcon },
             ]
         }),

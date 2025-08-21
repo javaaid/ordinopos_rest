@@ -197,7 +197,7 @@ export default function OrderSummary() {
   };
 
   const renderActionButtons = () => {
-    const buttonBaseClass = "w-full h-10 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-transform duration-200 hover:scale-105 hover:shadow-lg";
+    const buttonBaseClass = "w-full h-12 rounded-lg font-bold text-base flex items-center justify-center gap-2 transition-transform duration-200 hover:scale-105 hover:shadow-lg";
     const isCartEmpty = (cart || []).length === 0;
 
     if (isSettlingOrder) {
@@ -252,36 +252,36 @@ export default function OrderSummary() {
 
   return (
     <div className="bg-card rounded-xl shadow-md flex flex-col h-full border border-border">
-      <div className="p-1.5 border-b border-border bg-card">
+      <div className="p-2 border-b border-border bg-card">
         <div className="flex justify-between items-center">
             <div className="flex items-center gap-2 overflow-hidden">
-                 <Button onClick={() => openModal('customerSelect', { customers, onSelectCustomer: handleSelectCustomer, onAddNewCustomer: handleAddNewCustomer })} className="rounded-full h-7 w-7 bg-primary/10 text-primary hover:bg-primary/20 flex-shrink-0">
-                    <UserCircleIcon className="w-4 h-4"/>
+                 <Button onClick={() => openModal('customerSelect', { customers, onSelectCustomer: handleSelectCustomer, onAddNewCustomer: handleAddNewCustomer })} className="rounded-full h-8 w-8 bg-primary/10 text-primary hover:bg-primary/20 flex-shrink-0">
+                    <UserCircleIcon className="w-5 h-5"/>
                 </Button>
                 <div className="overflow-hidden">
-                     <p className="font-bold text-foreground text-xs truncate">{selectedCustomer ? selectedCustomer.name : t('walk_in_customer')}</p>
+                     <p className="font-bold text-foreground text-sm truncate">{selectedCustomer ? selectedCustomer.name : t('walk_in_customer')}</p>
                      <p className="text-xs text-muted-foreground">{selectedCustomer ? t('member') : t('guest')}</p>
                 </div>
                  {showStaffSelection && (
                     <>
-                        <div className="w-px h-5 bg-border mx-1"></div>
-                        <Button onClick={handleChooseStaff} className="rounded-full h-7 w-7 bg-primary/10 text-primary hover:bg-primary/20 flex-shrink-0">
-                            <UserIcon className="w-4 h-4" />
+                        <div className="w-px h-6 bg-border mx-1"></div>
+                        <Button onClick={handleChooseStaff} className="rounded-full h-8 w-8 bg-primary/10 text-primary hover:bg-primary/20 flex-shrink-0">
+                            <UserIcon className="w-5 h-5" />
                         </Button>
                         <div className="overflow-hidden">
-                            <p className="font-bold text-foreground text-xs truncate">{selectedStaff ? selectedStaff.name : t('choose_staff')}</p>
+                            <p className="font-bold text-foreground text-sm truncate">{selectedStaff ? selectedStaff.name : t('choose_staff')}</p>
                             <p className="text-xs text-muted-foreground">{t('serving')}</p>
                         </div>
                     </>
                 )}
             </div>
             <div className="flex items-center gap-0.5">
-                <Button onClick={handleGetUpsellSuggestions} disabled={(cart || []).length === 0 || isSuggestingUpsell || !aiSettings.enableAIFeatures || !aiSettings.enableUpsell} size="icon" variant="ghost" title={t('ai_upsell')} className="text-muted-foreground hover:text-primary h-7 w-7"><SparklesIcon className={`w-4 h-4 ${isSuggestingUpsell ? 'animate-spin' : ''}`} /></Button>
+                <Button onClick={handleGetUpsellSuggestions} disabled={(cart || []).length === 0 || isSuggestingUpsell || !aiSettings.enableAIFeatures || !aiSettings.enableUpsell} size="icon" variant="ghost" title={t('ai_upsell')} className="text-muted-foreground hover:text-primary h-8 w-8"><SparklesIcon className={`w-5 h-5 ${isSuggestingUpsell ? 'animate-spin' : ''}`} /></Button>
                 {settings.preferences.enableOrderHold && (
-                    <Button onClick={handleHoldOrder} disabled={(cart || []).length === 0 || isSettlingOrder} size="icon" variant="ghost" title={t('hold_order')} className="text-muted-foreground hover:text-primary h-7 w-7"><PauseIcon className="w-4 h-4"/></Button>
+                    <Button onClick={handleHoldOrder} disabled={(cart || []).length === 0 || isSettlingOrder} size="icon" variant="ghost" title={t('hold_order')} className="text-muted-foreground hover:text-primary h-8 w-8"><PauseIcon className="w-5 h-5"/></Button>
                 )}
-                <Button onClick={onVoidOrder} size="icon" variant="ghost" title={t('void_order')} className="text-muted-foreground hover:text-destructive h-7 w-7"><TrashIcon className="w-4 h-4"/></Button>
-                <Button onClick={onNewSaleClick} size="icon" variant="ghost" title={t('new_sale')} className="text-muted-foreground hover:text-primary h-7 w-7"><PlusCircleIcon className="w-4 h-4"/></Button>
+                <Button onClick={onVoidOrder} size="icon" variant="ghost" title={t('void_order')} className="text-muted-foreground hover:text-destructive h-8 w-8"><TrashIcon className="w-5 h-5"/></Button>
+                <Button onClick={onNewSaleClick} size="icon" variant="ghost" title={t('new_sale')} className="text-muted-foreground hover:text-primary h-8 w-8"><PlusCircleIcon className="w-5 h-5"/></Button>
             </div>
         </div>
       </div>
@@ -296,17 +296,17 @@ export default function OrderSummary() {
           </Button>
         </div>
       )}
-      <div className="p-1.5 space-y-1.5">
-          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+      <div className="p-2 space-y-2">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
               <span>{isSettlingOrder ? `${t('settling')}: ${getSettlementTitle()}` : (currentTable ? currentTable.name : (activeTab ? `${t('on_tab')}: ${activeTab.customer?.name}` : t('new_order')))}</span>
-              {(currentTable || activeTab) && !isSettlingOrder && (<Button variant="link" size="sm" className="p-0 h-auto text-xs" onClick={() => onSetCurrentTable(null)}>({t('change')})</Button>)}
+              {(currentTable || activeTab) && !isSettlingOrder && (<Button variant="link" size="sm" className="p-0 h-auto text-sm" onClick={() => onSetCurrentTable(null)}>({t('change')})</Button>)}
           </h2>
 
           {!isSettlingOrder && orderType === 'dine-in' && !currentTable && (
               <div className="animate-fade-in-down">
                   <select
                       id="table-select" onChange={handleTableSelection} value=""
-                      className="w-full bg-accent border border-border rounded-lg px-3 py-1.5 text-foreground focus:ring-primary focus:border-primary font-semibold text-sm"
+                      className="w-full bg-accent border border-border rounded-lg px-3 py-2 text-foreground focus:ring-primary focus:border-primary font-semibold"
                   >
                       <option value="" disabled>{t('select_table')}</option>
                       {Object.entries(availableTablesByFloor).map(([floor, tablesInFloor]) => {
@@ -333,19 +333,19 @@ export default function OrderSummary() {
            )}
       </div>
       
-      <div className="flex-grow overflow-y-auto p-1.5 space-y-1.5 bg-background">
+      <div className="flex-grow overflow-y-auto p-2 space-y-1.5 bg-background">
         {allItemsForBill.length === 0 ? (
           <div className="flex-grow flex flex-col justify-center items-center text-muted-foreground p-4 h-full">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2" fill="none" viewBox="0 0 24" stroke="currentColor" strokeWidth={1}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mb-2" fill="none" viewBox="0 0 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
-            <p className="text-center font-medium text-sm">{t('your_cart_is_empty')}</p>
+            <p className="text-center font-medium">{t('your_cart_is_empty')}</p>
           </div>
         ) : (
           <>
             {(cart || []).length > 0 && (
               <div>
-                <h3 className="text-xs font-bold uppercase text-muted-foreground mb-1.5 pt-1.5">
+                <h3 className="text-xs font-bold uppercase text-muted-foreground mb-1.5 pt-1.5 px-1">
                   {t('new_items')}
                 </h3>
                 <div className="space-y-1.5">
@@ -355,7 +355,7 @@ export default function OrderSummary() {
             )}
             {sentItems.length > 0 && !isSettlingOrder && (
               <div>
-                <h3 className="text-xs font-bold uppercase text-muted-foreground mb-1.5 mt-2">{t('running_tab')}</h3>
+                <h3 className="text-xs font-bold uppercase text-muted-foreground mb-1.5 mt-2 px-1">{t('running_tab')}</h3>
                 <div className="space-y-1.5 opacity-70 pointer-events-none">
                   {sentItems.map((item) => <OrderItem key={item.cartId} cartItem={item} onRemoveItem={() => {}} onUpdateCartQuantity={() => {}} orderType={orderType} customer={selectedCustomer} />)}
                 </div>
@@ -363,7 +363,7 @@ export default function OrderSummary() {
             )}
             {isSettlingOrder && activeOrderToSettle && (
                  <div>
-                    <h3 className="text-xs font-bold uppercase text-muted-foreground mb-1.5 mt-2">{t('items_on_bill')}</h3>
+                    <h3 className="text-xs font-bold uppercase text-muted-foreground mb-1.5 mt-2 px-1">{t('items_on_bill')}</h3>
                      <div className="space-y-1.5 opacity-70 pointer-events-none">
                         {(activeOrderToSettle.cart || []).map((item) => <OrderItem key={item.cartId} cartItem={item} onRemoveItem={() => {}} onUpdateCartQuantity={() => {}} orderType={orderType} customer={selectedCustomer}/>)}
                     </div>
@@ -373,10 +373,10 @@ export default function OrderSummary() {
         )}
       </div>
       
-      <div className="p-1.5 border-t border-border bg-card mt-auto space-y-1.5">
+      <div className="p-2 border-t border-border bg-card mt-auto space-y-2">
         <AISuggestions suggestions={aiUpsellSuggestions} isLoading={isSuggestingUpsell} onSelectSuggestion={onSelectUpsellSuggestion} language={language.staff} />
         
-        <div className="space-y-1 text-xs">
+        <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t('subtotal')}</span>
               <span className="font-medium text-foreground">{currency}{subtotal.toFixed(2)}</span>
@@ -403,7 +403,7 @@ export default function OrderSummary() {
             ) : (
                 <div className="flex justify-between">
                     <span className="text-muted-foreground">{t('discount')}</span>
-                    <button onClick={handleAddDiscountClick} className="text-primary font-semibold hover:underline text-xs">
+                    <button onClick={handleAddDiscountClick} className="text-primary font-semibold hover:underline">
                         {t('apply_discount')}
                     </button>
                 </div>
@@ -417,9 +417,9 @@ export default function OrderSummary() {
               </div>
             )}
             <div className="flex justify-between items-center pt-1 mt-1 border-t border-border">
-                <span className="text-sm font-bold text-foreground">{t('total')}</span>
+                <span className="text-lg font-bold text-foreground">{t('total')}</span>
                 <div className="text-right">
-                    <span className="text-lg font-bold text-primary">{currency}{total.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-primary">{currency}{total.toFixed(2)}</span>
                     {settings.dualCurrency.enabled && (
                         <p className="text-xs text-muted-foreground font-mono">
                             ≈ {settings.dualCurrency.secondaryCurrency} {(total * settings.dualCurrency.exchangeRate).toFixed(2)}

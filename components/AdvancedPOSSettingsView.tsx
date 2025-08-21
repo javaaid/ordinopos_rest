@@ -11,6 +11,11 @@ import { cn } from '../lib/utils';
 const AdvancedPOSSettingsView: React.FC = () => {
     const { settings, setSettings } = useAppContext();
     const { addToast } = useToastContext();
+
+    if (!settings || !settings.advancedPOS) {
+        return null; // or a loading spinner
+    }
+    
     const [localSettings, setLocalSettings] = useState<AdvancedPOSSettings>(settings.advancedPOS);
 
     useEffect(() => {

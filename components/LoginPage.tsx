@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Employee, Location, AppSettings } from '../types';
 import BuildingStorefrontIcon from './icons/BuildingStorefrontIcon';
@@ -38,6 +39,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings }) => {
     const { handlePinLogin, currentLocation, onLocationChange, isMultiStorePluginActive } = useAppContext();
     const { locations, employees } = useDataContext();
     
+    if (!settings || !settings.advancedPOS) {
+        return null; // Guard against settings prop being unavailable.
+    }
+
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [pinError, setPinError] = useState('');
     const [logoError, setLogoError] = useState(false);
@@ -99,6 +104,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings }) => {
 
     const backgroundImageUrl = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
+    
     return (
       <div className="min-h-screen w-screen bg-background grid grid-cols-1 lg:grid-cols-2">
         <div 

@@ -1,9 +1,8 @@
 
-
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { LOCATIONS, CATEGORIES, MENU_ITEMS, CUSTOMERS, DRIVERS, EMPLOYEES, SUPPLIERS, WASTAGE_LOG, ROLES, AUDIT_LOG, PRINTERS, TABLES, SUBSCRIPTIONS, PURCHASE_ORDERS, PLUGINS, SCHEDULE, RESERVATIONS, INGREDIENTS, RECIPES, SIGNAGE_DISPLAYS, SIGNAGE_CONTENT, SIGNAGE_PLAYLISTS, SIGNAGE_SCHEDULE, ACTIVATION_CODES, PAYMENT_TYPES, PIZZA_OPTIONS, PROMOTIONS, MODIFIER_GROUPS, KITCHEN_DISPLAYS, KITCHEN_NOTES, VOID_REASONS, MANUAL_DISCOUNTS, SURCHARGES, CUSTOMER_DISPLAYS, SCALES, CALL_LOG, DEFAULT_KITCHEN_PRINT_SETTINGS, DEFAULT_RECEIPT_SETTINGS, KITCHEN_PROFILE_NAMES } from '../constants';
-import { MenuItem, CartItem, ModifierOption, Customer, Order, Driver, OrderType, OrderSource, Employee, Location, PaymentMethod, Shift, AppliedDiscount, AIResponse, WastageEntry, Supplier, AIEstimatedWaitTime, Role, AIRoleSuggestion, AuditLogEntry, Notification, Language, ReportSchedule, Printer, ToastNotification, SimulationLogEntry, SimulationReport, Table, Subscription, PurchaseOrder, AIFloorPlanSuggestion, AIBusyZoneAnalysis, AIInvoiceWarning, AILoyaltyResponse, AppSettings, View, ManagementSubView, SettingsSubView, AppPlugin, ScheduleEntry, Reservation, ReservationStatus, Ingredient, RecipeItem, SignageDisplay, SignageContentItem, SignagePlaylist, SignageScheduleEntry, WaitlistEntry, WaitlistStatus, Theme, Payment, TableStatus, OrderStatus, PaymentType, ReceiptSettings, ZatcaSettings, PizzaConfiguration, Category, Promotion, HeldOrder, ModifierGroup, KitchenDisplay, KitchenNote, VoidReason, ManualDiscount, Surcharge, POSPreferences, GenericDevice, CustomerDisplay, CallLogEntry, PizzaToppingItem, KitchenPrintSettings, KitchenProfileType, PrintJob, PrintJobStatus, CSVImportResult, CsvImportFunction, AISettings } from '../types';
+import { MenuItem, CartItem, ModifierOption, Customer, Order, Driver, OrderType, OrderSource, Employee, Location, PaymentMethod, Shift, AppliedDiscount, AIResponse, WastageEntry, Supplier, AIEstimatedWaitTime, Role, AIRoleSuggestion, AuditLogEntry, Notification, Language, ReportSchedule, Printer, ToastNotification, SimulationLogEntry, SimulationReport, Table, Subscription, PurchaseOrder, AIFloorPlanSuggestion, AIBusyZoneAnalysis, AIInvoiceWarning, AILoyaltyResponse, AppSettings, View, ManagementSubView, SettingsSubView, AppPlugin, ScheduleEntry, Reservation, ReservationStatus, Ingredient, RecipeItem, SignageDisplay, SignageContentItem, SignagePlaylist, SignageScheduleEntry, WaitlistEntry, WaitlistStatus, Theme, Payment, TableStatus, OrderStatus, PaymentType, ReceiptSettings, ZatcaSettings, PizzaConfiguration, BurgerConfiguration, Category, Promotion, HeldOrder, ModifierGroup, KitchenDisplay, KitchenNote, VoidReason, ManualDiscount, Surcharge, POSPreferences, GenericDevice, CustomerDisplay, CallLogEntry, PizzaToppingItem, KitchenPrintSettings, KitchenProfileType, PrintJob, PrintJobStatus, CSVImportResult, CsvImportFunction } from '../types';
 import { calculateOrderTotals, getPriceForItem, isItemOutOfStock } from '../utils/calculations';
 
 // #region Context Creation
@@ -153,7 +152,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         iotSensors: { smartFridges: { enabled: false, apiKey: '' }, storageSensors: { enabled: false, apiKey: '' } },
         ai: { enableAIFeatures: true, enableUpsell: true, enableCFDSuggestions: true, enableReportAnalysis: true },
         cfd: { attractScreenPlaylistId: null, featuredItemIds: [] },
-        notificationSettings: { duration: 5, position: 'top-right', theme: 'dark' },
+        notificationSettings: { duration: 8, position: 'top-right', theme: 'dark' },
         dineIn: { enabled: true, defaultGuests: 2, maxGuests: 20, enableStaffSelection: true, surcharge: { enabled: false, name: 'Service Charge', type: 'percentage', value: 10 }, minCharge: { enabled: false, amount: 15 } },
         delivery: { enabled: true, surcharge: { enabled: false, surchargeId: null }, zones: [{id: 'zone1', name: 'Local', fee: 5 }] },
         takeAway: { enabled: true, customName: 'Take Away', requireCustomerName: true, useHoldReason: false, surcharge: { enabled: false, name: 'Packaging Fee', type: 'fixed', value: 0.50 } },
@@ -162,6 +161,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         advancedPOS: { enableItemNumber: false, separateSameItems: false, combineKitchenItems: true, kitchenPrintFooter: false, kitchenPrintReservedOrder: true, sortItemInKitchen: true, sortModifier: true, sortOrderInKDS: true, printVoidOrderItem: true, printOrderAfterSending: false, quickPay: true, useVoidReason: true, confirmPayment: false, printReceiptAfterPayment: true, combineReceiptItem: true, sortItemInReceipt: true, showItemDiscount: true, showVoidOrderItem: false, emailReceipt: true, showTaxOnReceipt: true, inventoryManagement: true, allowMinusQuantity: false, useInventoryPrint: false, useEndOfDayReport: true, useStaffSalary: false, useCashInOutPrint: false, useWorkTimePrint: false, autoClockOut: false, loginDoNotRememberPassword: false, dateFormat: 'MM/DD/YYYY', lockTillToLocation: false, enableTimeClock: true },
         preferences: { actionAfterSendOrder: 'order', actionAfterPayment: 'order', defaultPaymentMethod: 'Cash', enableOrderNotes: true, enableKitchenPrint: true, defaultOrderType: 'takeaway', enableOrderHold: true, resetOrderNumberDaily: true, dashboardWidgetOrder: ['stats', 'chart', 'quickActions', 'topItems', 'lowStock', 'recentTransactions'], },
         loyalty: { enabled: true, pointsPerDollar: 100, redemptionRate: 100 },
+        fontSettings: { baseSize: 16, menuItemName: 14, menuItemPrice: 14, orderSummaryItem: 14, orderSummaryTotal: 24, categoryTabs: 14 },
     });
 
     // --- Data States ---
@@ -251,6 +251,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const isKsaPluginActive = useMemo(() => plugins.some((p: AppPlugin) => p.id === 'e-invoice-ksa' && (p.status === 'enabled' || p.status === 'trial')), [plugins]);
     const isAdvancedInventoryPluginActive = useMemo(() => plugins.some((p: AppPlugin) => p.id === 'advanced-inventory' && (p.status === 'enabled' || p.status === 'trial')), [plugins]);
     const isPizzaBuilderPluginActive = useMemo(() => plugins.some((p: AppPlugin) => p.id === 'pizza-builder' && (p.status === 'enabled' || p.status === 'trial')), [plugins]);
+    const isBurgerBuilderPluginActive = useMemo(() => plugins.some((p: AppPlugin) => p.id === 'burger-builder' && (p.status === 'enabled' || p.status === 'trial')), [plugins]);
     
     const floors = useMemo(() => {
         if (!tables) return ['Main Floor'];
@@ -312,12 +313,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setAIUpsellSuggestions(null);
         setAppliedLoyaltyPoints(0);
     }, [setCart, setAppliedDiscount, setAppliedPromotion, setAIUpsellSuggestions, setAppliedLoyaltyPoints]);
-    
-    const handleLogout = useCallback(() => {
-        setCurrentEmployee(null);
-        setActiveView('landing');
-    }, [setCurrentEmployee, setActiveView]);
-    
+
     const resetPOSState = useCallback(() => {
         resetCartState();
         setSelectedCustomer(null);
@@ -328,27 +324,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setOrderType(settings.preferences.defaultOrderType);
         setActiveCategory('all');
     }, [resetCartState, settings.preferences.defaultOrderType]);
-
-    const handlePostActionEvent = useCallback((type: 'sendOrder' | 'payment') => {
-        const action = type === 'payment'
-            ? settings.preferences.actionAfterPayment
-            : settings.preferences.actionAfterSendOrder;
-
-        switch (action) {
-            case 'tables':
-                resetPOSState();
-                setActiveView('tables');
-                break;
-            case 'login':
-                resetPOSState();
-                handleLogout();
-                break;
-            case 'order':
-            default:
-                resetPOSState();
-                break;
-        }
-    }, [settings.preferences, resetPOSState, setActiveView, handleLogout]);
     
     const onNewSaleClick = useCallback((): void => {
         if (cart.length > 0 || currentTable || activeOrderToSettle || activeTab) {
@@ -433,6 +408,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const onDeleteScheduleEntry = useCallback(() => {
         addToast({ type: 'info', title: 'Not Implemented', message: 'Deleting schedule entries is not yet implemented.' });
     }, [addToast]);
+    
+    const handleAddPizzaToCart = useCallback((item: MenuItem, config: PizzaConfiguration, finalPrice: number) => {
+        const cartItem: CartItem = {
+            cartId: `pizza-${Date.now()}`,
+            menuItem: item,
+            quantity: 1,
+            selectedModifiers: [], // Modifiers are part of the configuration
+            pizzaConfiguration: config,
+            priceOverride: finalPrice,
+        };
+        setCart(prev => [...prev, cartItem]);
+        closeModal();
+    }, [setCart, closeModal]);
+
+    const handleAddBurgerToCart = useCallback((item: MenuItem, config: BurgerConfiguration, finalPrice: number) => {
+        const cartItem: CartItem = {
+            cartId: `burger-${Date.now()}`,
+            menuItem: item,
+            quantity: 1,
+            selectedModifiers: [],
+            burgerConfiguration: config,
+            priceOverride: finalPrice,
+        };
+        setCart(prev => [...prev, cartItem]);
+        closeModal();
+    }, [setCart, closeModal]);
 
     const onSelectItem = useCallback((item: MenuItem) => {
         const addItemToCart = (finalizedItem: Omit<CartItem, 'cartId'>) => {
@@ -531,8 +532,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             addItemToCart({ ...currentItemConfig, quantity });
         };
         
-        const cartItemsForThisProduct = cart.filter((ci: CartItem) => ci.menuItem.id === item.id);
-        const cartQuantity = cartItemsForThisProduct.reduce((sum: number, i: CartItem) => sum + i.quantity, 0);
         const isOutOfStock = isAdvancedInventoryPluginActive && isItemOutOfStock(item, cart, ingredients, recipes);
 
         if (isOutOfStock) {
@@ -545,11 +544,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return;
         }
 
+        if (isBurgerBuilderPluginActive && item.isCustomizableBurger) {
+            openModal('burgerBuilder', { item });
+            return;
+        }
+
         processNextStep({
             menuItem: item,
             selectedModifiers: [],
         });
-    }, [cart, openModal, closeModal, settings, addToast, modifierGroups, isAdvancedInventoryPluginActive, ingredients, recipes, isPizzaBuilderPluginActive]);
+    }, [cart, openModal, closeModal, settings, addToast, modifierGroups, isAdvancedInventoryPluginActive, ingredients, recipes, isPizzaBuilderPluginActive, isBurgerBuilderPluginActive]);
 
     const onVoidOrder = useCallback(() => {
         const performVoid = (reason: string) => {
@@ -818,18 +822,317 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 item.cartId === cartId ? { ...item, quantity: newQuantity } : item
             ));
         }
-    }, [cart, setCart, addToast]);
+    }, [setCart]);
 
     const onRemoveItem = useCallback((cartId: string) => {
         setCart(prev => (prev || []).filter(item => item.cartId !== cartId));
     }, [setCart]);
+
+    const handleSendToKitchen = useCallback(() => {
+        if (cart.length === 0 || !currentTable) {
+          addToast({ type: 'error', title: 'Action Failed', message: 'Please select a table and add items to the cart first.' });
+          return;
+        }
+      
+        const orderForKitchen = createOrderObject(cart, [], 'dine-in');
+        orderForKitchen.status = 'kitchen';
+        
+        setOrders(prev => [...(prev || []), orderForKitchen]);
+        
+        setTables(prev => (prev || []).map(t => 
+          t.id === currentTable.id 
+            ? { ...t, status: 'occupied' as TableStatus, orderId: t.orderId || orderForKitchen.id, occupiedSince: t.occupiedSince || Date.now() } 
+            : t
+        ));
+      
+        handleKitchenPrinting(orderForKitchen);
+        
+        addToast({ type: 'success', title: 'Order Sent', message: `New items for ${currentTable.name} sent to the kitchen.` });
+        
+        // Fulfill user request: Clear cart and reset category after sending to kitchen.
+        resetCartState();
+        setActiveCategory('all');
+        
+    }, [cart, currentTable, addToast, createOrderObject, setOrders, setTables, handleKitchenPrinting, resetCartState, setActiveCategory]);
+      
+    const handleInitiatePayment = useCallback(() => {
+        if (cart.length === 0) return;
     
+        const placeOrderDirectly = () => {
+            const { total } = calculateOrderTotals(
+                cart,
+                currentLocation,
+                appliedDiscount,
+                appliedPromotion,
+                orderType,
+                settings,
+                selectedCustomer,
+                surcharges,
+                appliedLoyaltyPoints
+            );
+            const payment: Payment = {
+                method: settings.preferences.defaultPaymentMethod,
+                amount: total,
+                timestamp: Date.now(),
+            };
+            onProcessFinalOrder(cart, [payment], orderType);
+        };
+    
+        if (settings.advancedPOS.confirmPayment) {
+            const tempOrder = createOrderObject(cart, [], orderType);
+            openModal('payment', {
+                orderToPay: [tempOrder],
+                onFinalize: (payments: Payment[]) => {
+                    const finalOrder = onProcessFinalOrder(cart, payments, orderType);
+                    return finalOrder;
+                },
+                onDirectPrintReceipt: (order: Order) => {
+                    const printerId = settings.devices.receiptPrinterId;
+                    const printer = printers.find((p: Printer) => p.id === printerId);
+                    if (!printer) {
+                        addToast({ type: 'error', title: 'Print Error', message: 'No receipt printer configured.' });
+                        return;
+                    }
+                    addPrintJobs([{
+                        component: 'TemplateRenderer',
+                        props: {
+                            format: 'thermal',
+                            order,
+                            location: currentLocation,
+                            settings,
+                            receiptSettings: printer.receiptSettings || settings.receipt,
+                        }
+                    }]);
+                },
+                onPrintA4: handlePrintA4,
+                cardPlugin: plugins.find((p: AppPlugin) => p.id === 'payment-terminal'),
+                allPaymentTypes: paymentTypes,
+                currency: currentLocation.currency,
+                settings,
+                setSettings,
+                addToast,
+            });
+        } else {
+            placeOrderDirectly();
+        }
+    }, [
+        cart, settings, currentLocation, appliedDiscount, appliedPromotion, orderType, selectedCustomer, surcharges, appliedLoyaltyPoints,
+        onProcessFinalOrder, createOrderObject, openModal, handlePrintA4, plugins, paymentTypes, setSettings, addToast, printers
+    ]);
+      
+    const handleSettleBill = useCallback(() => {
+        if (!currentTable) {
+            addToast({ type: 'error', title: 'No Table Selected', message: 'Please select a table to settle the bill.' });
+            return;
+        }
+
+        const pendingOrdersForTable = (orders || []).filter(
+            (o: Order) => o.tableId === currentTable.id && ['kitchen', 'served'].includes(o.status)
+        );
+        const sentItems = pendingOrdersForTable.flatMap(o => o.cart);
+        const allItemsForBill = [...sentItems, ...cart];
+
+        if (allItemsForBill.length === 0) {
+            addToast({ type: 'info', title: 'Empty Bill', message: 'There are no items to settle.' });
+            return;
+        }
+
+        const totals = calculateOrderTotals(
+            allItemsForBill, currentLocation, appliedDiscount, appliedPromotion, 'dine-in', settings, selectedCustomer, surcharges, appliedLoyaltyPoints
+        );
+
+        const settlementOrder: Order = {
+            id: `settle_${currentTable.id}_${Date.now()}`,
+            orderNumber: 'BILL',
+            invoiceNumber: 'BILL',
+            createdAt: Date.now(),
+            cart: allItemsForBill,
+            customer: selectedCustomer || undefined,
+            employeeId: currentEmployee?.id,
+            orderType: 'dine-in',
+            status: 'pending',
+            source: 'in-store',
+            payments: [],
+            tableId: currentTable.id,
+            locationId: currentLocation.id,
+            isTraining: false,
+            originalOrderIds: pendingOrdersForTable.map(o => o.id),
+            subtotal: totals.subtotal,
+            tax: totals.tax,
+            total: totals.total,
+            taxDetails: totals.taxDetails,
+            appliedDiscount: totals.finalAppliedDiscount,
+            appliedPromotion: appliedPromotion || undefined,
+            appliedLoyaltyPoints: appliedLoyaltyPoints > 0 ? appliedLoyaltyPoints : undefined,
+            balanceDue: totals.total,
+        };
+        
+        setActiveOrderToSettle(settlementOrder);
+    }, [currentTable, orders, cart, currentLocation, appliedDiscount, appliedPromotion, settings, selectedCustomer, surcharges, appliedLoyaltyPoints, addToast, setActiveOrderToSettle, currentEmployee]);
+
+    const handleInitiateSettlePayment = useCallback(() => {
+        if (!activeOrderToSettle) return;
+        openModal('payment', {
+            orderToPay: [activeOrderToSettle],
+            onFinalize: (payments: Payment[]) => {
+                const finalOrder = onProcessFinalOrder(activeOrderToSettle.cart, payments, activeOrderToSettle.orderType, activeOrderToSettle);
+                return finalOrder;
+            },
+            onDirectPrintReceipt: (order: Order) => {
+                const printerId = settings.devices.receiptPrinterId;
+                const printer = printers.find((p: Printer) => p.id === printerId);
+                if (!printer) {
+                    addToast({ type: 'error', title: 'Print Error', message: 'No receipt printer configured.' });
+                    return;
+                }
+                addPrintJobs([{
+                    component: 'TemplateRenderer',
+                    props: {
+                        format: 'thermal',
+                        order,
+                        location: currentLocation,
+                        settings,
+                        receiptSettings: printer.receiptSettings || settings.receipt,
+                    }
+                }]);
+            },
+            onPrintA4: handlePrintA4,
+            cardPlugin: plugins.find((p: AppPlugin) => p.id === 'payment-terminal'),
+            allPaymentTypes: paymentTypes,
+            currency: currentLocation.currency,
+            settings,
+            setSettings,
+            addToast,
+        });
+    }, [activeOrderToSettle, openModal, onProcessFinalOrder, settings, printers, addPrintJobs, currentLocation, addToast, handlePrintA4, plugins, paymentTypes, setSettings]);
+    
+    const handleSaveTab = useCallback(() => {
+        if (!selectedCustomer) {
+            addToast({ type: 'error', title: 'No Customer', message: 'Please select a customer to save items to a tab.' });
+            return;
+        }
+        if (cart.length === 0) {
+            addToast({ type: 'info', title: 'Empty Cart', message: 'Add items to the cart before saving to the tab.' });
+            return;
+        }
+
+        let updatedTabOrder: Order;
+        if (activeTab) {
+            const updatedCart = [...activeTab.cart, ...cart];
+            const totals = calculateOrderTotals(updatedCart, currentLocation, activeTab.appliedDiscount || null, activeTab.appliedPromotion || null, 'tab', settings, selectedCustomer, surcharges, activeTab.appliedLoyaltyPoints || 0);
+            updatedTabOrder = { ...activeTab, cart: updatedCart, ...totals, balanceDue: totals.total, payments: [] };
+            setOrders(prev => (prev || []).map(o => o.id === activeTab.id ? updatedTabOrder : o));
+        } else {
+            updatedTabOrder = createOrderObject(cart, [], 'tab');
+            updatedTabOrder.status = 'partially-paid';
+            setOrders(prev => [...(prev || []), updatedTabOrder]);
+        }
+        
+        setActiveTab(updatedTabOrder);
+        resetCartState();
+        addToast({ type: 'success', title: 'Tab Updated', message: `Items added to ${selectedCustomer.name}'s tab.` });
+    }, [cart, selectedCustomer, activeTab, addToast, createOrderObject, setOrders, setActiveTab, resetCartState, currentLocation, settings, surcharges]);
+
+    const handleSettleTab = useCallback(() => {
+        if (!activeTab && cart.length === 0) {
+            addToast({ type: 'error', title: 'No Tab', message: 'No active tab to settle.' });
+            return;
+        }
+
+        const allItemsForBill = [...(activeTab?.cart || []), ...cart];
+
+        if (allItemsForBill.length === 0) {
+            addToast({ type: 'info', title: 'Empty Tab', message: 'There are no items to settle.' });
+            return;
+        }
+        
+        const currentAppliedDiscount = appliedDiscount || activeTab?.appliedDiscount || null;
+        const currentAppliedPromotion = appliedPromotion || activeTab?.appliedPromotion || null;
+        const currentAppliedLoyalty = appliedLoyaltyPoints || activeTab?.appliedLoyaltyPoints || 0;
+
+        const totals = calculateOrderTotals(
+            allItemsForBill, currentLocation, currentAppliedDiscount, currentAppliedPromotion, 'tab', settings, selectedCustomer, surcharges, currentAppliedLoyalty
+        );
+
+        const settlementOrder: Order = {
+            id: activeTab?.id || `settle_tab_${Date.now()}`,
+            orderNumber: activeTab?.orderNumber || 'TAB',
+            invoiceNumber: activeTab?.invoiceNumber || 'TAB',
+            createdAt: activeTab?.createdAt || Date.now(),
+            cart: allItemsForBill,
+            customer: selectedCustomer || undefined,
+            employeeId: currentEmployee?.id,
+            orderType: 'tab',
+            status: 'partially-paid',
+            source: 'in-store',
+            payments: [],
+            locationId: currentLocation.id,
+            isTraining: false,
+            subtotal: totals.subtotal,
+            tax: totals.tax,
+            total: totals.total,
+            taxDetails: totals.taxDetails,
+            appliedDiscount: totals.finalAppliedDiscount,
+            appliedPromotion: currentAppliedPromotion || undefined,
+            appliedLoyaltyPoints: currentAppliedLoyalty > 0 ? currentAppliedLoyalty : undefined,
+            balanceDue: totals.total,
+        };
+        
+        setActiveOrderToSettle(settlementOrder);
+    }, [activeTab, cart, addToast, currentLocation, appliedDiscount, appliedPromotion, settings, selectedCustomer, surcharges, appliedLoyaltyPoints, setActiveOrderToSettle, currentEmployee]);
+
+    const onLoadOrder = useCallback((orderToLoad: Order) => {
+        if(cart.length > 0) {
+            openModal('confirm', {
+                title: 'Load Order for Payment?',
+                message: 'This will clear your current cart. Are you sure you want to continue?',
+                onConfirm: () => {
+                    resetPOSState();
+                    setActiveOrderToSettle(orderToLoad);
+                    setSelectedCustomer(orderToLoad.customer || null);
+                    addToast({ type: 'info', title: 'Order Loaded', message: `Loaded order #${orderToLoad.orderNumber} for payment.` });
+                    closeModal();
+                },
+            });
+        } else {
+            resetPOSState();
+            setActiveOrderToSettle(orderToLoad);
+            setSelectedCustomer(orderToLoad.customer || null);
+            addToast({ type: 'info', title: 'Order Loaded', message: `Loaded order #${orderToLoad.orderNumber} for payment.` });
+        }
+    }, [resetPOSState, setActiveOrderToSettle, setSelectedCustomer, addToast, cart, openModal, closeModal]);
+    
+    const handleSelectTab = useCallback((orderId: string) => {
+        const tabOrder = (orders || []).find((o: Order) => o.id === orderId);
+        if (tabOrder) {
+            if(cart.length > 0) {
+                 openModal('confirm', {
+                    title: 'Switch to Tab?',
+                    message: 'This will clear your current cart. Are you sure you want to continue?',
+                    onConfirm: () => {
+                        resetPOSState();
+                        setActiveTab(tabOrder);
+                        setSelectedCustomer(tabOrder.customer || null);
+                        setOrderType('tab');
+                        addToast({ type: 'info', title: 'Tab Loaded', message: `Switched to ${tabOrder.customer?.name}'s tab.` });
+                        closeModal();
+                    }
+                 });
+            } else {
+                resetPOSState();
+                setActiveTab(tabOrder);
+                setSelectedCustomer(tabOrder.customer || null);
+                setOrderType('tab');
+                addToast({ type: 'info', title: 'Tab Loaded', message: `Switched to ${tabOrder.customer?.name}'s tab.` });
+            }
+        }
+    }, [orders, resetPOSState, setActiveTab, setSelectedCustomer, setOrderType, addToast, cart, openModal, closeModal]);
     // #endregion
 
     const allContexts = {
         // App
         activeView, setView: setActiveView, managementSubView, setManagementSubView, settingsSubView, setSettingsSubView,
-        currentEmployee, handleLogout,
+        currentEmployee, handleLogout: () => { setCurrentEmployee(null); setActiveView('landing'); },
         handlePinLogin: (employeeId: string, pin: string) => {
             const employee = employees.find((e: any) => e.id === employeeId && e.pin === pin);
             if(employee) { setCurrentEmployee(employee); setActiveView('pos'); return true; }
@@ -841,6 +1144,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         plugins, notifications, handleMarkAllNotificationsAsRead, isKsaPluginActive,
         isMultiStorePluginActive: true, isReservationPluginActive: true, isWaitlistPluginActive: true, 
         isOrderNumberDisplayPluginActive: true, isPizzaBuilderPluginActive, isQRCodePluginActive: true, isCallerIdPluginActive: true,
+        isBurgerBuilderPluginActive,
         isAdvancedInventoryPluginActive,
         onLaunchView: (view: View) => window.open(`#/${view}`, '_blank'),
         justAddedCategoryId, onClearJustAddedCategoryId: () => setJustAddedCategoryId(null),
@@ -874,7 +1178,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         categoriesWithCounts, floors,
         handleSaveCustomer,
         onToggleClockStatus, onSaveScheduleEntry, onDeleteScheduleEntry,
-        // ... all other data handlers
         
         // POS
         cart, setCart, activeCategory, onSelectCategory: setActiveCategory, searchQuery, onSearchChange: setSearchQuery,
@@ -884,7 +1187,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activeTab, setActiveTab, availablePromotions,
         appliedLoyaltyPoints, setAppliedLoyaltyPoints,
         resetPOSState, onNewSaleClick, onSelectItem,
-        // ... all other pos handlers
         
         // Modal
         modal, openModal, closeModal,
@@ -897,24 +1199,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updatePrintJobStatus: (id: string, status: PrintJobStatus) => setPrintQueue((prev: any) => prev.map((job: any) => job.id === id ? { ...job, status } : job)),
     };
     
-    
     const appContextValue = allContexts;
-    const dataContextValue = {
-        ...allContexts,
-        //...
-    };
+    const dataContextValue = allContexts;
+    const modalContextValue = allContexts;
+    const toastContextValue = allContexts;
+
     const posContextValue = {
         ...allContexts,
         onUpdateCartQuantity,
-        onRemoveItem, onVoidOrder, 
-        handleDeleteHeldOrder,
-        handleInitiatePayment: () => {}, handleInitiateSettlePayment: () => {}, handleSendToKitchen: () => {}, handleSettleBill: () => {},
+        onRemoveItem, 
+        onVoidOrder, 
+        handleReopenOrder, 
+        handleDeleteHeldOrder, 
+        handleHoldOrder,
+        handleInitiatePayment,
+        handleInitiateSettlePayment,
+        handleSendToKitchen,
+        handleSettleBill,
         onProcessFinalOrder,
-        handleSaveTab: () => {}, handleSettleTab: () => {}, handleSelectTab: () => {}, onLoadOrder: () => {}, handleAddPizzaToCart: () => {},
-        handleKitchenPrinting, onPrintA4: handlePrintA4, handlePostActionEvent,
+        handleSaveTab, 
+        handleSettleTab, 
+        handleSelectTab, 
+        onLoadOrder, 
+        handleAddPizzaToCart,
+        handleAddBurgerToCart,
+        handleKitchenPrinting, 
+        onPrintA4: handlePrintA4,
     };
-    const modalContextValue = allContexts;
-    const toastContextValue = allContexts;
+    
 
     return (
         <AppContext.Provider value={appContextValue}>

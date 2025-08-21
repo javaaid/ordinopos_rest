@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useDataContext, usePOSContext, useAppContext } from '../contexts/AppContext';
 import { useTranslations } from '../hooks/useTranslations';
@@ -46,7 +47,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = (props) => {
 
   return (
     <nav className="flex-shrink-0">
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-2">
         {allCategories.map((category) => {
           const isActive = activeCategory === category.id;
           const isAllButton = category.id === 'all';
@@ -59,7 +60,7 @@ const CategoryTabs: React.FC<CategoryTabsProps> = (props) => {
             <button
               key={category.id}
               onClick={() => onSelectCategory(category.id)}
-              className={`py-1 px-2.5 rounded-md transition-all duration-200 ease-in-out whitespace-nowrap text-xs font-medium uppercase hover:brightness-[0.93] active:scale-105 active:shadow-lg focus:outline-none ${baseBgColor} ${
+              className={`py-2.5 px-4 rounded-lg transition-all duration-200 ease-in-out whitespace-nowrap font-semibold hover:brightness-[0.93] active:scale-105 active:shadow-lg focus:outline-none text-sm ${baseBgColor} ${
                 isActive ? 'ring-2 ring-offset-2 ring-offset-background ring-primary' : ''
               }`}
             >

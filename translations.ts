@@ -149,6 +149,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     points_to_redeem: 'Points to Redeem',
     points_balance: 'Points Balance',
     loyalty_discount: 'Loyalty Discount',
+    fonts: 'Fonts',
   },
   es: {
     add: 'Añadir',
@@ -298,6 +299,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     points_to_redeem: 'Puntos a Canjear',
     points_balance: 'Saldo de Puntos',
     loyalty_discount: 'Descuento de Lealtad',
+    fonts: 'Fuentes',
   },
   ar: {
     add: 'إضافة',
@@ -447,6 +449,7 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
     points_to_redeem: 'نقاط للاستبدال',
     points_balance: 'رصيد النقاط',
     loyalty_discount: 'خصم الولاء',
+    fonts: 'الخطوط',
   }
 };
 

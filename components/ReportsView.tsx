@@ -84,7 +84,7 @@ const ReportsView: React.FC = () => {
     
     const availableGroups = useMemo((): Partial<Record<ReportGroup, { name: string; tabs: ReportTab[]; }>> => {
         if (!currentEmployee) return {};
-        const role = roles.find(r => r.id === currentEmployee.roleId);
+        const role = roles.find((r: Role) => r.id === currentEmployee.roleId);
         if (!role) return {};
         const p = role.permissions;
 
@@ -125,140 +125,78 @@ const ReportsView: React.FC = () => {
     }, [availableGroups, activeGroup, activeTab]);
 
     const currentGroupData = availableGroups[activeGroup];
-    const isStateReadyForRender = currentGroupData && currentGroupData.tabs && currentGroupData.tabs.includes(activeTab);
 
-    if (Object.keys(availableGroups).length > 0 && !isStateReadyForRender) {
-        return null;
-    }
-
-    const handleDateChange = (start: Date, end: Date) => {
-        setStartDate(start);
-        setEndDate(end);
-    };
-    
-    const handleGroupSelect = (group: ReportGroup) => {
-        setActiveGroup(group);
-    };
-
-    const realOrders = useMemo(() => (orders || []).filter(o => !o.isTraining), [orders]);
-    
     const filteredOrders = useMemo(() => {
-        return realOrders.filter(o => {
-            const orderDate = new Date(o.createdAt);
-            const endOfDay = new Date(endDate);
-            endOfDay.setHours(23, 59, 59, 999);
-            const isDateMatch = orderDate >= startDate && orderDate <= endOfDay;
-            const isEmployeeMatch = !filterEmployeeId || o.employeeId === filterEmployeeId;
-            return isDateMatch && isEmployeeMatch;
+        const start = startDate.getTime();
+        const end = endDate.getTime();
+        return (orders || []).filter((o: Order) => {
+            const createdAt = o.createdAt;
+            const inDateRange = createdAt >= start && createdAt <= end;
+            const matchesLocation = currentLocationId === 'all_locations' || o.locationId === currentLocationId;
+            return inDateRange && matchesLocation;
         });
-    }, [realOrders, startDate, endDate, filterEmployeeId]);
+    }, [orders, startDate, endDate, currentLocationId]);
 
-    const handleExportCSV = () => {
-        const headers = ["OrderID", "Date", "Time", "Location", "Employee", "Customer", "Subtotal", "DiscountName", "DiscountAmount", "Tax", "Total", "Type", "Source", "PaymentMethod", "ItemCount"];
-        const rows = filteredOrders.map(order => [order.id.slice(-6), new Date(order.createdAt).toLocaleDateString(), new Date(order.createdAt).toLocaleTimeString(), locations.find(l => l.id === order.locationId)?.name || 'N/A', employees.find(e => e.id === order.employeeId)?.name.replace(/\s\(.*\)/, '') || 'N/A', order.customer?.name || 'Walk-in', order.subtotal.toFixed(2), order.appliedDiscount?.name || '', (order.appliedDiscount?.amount || 0).toFixed(2), order.tax.toFixed(2), order.total.toFixed(2), order.orderType, order.source, order.payments.map(p => p.method).join('/'), order.cart.reduce((sum, item) => sum + item.quantity, 0)].join(','));
-        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
-        const link = document.createElement("a");
-        link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", `ordino_pos_sales_${currentLocationId}_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
-    const onRequestLogWaste = () => openModal('logWaste', { ingredients, onLogWaste: (data: any) => { handleLogWaste(data); closeModal(); } });
-    const onRequestStockCount = () => openModal('stockCount', { ingredients, onUpdateStock: handleUpdateStock });
-    
-    const renderContent = () => {
-        switch(activeTab) {
+    const renderActiveReport = () => {
+        switch (activeTab) {
             case 'summary': return <ExecutiveSummaryReport orders={filteredOrders} menuItems={menuItems} employees={employees} startDate={startDate} endDate={endDate} aiSettings={settings.ai} />;
             case 'sales': return <SalesDashboard orders={filteredOrders} startDate={startDate} endDate={endDate} locations={locations} currentLocationId={currentLocationId} recipes={recipes} ingredients={ingredients} allPaymentTypes={allPaymentTypes} />;
             case 'menu': return <MenuReport orders={filteredOrders} menuItems={menuItems} ingredients={ingredients} recipes={recipes} filterCategoryId={filterCategoryId} locations={locations} currentLocationId={currentLocationId} aiSettings={settings.ai} />;
-            case 'categories': return <CategoryReport orders={filteredOrders} categories={categories} filterCategoryId={filterCategoryId} ingredients={ingredients} recipes={recipes} />;
-            case 'inventory': return <InventoryReport ingredients={ingredients} orders={filteredOrders} recipes={recipes} suppliers={suppliers} wastageLog={wastageLog} onRequestLogWaste={onRequestLogWaste} onRequestStockCount={onRequestStockCount} startDate={startDate} endDate={endDate} />;
-            case 'staff_performance': return <StaffSalesReport orders={filteredOrders} employees={employees} locations={locations} currentLocationId={currentLocationId} aiSettings={settings.ai} />;
-            case 'labor': return <LaborReport employees={(employees || []).filter(e => !filterEmployeeId || e.id === filterEmployeeId)} />;
-            case 'customer': return <CustomerReport orders={filteredOrders} customers={customers} locations={locations} currentLocationId={currentLocationId} />;
+            case 'categories': return <CategoryReport orders={filteredOrders} categories={categories} ingredients={ingredients} recipes={recipes} filterCategoryId={filterCategoryId} />;
             case 'financials': return <FinancialsReport orders={filteredOrders} settings={settings} lastQuickBooksSync={lastAccountingSync} onSyncToQuickBooks={handleSyncAccounting} allPaymentTypes={allPaymentTypes} />;
             case 'discounts': return <DiscountReport orders={filteredOrders} />;
             case 'delivery': return <DeliveryReport orders={filteredOrders} />;
-            case 'retention': return <RetentionReport ordersInDateRange={filteredOrders} allOrders={realOrders} startDate={startDate} />;
+            case 'staff_performance': return <StaffSalesReport orders={filteredOrders} employees={employees} locations={locations} currentLocationId={currentLocationId} aiSettings={settings.ai}/>;
+            case 'labor': return <LaborReport employees={employees} />;
+            case 'customer': return <CustomerReport orders={filteredOrders} customers={customers} locations={locations} currentLocationId={currentLocationId} />;
+            case 'retention': return <RetentionReport ordersInDateRange={filteredOrders} allOrders={orders} startDate={startDate} />;
+            case 'inventory': return <InventoryReport orders={filteredOrders} ingredients={ingredients} recipes={recipes} suppliers={suppliers} wastageLog={wastageLog} onRequestLogWaste={() => openModal('logWaste', { ingredients, onLogWaste: handleLogWaste })} onRequestStockCount={() => openModal('stockCount', { ingredients, onUpdateStock: handleUpdateStock })} startDate={startDate} endDate={endDate} />;
             case 'kiosk': return <KioskReport orders={filteredOrders} />;
             case 'cfd': return <CFDReport orders={filteredOrders} />;
             case 'bi_dashboard': return <BIView />;
+            default: return <div>Select a report</div>;
         }
     };
     
+    if (!currentGroupData) return <div>Loading reports or no permissions...</div>;
+    
     return (
         <div className="p-6 h-full flex flex-col">
-            <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-                <div>
+            <header className="flex-shrink-0 mb-6">
+                <div className="flex justify-between items-center mb-4">
                     <h1 className="text-3xl font-bold text-foreground">Reports</h1>
-                    <p className="text-muted-foreground">{reportTitles[activeTab]}</p>
+                    <div className="flex items-center gap-2">
+                        <button className="flex items-center gap-2 bg-secondary hover:bg-muted text-secondary-foreground font-bold py-2 px-4 rounded-lg">
+                            <DocumentDuplicateIcon className="w-5 h-5"/> Export
+                        </button>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button onClick={() => {}} className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-semibold text-sm py-2 px-3 rounded-lg hover:bg-secondary">
-                        <PrinterIcon className="w-5 h-5" />
-                        Print
-                    </button>
-                    <button onClick={handleExportCSV} className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-semibold text-sm py-2 px-3 rounded-lg hover:bg-secondary">
-                        <ArrowDownTrayIcon className="w-5 h-5" />
-                        Export
-                    </button>
-                    <button onClick={() => {}} className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-semibold text-sm py-2 px-3 rounded-lg hover:bg-secondary">
-                        <DocumentDuplicateIcon className="w-5 h-5" />
-                        Copy
-                    </button>
+                <DateRangePicker startDate={startDate} endDate={endDate} onDateChange={(start, end) => { setStartDate(start); setEndDate(end); }} />
+                 <div className="mt-4 flex gap-x-6 gap-y-2 border-b border-border flex-wrap">
+                    {Object.entries(availableGroups).map(([key, groupData]) => (
+                         <button key={key} onClick={() => { setActiveGroup(key as ReportGroup); setActiveTab(groupData.tabs[0]); }} className={`py-2 px-1 text-sm font-semibold transition-colors border-b-2 ${activeGroup === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+                            {groupData.name}
+                        </button>
+                    ))}
                 </div>
-            </div>
-
-            <div className="bg-card border border-border rounded-xl p-4 mb-6">
-                <DateRangePicker startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
-            </div>
+            </header>
             
-            <div className="flex-grow flex flex-col md:flex-row gap-6 overflow-hidden">
-                <aside className="w-full md:w-56 bg-card rounded-xl p-3 shrink-0 border border-border">
-                    <nav className="space-y-4">
-                         {Object.entries(availableGroups).map(([key, group]) => (
-                            <div key={key}>
-                                <h3 className="px-3 text-sm font-semibold text-foreground mb-2">{group.name}</h3>
-                                {group.tabs.map(tabId => (
-                                    <button
-                                        key={tabId}
-                                        onClick={() => setActiveTab(tabId)}
-                                        className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                                            activeTab === tabId
-                                                ? 'bg-primary text-primary-foreground'
-                                                : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-                                        }`}
-                                    >
-                                        {reportTitles[tabId]}
-                                    </button>
-                                ))}
-                            </div>
+            <div className="flex-grow flex gap-6 overflow-hidden">
+                <aside className="w-56 bg-card rounded-xl p-3 shrink-0 flex flex-col border border-border">
+                    <nav className="space-y-1">
+                        {currentGroupData.tabs.map((tabId: ReportTab) => (
+                             <button key={tabId} onClick={() => setActiveTab(tabId)} className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium ${activeTab === tabId ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
+                                {reportTitles[tabId]}
+                            </button>
                         ))}
                     </nav>
                 </aside>
-                <main className="flex-grow bg-card rounded-xl p-6 overflow-y-auto border border-border">
-                     {(activeTab === 'menu' || activeTab === 'categories') && (
-                        <div className="mb-4 max-w-sm">
-                            <Select value={filterCategoryId} onChange={e => setFilterCategoryId(e.target.value)}>
-                                <option value="">All Categories</option>
-                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </Select>
-                        </div>
-                    )}
-                    {(activeTab === 'staff_performance' || activeTab === 'labor') && (
-                        <div className="mb-4 max-w-sm">
-                            <Select value={filterEmployeeId} onChange={e => setFilterEmployeeId(e.target.value)}>
-                                <option value="">All Employees</option>
-                                {(employees || []).map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-                            </Select>
-                        </div>
-                    )}
-                    {renderContent()}
+                <main className="flex-grow bg-card rounded-xl overflow-y-auto p-6 border border-border">
+                    {renderActiveReport()}
                 </main>
             </div>
         </div>
     );
 };
+
 export default ReportsView;

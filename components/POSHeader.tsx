@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Role } from '../types';
 import ChefHatIcon from './icons/ChefHatIcon';
@@ -10,7 +9,7 @@ import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
 import SearchIcon from './icons/SearchIcon';
 import BuildingStorefrontIcon from './icons/BuildingStorefrontIcon';
 import PizzaIcon from './icons/PizzaIcon';
-import { useAppContext, useDataContext, usePOSContext, useModalContext } from '../contexts/AppContext';
+import { useAppContext, useDataContext, usePOSContext, useModalContext, useToastContext } from '../contexts/AppContext';
 import QueueListIcon from './icons/QueueListIcon';
 import Squares2X2Icon from './icons/Squares2X2Icon';
 import PhoneIcon from './icons/PhoneIcon';
@@ -42,6 +41,7 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
     const { locations, menuItems, heldOrders, roles } = useDataContext();
     const { searchQuery, onSearchChange, handleReopenOrder, handleDeleteHeldOrder } = usePOSContext();
     const { openModal } = useModalContext();
+    const { addToast } = useToastContext();
 
     const [isLaunchpadOpen, setIsLaunchpadOpen] = useState(false);
     const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
@@ -52,6 +52,11 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
     const locationDropdownRef = useRef<HTMLDivElement>(null);
     const userMenuRef = useRef<HTMLDivElement>(null);
     const notificationPanelRef = useRef<HTMLDivElement>(null);
+
+    // Add a guard clause to prevent crashes if settings are not yet loaded.
+    if (!settings || !settings.advancedPOS) {
+        return null;
+    }
 
     const t = useTranslations(settings.language.staff);
 
@@ -77,7 +82,7 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
         if (pizzaItem) {
             openModal('pizzaBuilder', { item: pizzaItem });
         } else {
-            alert("Pizza builder item not found in menu!");
+            addToast({type: 'error', title: 'Setup Required', message: 'Pizza builder menu item not found.'});
         }
         setIsLaunchpadOpen(false);
     };

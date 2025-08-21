@@ -39,7 +39,7 @@ import SuppliersView from './components/SuppliersView';
 import AccountingView from './components/AccountingView';
 import ReservationsView from './components/ReservationsView';
 import ZatcaSettingsView from './components/ZatcaSettingsView';
-import { View, ManagementSubView, SettingsSubView, AppSettings, Order, Table, AISettings, AppPlugin, Location, Language, Role, CartItem, Category, PrintJob, Notification } from './types';
+import { View, ManagementSubView, SettingsSubView, AppSettings, Order, Table, AISettings, AppPlugin, Location, Language, Role, CartItem, Category, PrintJob, Notification, FontSettings } from './types';
 import { LOCATIONS } from './constants';
 import WaitlistView from './components/WaitlistView';
 import QRCodeOrderingView from './components/QRCodeOrderingView';
@@ -80,6 +80,7 @@ import ChevronDoubleRightIcon from './components/icons/ChevronDoubleRightIcon';
 import PrintersView from './components/PrintersView';
 import POSSubHeader from './components/POSSubHeader';
 import LoyaltySettingsView from './components/LoyaltySettingsView';
+import FontSettingsView from './components/FontSettingsView';
 
 const App: React.FC = () => {
   const { 
@@ -167,7 +168,14 @@ const App: React.FC = () => {
   }, [currentEmployee, roles]);
   
   const permissions = useMemo(() => {
-    if (!currentRole) return null;
+    if (!currentRole || !settings) {
+        return null;
+    }
+    // Add a more robust check to ensure advancedPOS is a valid object before proceeding.
+    const { advancedPOS } = settings;
+    if (typeof advancedPOS !== 'object' || advancedPOS === null) {
+        return null;
+    }
     
     const effectivePermissions = { ...currentRole.permissions };
 
@@ -177,7 +185,7 @@ const App: React.FC = () => {
     if (!isOrderNumberDisplayPluginActive) effectivePermissions.viewOrderNumberDisplay = false;
     
     // Explicit setting overrides. A setting of `false` should always override a `true` permission.
-    if (settings.advancedPOS.enableTimeClock === false) {
+    if (advancedPOS.enableTimeClock === false) {
         effectivePermissions.viewTimeClock = false;
     }
     
@@ -200,6 +208,19 @@ const App: React.FC = () => {
     document.documentElement.dir = dir;
     document.documentElement.lang = settings.language.staff;
   }, [settings.language.staff]);
+
+  useEffect(() => {
+    // Apply font settings as CSS variables
+    if (settings.fontSettings) {
+        const root = document.documentElement;
+        root.style.setProperty('--font-size-base', `${settings.fontSettings.baseSize}px`);
+        root.style.setProperty('--font-size-menu-item-name', `${settings.fontSettings.menuItemName}px`);
+        root.style.setProperty('--font-size-menu-item-price', `${settings.fontSettings.menuItemPrice}px`);
+        root.style.setProperty('--font-size-order-summary-item', `${settings.fontSettings.orderSummaryItem}px`);
+        root.style.setProperty('--font-size-order-summary-total', `${settings.fontSettings.orderSummaryTotal}px`);
+        root.style.setProperty('--font-size-category-tabs', `${settings.fontSettings.categoryTabs}px`);
+    }
+  }, [settings.fontSettings]);
 
   const handleSelectTableFromBar = (table: Table) => {
     setCurrentTable(table);
@@ -317,6 +338,7 @@ const App: React.FC = () => {
         switch(settingsSubView) {
             case 'integrations': return <IntegrationsSettings />;
             case 'customization': return <CustomizationSettings />;
+            case 'fonts': return <FontSettingsView />;
             case 'advanced': return <AdvancedSettings />;
             case 'activity': return <UserActivityReport />;
             case 'zatca': return <ZatcaSettingsView />;
@@ -332,7 +354,7 @@ const App: React.FC = () => {
 
     switch(activeView) {
       case 'pos': return permissions.viewPOS ? (
-        <div className="flex flex-row gap-1 p-1 h-screen overflow-hidden">
+        <div className="flex flex-row gap-2 p-2 h-screen overflow-hidden">
             <main className="flex-1 flex flex-col gap-2 overflow-hidden">
                 <div className="flex-shrink-0">
                     <POSHeader />
@@ -340,21 +362,21 @@ const App: React.FC = () => {
                 <div className="flex-shrink-0">
                     <POSSubHeader />
                 </div>
-                 <div className="flex-shrink-0">
+                 <div className="flex-shrink-0 px-1.5">
                     <CategoryTabs />
                 </div>
-                <div className="flex-grow overflow-y-auto pr-1">
+                <div className="flex-grow overflow-y-auto pr-1.5 pl-1.5">
                     <MenuGrid />
                 </div>
-                <div className="flex-shrink-0 mt-2">
+                <div className="flex-shrink-0 mt-2 px-1.5">
                     <ActiveTablesBar onSelectTable={handleSelectTableFromBar} />
                 </div>
             </main>
-            <aside className="w-[380px] shrink-0">
+            <aside className="w-[420px] shrink-0">
                 <OrderSummary />
             </aside>
              <div 
-                className="fixed bottom-4 right-[calc(380px+0.5rem+1.5rem)] z-30"
+                className="fixed bottom-4 right-[calc(420px+0.5rem+1.5rem)] z-30"
                 style={{ transform: `translate(${aiFabPosition.x}px, ${aiFabPosition.y}px)` }}
               >
                 <button 

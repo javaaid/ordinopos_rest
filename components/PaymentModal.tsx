@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Order, PaymentMethod, AppPlugin, PaymentType, AppSettings, ToastNotification, Payment } from '../types';
 import CurrencyDollarIcon from './icons/CurrencyDollarIcon';
@@ -89,13 +88,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay
   }, [remainingDue, payments, paymentStatus, onFinalize, orderToPay, isOpen]);
   
   useEffect(() => {
-    if (finalizedOrder && settings.advancedPOS.printReceiptAfterPayment) {
+    if (finalizedOrder && settings?.advancedPOS?.printReceiptAfterPayment) {
         const timer = setTimeout(() => {
             onDirectPrintReceipt(finalizedOrder);
         }, 500);
         return () => clearTimeout(timer);
     }
-  }, [finalizedOrder, settings.advancedPOS.printReceiptAfterPayment, onDirectPrintReceipt]);
+  }, [finalizedOrder, settings?.advancedPOS?.printReceiptAfterPayment, onDirectPrintReceipt]);
 
 
   if (!isOpen || !orderToPay) return null;
@@ -189,7 +188,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay
               </Button>
           </div>
 
-          {settings.advancedPOS.emailReceipt && (
+          {settings?.advancedPOS?.emailReceipt && (
             <div className="space-y-2 text-left">
                 <label className="text-sm font-medium text-muted-foreground">Send Email Receipt</label>
                 <div className="flex gap-2">

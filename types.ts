@@ -31,7 +31,7 @@ export type ManagementSubView =
   'call_log' |
   // New Loyalty sub-view
   'loyalty';
-export type SettingsSubView = 'integrations' | 'customization' | 'activity' | 'advanced' | 'zatca' | 'ai' | 'numbering' | 'device_settings' | 'printers' | 'advanced_pos_settings' | 'preferences_settings';
+export type SettingsSubView = 'integrations' | 'customization' | 'activity' | 'advanced' | 'zatca' | 'ai' | 'numbering' | 'device_settings' | 'printers' | 'advanced_pos_settings' | 'preferences_settings' | 'fonts';
 export type SignageSubView = 'displays' | 'content' | 'playlists' | 'scheduler' | 'cfd_attract';
 
 export type TranslationKey = 
@@ -90,7 +90,7 @@ export type TranslationKey =
   // Settings Sidebar
   'integrations' | 'customization' | 'devices' | 'printers' | 'numbering' | 'activity_log' | 
   'zatca_ksa' | 'ai_settings' | 'advanced' | 'branding_localization' | 'pos_configuration' | 
-  'advanced_pos' | 'system_and_data' | 'backup_restore' |
+  'advanced_pos' | 'system_and_data' | 'backup_restore' | 'fonts' |
   
   // Order History
   'order_hash' | 'date_time' | 'balance_due' | 'status' | 'actions' |
@@ -814,6 +814,15 @@ export interface SignageScheduleEntry {
   endTime: string; // "HH:mm"
 }
 
+export interface FontSettings {
+    baseSize: number;
+    menuItemName: number;
+    menuItemPrice: number;
+    orderSummaryItem: number;
+    orderSummaryTotal: number;
+    categoryTabs: number;
+}
+
 // App Settings
 export interface AppPlugin {
   id: string;
@@ -1010,6 +1019,7 @@ export interface AppSettings {
     advancedPOS: AdvancedPOSSettings;
     preferences: POSPreferences;
     loyalty: LoyaltySettings;
+    fontSettings: FontSettings;
 }
 
 export interface SimulationLogEntry {

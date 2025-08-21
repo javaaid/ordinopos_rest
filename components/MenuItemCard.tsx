@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { MenuItem } from '../types';
 import PlusIcon from './icons/PlusIcon';
@@ -44,29 +45,29 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, cartQuantity, onSelec
       onClick={handleAction}
       onContextMenu={handleContextMenu}
       style={hasImage ? cardStyleWithImage : cardStyleWithColor}
-      className={`rounded-lg overflow-hidden flex flex-col justify-end p-1.5 h-24 relative transition-all duration-200 group shadow-md
+      className={`rounded-lg overflow-hidden flex flex-col justify-end p-2 h-28 relative transition-all duration-200 group shadow-md
         ${!hasImage && !hasColor ? 'bg-card border border-border' : ''}
         ${isOutOfStock ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:ring-2 ring-primary'} 
         ${isInCart ? 'ring-2 ring-primary' : ''}`}
     >
         {isInCart && (
-            <div className="absolute top-1 end-1 bg-primary text-primary-foreground rounded-full h-5 w-5 flex items-center justify-center text-xs font-bold border-2 border-card">
+            <div className="absolute top-1 end-1 bg-primary text-primary-foreground rounded-full h-6 min-w-[1.5rem] px-2 flex items-center justify-center text-sm font-bold border-2 border-card">
                 {cartQuantity}
             </div>
         )}
 
       <div className="flex justify-between items-end gap-1 z-10">
         <div className={textColorClass}>
-            <h3 className="font-medium leading-tight text-xs">{item.name}</h3>
+            <h3 className="font-medium leading-tight text-sm">{item.name}</h3>
             <p className="font-semibold text-sm">${item.price.toFixed(2)}</p>
         </div>
         
         <button
             onClick={handleAction}
             disabled={isOutOfStock}
-            className="bg-card/50 backdrop-blur-sm w-7 h-7 rounded-full flex items-center justify-center hover:bg-card/75 transition-colors disabled:opacity-50 text-card-foreground flex-shrink-0"
+            className="bg-card/50 backdrop-blur-sm w-8 h-8 rounded-full flex items-center justify-center hover:bg-card/75 transition-colors disabled:opacity-50 text-card-foreground flex-shrink-0"
         >
-            <PlusIcon className="w-4 h-4"/>
+            <PlusIcon className="w-5 h-5"/>
         </button>
       </div>
     </div>
