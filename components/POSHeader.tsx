@@ -9,7 +9,7 @@ import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
 import SearchIcon from './icons/SearchIcon';
 import BuildingStorefrontIcon from './icons/BuildingStorefrontIcon';
 import PizzaIcon from './icons/PizzaIcon';
-import { useAppContext, useDataContext, usePOSContext, useModalContext, useToastContext } from '../contexts/AppContext';
+import { useAppContext } from '../contexts/AppContext';
 import QueueListIcon from './icons/QueueListIcon';
 import Squares2X2Icon from './icons/Squares2X2Icon';
 import PhoneIcon from './icons/PhoneIcon';
@@ -36,12 +36,11 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
         isCallerIdPluginActive, handleIncomingCall,
         setView, currentEmployee, handleLogout, notifications,
         theme, onToggleTheme, handleMarkAllNotificationsAsRead,
-        handleBarcodeScanned
+        handleBarcodeScanned,
+        locations, menuItems, heldOrders, roles,
+        searchQuery, onSearchChange, handleReopenOrder, handleDeleteHeldOrder,
+        openModal, addToast
     } = useAppContext();
-    const { locations, menuItems, heldOrders, roles } = useDataContext();
-    const { searchQuery, onSearchChange, handleReopenOrder, handleDeleteHeldOrder } = usePOSContext();
-    const { openModal } = useModalContext();
-    const { addToast } = useToastContext();
 
     const [isLaunchpadOpen, setIsLaunchpadOpen] = useState(false);
     const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);

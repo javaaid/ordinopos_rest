@@ -1,18 +1,32 @@
+
 import React, { useMemo } from 'react';
 import { CartItem, MenuItem } from '../types';
 import MenuItemCard from './MenuItemCard';
-import { useAppContext, useDataContext, usePOSContext, useModalContext } from '../contexts/AppContext';
+import { useAppContext } from '../contexts/AppContext';
 import { isItemOutOfStock } from '../utils/calculations';
 
 const MenuGrid: React.FC = () => {
-  const { menuItems, ingredients, recipes, handleSaveProduct, printers, kitchenDisplays, handleSaveCategory } = useDataContext();
-  const { cart, activeCategory, searchQuery, onSelectItem } = usePOSContext();
-  const { isAdvancedInventoryPluginActive, justAddedCategoryId, onClearJustAddedCategoryId } = useAppContext();
-  const { openModal, closeModal } = useModalContext();
+  const { 
+    menuItems, 
+    ingredients, 
+    recipes, 
+    handleSaveProduct, 
+    printers, 
+    kitchenDisplays, 
+    handleSaveCategory,
+    cart, 
+    activeCategory, 
+    searchQuery, 
+    onSelectItem,
+    isAdvancedInventoryPluginActive, 
+    justAddedCategoryId, 
+    onClearJustAddedCategoryId,
+    openModal, 
+    closeModal 
+  } = useAppContext();
 
   const filteredMenuItems = useMemo(() => {
-    // This logic should ideally be in the context as well, but this is fine for now.
-    let items = menuItems || []; // Assuming location filter is handled elsewhere or in a selector
+    let items = menuItems || [];
     if (activeCategory !== 'all') {
         items = items.filter(item => item.category === activeCategory);
     }

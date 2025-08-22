@@ -1,22 +1,18 @@
 
-
-import React, { useState, useEffect } from 'react';
-import { Employee, Location, AppSettings } from '../types';
+import React, { useState } from 'react';
+import { Employee, AppSettings } from '../types';
 import BuildingStorefrontIcon from './icons/BuildingStorefrontIcon';
-import { useAppContext, useDataContext } from '../contexts/AppContext';
-import SunIcon from './icons/SunIcon';
-import MoonIcon from './icons/MoonIcon';
+import { useAppContext } from '../contexts/AppContext';
 import PinPad from './PinPad';
 import GoogleIcon from './icons/GoogleIcon';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
-import { hexToHsl } from '../lib/utils';
 
 
 const DateTimeDisplay: React.FC = () => {
     const [dateTime, setDateTime] = useState(new Date());
 
-    useEffect(() => {
+    React.useEffect(() => {
         const timer = setInterval(() => setDateTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
@@ -36,8 +32,7 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ settings }) => {
-    const { handlePinLogin, currentLocation, onLocationChange, isMultiStorePluginActive } = useAppContext();
-    const { locations, employees } = useDataContext();
+    const { handlePinLogin, currentLocation, onLocationChange, isMultiStorePluginActive, locations, employees } = useAppContext();
     
     if (!settings || !settings.advancedPOS) {
         return null; // Guard against settings prop being unavailable.

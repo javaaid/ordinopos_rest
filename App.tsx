@@ -1,5 +1,4 @@
 
-
 import React, { useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import MenuGrid from './components/MenuGrid';
 import OrderSummary from './components/OrderSummary';
@@ -10,7 +9,6 @@ import CustomersView from './components/CustomersView';
 import PermissionDenied from './components/PermissionDenied';
 import CFDView from './components/CFDView';
 import KIOSKView from './components/KIOSKView';
-import SessionTimeoutWarningModal from './components/SessionTimeoutWarningModal';
 import { LoginPage } from './components/LoginPage';
 import OrderHistoryView from './components/OrderHistoryView';
 import ToastContainer from './components/ToastContainer';
@@ -39,15 +37,14 @@ import SuppliersView from './components/SuppliersView';
 import AccountingView from './components/AccountingView';
 import ReservationsView from './components/ReservationsView';
 import ZatcaSettingsView from './components/ZatcaSettingsView';
-import { View, ManagementSubView, SettingsSubView, AppSettings, Order, Table, AISettings, AppPlugin, Location, Language, Role, CartItem, Category, PrintJob, Notification, FontSettings } from './types';
+import { View, ManagementSubView, SettingsSubView, Order, Table, Location, Role, Category } from './types';
 import { LOCATIONS } from './constants';
 import WaitlistView from './components/WaitlistView';
 import QRCodeOrderingView from './components/QRCodeOrderingView';
 import POSHeader from './components/POSHeader';
-import { useAppContext, useDataContext, useModalContext, usePOSContext, useToastContext } from './contexts/AppContext';
-import { calculateOrderTotals, getPriceForItem } from './utils/calculations';
+import { useAppContext } from './contexts/AppContext';
 import ModalManager from './components/ModalManager';
-import { hexToHsl, cn } from './lib/utils';
+import { cn } from './lib/utils';
 import IngredientsView from './components/IngredientsView';
 import DineInSettingsView from './components/DineInSettingsView';
 import DeliverySettingsView from './components/DeliverySettingsView';
@@ -70,12 +67,10 @@ import OrderNumberDisplayView from './components/OrderNumberDisplayView';
 import PizzaBuilderSettingsView from './components/PizzaBuilderSettingsView';
 import BurgerBuilderSettingsView from './components/BurgerBuilderSettingsView';
 import LandingPage from './components/LandingPage';
-import QRCode from "react-qr-code";
 import CallLogView from './components/CallLogView';
 import ChatBubbleOvalLeftEllipsisIcon from './components/icons/ChatBubbleOvalLeftEllipsisIcon';
 import PrintQueueMonitor from './components/PrintQueueMonitor';
 import { useTranslations } from './hooks/useTranslations';
-import ChevronDoubleLeftIcon from './components/icons/ChevronDoubleLeftIcon';
 import ChevronDoubleRightIcon from './components/icons/ChevronDoubleRightIcon';
 import PrintersView from './components/PrintersView';
 import POSSubHeader from './components/POSSubHeader';
@@ -85,17 +80,15 @@ import FontSettingsView from './components/FontSettingsView';
 const App: React.FC = () => {
   const { 
     activeView, setView, managementSubView, setManagementSubView, settingsSubView, setSettingsSubView,
-    currentEmployee, settings, setSettings, 
-    isFullscreen, currentLocation,
+    currentEmployee, settings,
     isMultiStorePluginActive, isKsaPluginActive,
     isReservationPluginActive, isWaitlistPluginActive, isOrderNumberDisplayPluginActive,
-    addPrintJobs, isSidebarHidden, onToggleSidebar
+    isSidebarHidden, onToggleSidebar,
+    roles, orders, locations, categories, handleSaveCategory, handleDeleteCategory, onRequestRefund, onApproveRefund, onDenyRefund,
+    toasts, dismissToast,
+    openModal, closeModal,
+    setCurrentTable, onLoadOrder, onPrintA4
   } = useAppContext();
-
-  const { roles, orders, tables, customers, categories, locations, employees, handleSaveCategory, handleDeleteCategory, onRequestRefund, onApproveRefund, onDenyRefund } = useDataContext();
-  const { toasts, dismissToast } = useToastContext();
-  const { openModal, closeModal } = useModalContext();
-  const { setCurrentTable, onLoadOrder, onPrintA4, handleSelectTab } = usePOSContext();
 
 
   // State and handlers for the draggable AI FAB
@@ -171,7 +164,6 @@ const App: React.FC = () => {
     if (!currentRole || !settings) {
         return null;
     }
-    // Add a more robust check to ensure advancedPOS is a valid object before proceeding.
     const { advancedPOS } = settings;
     if (typeof advancedPOS !== 'object' || advancedPOS === null) {
         return null;
@@ -179,12 +171,10 @@ const App: React.FC = () => {
     
     const effectivePermissions = { ...currentRole.permissions };
 
-    // Plugin-based overrides
     if (!isReservationPluginActive) effectivePermissions.viewReservations = false;
     if (!isWaitlistPluginActive) effectivePermissions.viewWaitlist = false;
     if (!isOrderNumberDisplayPluginActive) effectivePermissions.viewOrderNumberDisplay = false;
     
-    // Explicit setting overrides. A setting of `false` should always override a `true` permission.
     if (advancedPOS.enableTimeClock === false) {
         effectivePermissions.viewTimeClock = false;
     }
@@ -203,14 +193,12 @@ const App: React.FC = () => {
   }, []);
   
   useEffect(() => {
-    // Set language and direction for RTL support
     const dir = settings.language.staff === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.dir = dir;
     document.documentElement.lang = settings.language.staff;
   }, [settings.language.staff]);
 
   useEffect(() => {
-    // Apply font settings as CSS variables
     if (settings.fontSettings) {
         const root = document.documentElement;
         root.style.setProperty('--font-size-base', `${settings.fontSettings.baseSize}px`);
@@ -240,7 +228,6 @@ const App: React.FC = () => {
   });
 
   const onSendDigitalReceipt = (type: 'email' | 'sms', destination: string) => {
-    // This is a placeholder for a real implementation
     console.log(`Simulating sending ${type} receipt to ${destination}`);
   };
 
@@ -274,13 +261,11 @@ const App: React.FC = () => {
   
   const publicViews: View[] = ['kds', 'cfd', 'kiosk', 'qr_ordering', 'order_number_display', 'landing'];
 
-  // Login check for non-public views
   if (!currentEmployee && !publicViews.includes(activeView)) {
       return <LoginPage settings={settings} />;
   }
 
   const renderActiveView = () => {
-    // Render public views first, as they don't need permissions
     if (publicViews.includes(activeView)) {
         switch(activeView) {
             case 'landing': return <LandingPage />;
@@ -289,11 +274,10 @@ const App: React.FC = () => {
             case 'kiosk': return <KIOSKView />;
             case 'qr_ordering': return <QRCodeOrderingView />;
             case 'order_number_display': return <OrderNumberDisplayView />;
-            default: return <PermissionDenied />; // Should not happen if publicViews list is correct
+            default: return <PermissionDenied />;
         }
     }
 
-    // For protected views, we must have a logged-in user with permissions.
     if (!permissions) return <PermissionDenied />;
 
     const renderManagementSubView = () => {

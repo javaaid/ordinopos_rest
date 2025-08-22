@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { useDataContext, usePOSContext, useAppContext } from '../contexts/AppContext';
+import { useAppContext } from '../contexts/AppContext';
 import { useTranslations } from '../hooks/useTranslations';
 
 interface CategoryTabsProps {
@@ -16,25 +16,23 @@ const COLORS = [
 ];
 
 const CategoryTabs: React.FC<CategoryTabsProps> = (props) => {
-  const contextData = useDataContext();
-  const posContext = usePOSContext();
-  const { settings } = useAppContext();
+  const { settings, categoriesWithCounts, activeCategory: contextActiveCategory, onSelectCategory: contextOnSelectCategory } = useAppContext();
   const t = useTranslations(settings.language.staff);
 
   // Use props if available, otherwise fall back to context
-  const activeCategory = props.activeCategory ?? posContext.activeCategory;
-  const onSelectCategory = props.onSelectCategory ?? posContext.onSelectCategory;
+  const activeCategory = props.activeCategory ?? contextActiveCategory;
+  const onSelectCategory = props.onSelectCategory ?? contextOnSelectCategory;
 
   const allCategories = useMemo(() => {
       if (props.categories) {
           return props.categories;
       }
-      const categoriesWithCounts = contextData.categoriesWithCounts || [];
+      const categories = categoriesWithCounts || [];
       return [
-        { id: 'all', name: t('all'), itemCount: categoriesWithCounts.reduce((sum: number, c: {itemCount: number}) => sum + c.itemCount, 0) }, 
-        ...categoriesWithCounts
+        { id: 'all', name: t('all'), itemCount: categories.reduce((sum: number, c: {itemCount: number}) => sum + c.itemCount, 0) }, 
+        ...categories
       ];
-  }, [props.categories, contextData.categoriesWithCounts, t]);
+  }, [props.categories, categoriesWithCounts, t]);
 
   const categoryColorMap = useMemo(() => {
     const map = new Map<string, string>();

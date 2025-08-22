@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { CartItem, Customer, OrderType, Employee, AppliedDiscount, Language, Table, Location, Order, AppSettings, AIResponse, AISettings, Promotion, ManualDiscount, Surcharge } from '../types';
 import OrderItem from './OrderItem';
@@ -7,7 +6,7 @@ import UserCircleIcon from './icons/UserCircleIcon';
 import { calculateOrderTotals } from '../utils/calculations';
 import SparklesIcon from './icons/SparklesIcon';
 import AISuggestions from './AISuggestions';
-import { useAppContext, useDataContext, usePOSContext, useModalContext } from '../contexts/AppContext';
+import { useAppContext } from '../contexts/AppContext';
 import { Button } from './ui/Button';
 import TrashIcon from './icons/TrashIcon';
 import PauseIcon from './icons/PauseIcon';
@@ -22,17 +21,12 @@ import ShoppingBagIcon from './icons/ShoppingBagIcon';
 import StarIcon from './icons/StarIcon';
 
 export default function OrderSummary() {
-  const { settings, currentEmployee, currentLocation } = useAppContext();
-  
-  if (!settings) {
-    return null; // or a loading component
-  }
-
-  const { tables, orders, customers, handleSaveCustomer, manualDiscounts, employees, surcharges } = useDataContext();
   const { 
-    cart, setCart, onRemoveItem, onUpdateCartQuantity, currentTable, setCurrentTable: onSetCurrentTable, 
+    settings, currentEmployee, currentLocation,
+    tables, orders, customers, handleSaveCustomer, manualDiscounts, employees, surcharges,
+    cart, onRemoveItem, onUpdateCartQuantity, currentTable, setCurrentTable: onSetCurrentTable, 
     selectedCustomer, setSelectedCustomer, onNewSaleClick, onVoidOrder, 
-    appliedDiscount, setAppliedDiscount, appliedPromotion, setAppliedPromotion,
+    appliedDiscount, appliedPromotion, 
     aiUpsellSuggestions, isSuggestingUpsell, handleGetUpsellSuggestions, onSelectUpsellSuggestion,
     handleHoldOrder, availablePromotions,
     activeOrderToSettle, handleInitiateSettlePayment,
@@ -40,9 +34,14 @@ export default function OrderSummary() {
     orderType, setOrderType, handleApplyManualDiscount, handleRemoveDiscount, handleApplyPromotion,
     selectedStaff, setSelectedStaff,
     activeTab, setActiveTab, handleSaveTab, handleSettleTab,
-    handleInitiatePayment, appliedLoyaltyPoints, setAppliedLoyaltyPoints
-  } = usePOSContext();
-  const { openModal, closeModal } = useModalContext();
+    handleInitiatePayment, appliedLoyaltyPoints, setAppliedLoyaltyPoints,
+    openModal, closeModal
+  } = useAppContext();
+  
+  if (!settings) {
+    return null; // or a loading component
+  }
+  
   const t = useTranslations(settings.language.staff);
   
   const isSettlingOrder = !!activeOrderToSettle;
@@ -83,8 +82,8 @@ export default function OrderSummary() {
       
       if (openTab) {
           setActiveTab(openTab);
-          setAppliedDiscount(openTab.appliedDiscount || null);
-          setAppliedPromotion(openTab.appliedPromotion || null);
+          // setAppliedDiscount(openTab.appliedDiscount || null);
+          // setAppliedPromotion(openTab.appliedPromotion || null);
       } else {
           setActiveTab(null);
       }

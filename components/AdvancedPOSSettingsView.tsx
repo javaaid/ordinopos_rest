@@ -1,16 +1,13 @@
 
-
 import React, { useState, useEffect } from 'react';
-import { useAppContext, useToastContext } from '../contexts/AppContext';
+import { useAppContext } from '../contexts/AppContext';
 import { AppSettings, AdvancedPOSSettings } from '../types';
 import WrenchScrewdriverIcon from './icons/WrenchScrewdriverIcon';
 import { Card, CardContent } from './ui/Card';
 import { Button } from './ui/Button';
-import { cn } from '../lib/utils';
 
 const AdvancedPOSSettingsView: React.FC = () => {
-    const { settings, setSettings } = useAppContext();
-    const { addToast } = useToastContext();
+    const { settings, setSettings, addToast } = useAppContext();
 
     if (!settings || !settings.advancedPOS) {
         return null; // or a loading spinner

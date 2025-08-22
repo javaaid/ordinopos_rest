@@ -1,23 +1,26 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
-import { LOCATIONS, CATEGORIES, MENU_ITEMS, CUSTOMERS, DRIVERS, EMPLOYEES, SUPPLIERS, WASTAGE_LOG, ROLES, AUDIT_LOG, PRINTERS, TABLES, SUBSCRIPTIONS, PURCHASE_ORDERS, PLUGINS, SCHEDULE, RESERVATIONS, INGREDIENTS, RECIPES, SIGNAGE_DISPLAYS, SIGNAGE_CONTENT, SIGNAGE_PLAYLISTS, SIGNAGE_SCHEDULE, ACTIVATION_CODES, PAYMENT_TYPES, PIZZA_OPTIONS, PROMOTIONS, MODIFIER_GROUPS, KITCHEN_DISPLAYS, KITCHEN_NOTES, VOID_REASONS, MANUAL_DISCOUNTS, SURCHARGES, CUSTOMER_DISPLAYS, SCALES, CALL_LOG, DEFAULT_KITCHEN_PRINT_SETTINGS, DEFAULT_RECEIPT_SETTINGS, KITCHEN_PROFILE_NAMES } from '../constants';
-import { MenuItem, CartItem, ModifierOption, Customer, Order, Driver, OrderType, OrderSource, Employee, Location, PaymentMethod, Shift, AppliedDiscount, AIResponse, WastageEntry, Supplier, AIEstimatedWaitTime, Role, AIRoleSuggestion, AuditLogEntry, Notification, Language, ReportSchedule, Printer, ToastNotification, SimulationLogEntry, SimulationReport, Table, Subscription, PurchaseOrder, AIFloorPlanSuggestion, AIBusyZoneAnalysis, AIInvoiceWarning, AILoyaltyResponse, AppSettings, View, ManagementSubView, SettingsSubView, AppPlugin, ScheduleEntry, Reservation, ReservationStatus, Ingredient, RecipeItem, SignageDisplay, SignageContentItem, SignagePlaylist, SignageScheduleEntry, WaitlistEntry, WaitlistStatus, Theme, Payment, TableStatus, OrderStatus, PaymentType, ReceiptSettings, ZatcaSettings, PizzaConfiguration, BurgerConfiguration, Category, Promotion, HeldOrder, ModifierGroup, KitchenDisplay, KitchenNote, VoidReason, ManualDiscount, Surcharge, POSPreferences, GenericDevice, CustomerDisplay, CallLogEntry, PizzaToppingItem, KitchenPrintSettings, KitchenProfileType, PrintJob, PrintJobStatus, CSVImportResult, CsvImportFunction } from '../types';
-import { calculateOrderTotals, getPriceForItem, isItemOutOfStock } from '../utils/calculations';
+import { LOCATIONS, CATEGORIES, MENU_ITEMS, CUSTOMERS, DRIVERS, EMPLOYEES, SUPPLIERS, WASTAGE_LOG, ROLES, AUDIT_LOG, PRINTERS, TABLES, SUBSCRIPTIONS, PURCHASE_ORDERS, PLUGINS, SCHEDULE, RESERVATIONS, INGREDIENTS, RECIPES, SIGNAGE_DISPLAYS, SIGNAGE_CONTENT, SIGNAGE_PLAYLISTS, SIGNAGE_SCHEDULE, ACTIVATION_CODES, PAYMENT_TYPES, PIZZA_OPTIONS, PROMOTIONS, MODIFIER_GROUPS, KITCHEN_DISPLAYS, KITCHEN_NOTES, VOID_REASONS, MANUAL_DISCOUNTS, SURCHARGES, CUSTOMER_DISPLAYS, SCALES, CALL_LOG, DEFAULT_KITCHEN_PRINT_SETTINGS, DEFAULT_RECEIPT_SETTINGS } from '../constants';
+import { MenuItem, CartItem, ModifierOption, Customer, Order, Driver, OrderType, Employee, Location, PaymentMethod, Shift, AppliedDiscount, AIResponse, WastageEntry, Supplier, AIEstimatedWaitTime, Role, AIRoleSuggestion, AuditLogEntry, Notification, Language, ReportSchedule, Printer, ToastNotification, SimulationLogEntry, SimulationReport, Table, Subscription, PurchaseOrder, AppSettings, View, ManagementSubView, SettingsSubView, AppPlugin, ScheduleEntry, Reservation, Ingredient, RecipeItem, SignageDisplay, SignageContentItem, SignagePlaylist, SignageScheduleEntry, WaitlistEntry, WaitlistStatus, Theme, Payment, TableStatus, OrderStatus, PaymentType, PizzaConfiguration, BurgerConfiguration, Category, Promotion, HeldOrder, ModifierGroup, KitchenDisplay, KitchenNote, VoidReason, ManualDiscount, Surcharge, GenericDevice, CustomerDisplay, CallLogEntry, PrintJob, PrintJobStatus } from '../types';
+import { calculateOrderTotals, isItemOutOfStock } from '../utils/calculations';
 
 // #region Context Creation
 const AppContext = createContext<any>(null);
-const DataContext = createContext<any>(null);
-const POSContext = createContext<any>(null);
-const ModalContext = createContext<any>(null);
-const ToastContext = createContext<any>(null);
 // #endregion
 
-export const useAppContext = () => useContext(AppContext);
-export const useDataContext = () => useContext(DataContext);
-export const usePOSContext = () => useContext(POSContext);
-export const useModalContext = () => useContext(ModalContext);
-export const useToastContext = () => useContext(ToastContext);
+export const useAppContext = () => {
+    const context = useContext(AppContext);
+    if (!context) {
+        throw new Error('useAppContext must be used within an AppProvider');
+    }
+    return context;
+};
+export const useDataContext = () => useAppContext();
+export const usePOSContext = () => useAppContext();
+export const useModalContext = () => useAppContext();
+export const useToastContext = () => useAppContext();
+
 
 // #region Persistence
 const isObject = (item: any): item is { [key: string]: any } => (item && typeof item === 'object' && !Array.isArray(item));
@@ -143,7 +146,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         reservationSystem: 'none', opentableApiKey: '', googleReservationsApiKey: '',
         orderSettings: { gratuityOptions: [15, 18, 20], invoicePrefix: 'INV-', invoiceSuffix: '', nextInvoiceNumber: 1, nextDailyOrderNumber: 1, dailyOrderSequenceLastReset: new Date().toISOString().split('T')[0] },
         dualCurrency: { enabled: false, secondaryCurrency: 'USD', exchangeRate: 1 },
-        zatca: { enabled: false, productionCert: '', productionCSR: '', isSandbox: true, fatooraApiKey: '', qrCodeSize: 128, qrCodePosition: 'bottom' },
+        zatca: { enabled: true, productionCert: '', productionCSR: '', isSandbox: true, fatooraApiKey: '', qrCodeSize: 128, qrCodePosition: 'bottom' },
         receipt: { ...DEFAULT_RECEIPT_SETTINGS, logoUrl: 'https://raw.githubusercontent.com/ordino-pos/ordino-pos-media/main/logo-dark.png', promoMessage: 'Thank you!', template: 'standard' },
         invoice: { template: 'modern' },
         theme: { primary: '#2563eb', background: '#f4f4f5', surface: '#ffffff', textBase: '#111827', textMuted: '#6b7280' },
@@ -158,7 +161,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         takeAway: { enabled: true, customName: 'Take Away', requireCustomerName: true, useHoldReason: false, surcharge: { enabled: false, name: 'Packaging Fee', type: 'fixed', value: 0.50 } },
         tab: { enabled: true, customName: 'Tab' },
         devices: { receiptPrinterId: 'p1', kitchenPrinterId: 'kp1', kioskPrinterId: 'p1', barPrinterId: null, reportPrinterId: 'p4', customerDisplayId: 'cd1', kitchenDisplayId: 'kds_1', scaleId: 'sc1', printServerUrl: 'http://localhost:3000' },
-        advancedPOS: { enableItemNumber: false, separateSameItems: false, combineKitchenItems: true, kitchenPrintFooter: false, kitchenPrintReservedOrder: true, sortItemInKitchen: true, sortModifier: true, sortOrderInKDS: true, printVoidOrderItem: true, printOrderAfterSending: false, quickPay: true, useVoidReason: true, confirmPayment: false, printReceiptAfterPayment: true, combineReceiptItem: true, sortItemInReceipt: true, showItemDiscount: true, showVoidOrderItem: false, emailReceipt: true, showTaxOnReceipt: true, inventoryManagement: true, allowMinusQuantity: false, useInventoryPrint: false, useEndOfDayReport: true, useStaffSalary: false, useCashInOutPrint: false, useWorkTimePrint: false, autoClockOut: false, loginDoNotRememberPassword: false, dateFormat: 'MM/DD/YYYY', lockTillToLocation: false, enableTimeClock: true },
+        advancedPOS: { enableItemNumber: false, separateSameItems: false, combineKitchenItems: true, kitchenPrintFooter: false, kitchenPrintReservedOrder: true, sortItemInKitchen: true, sortModifier: true, sortOrderInKDS: true, printVoidOrderItem: true, printOrderAfterSending: false, quickPay: true, useVoidReason: true, confirmPayment: true, printReceiptAfterPayment: true, combineReceiptItem: true, sortItemInReceipt: true, showItemDiscount: true, showVoidOrderItem: false, emailReceipt: true, showTaxOnReceipt: true, inventoryManagement: true, allowMinusQuantity: false, useInventoryPrint: false, useEndOfDayReport: true, useStaffSalary: false, useCashInOutPrint: false, useWorkTimePrint: false, autoClockOut: false, loginDoNotRememberPassword: false, dateFormat: 'MM/DD/YYYY', lockTillToLocation: false, enableTimeClock: true },
         preferences: { actionAfterSendOrder: 'order', actionAfterPayment: 'order', defaultPaymentMethod: 'Cash', enableOrderNotes: true, enableKitchenPrint: true, defaultOrderType: 'takeaway', enableOrderHold: true, resetOrderNumberDaily: true, dashboardWidgetOrder: ['stats', 'chart', 'quickActions', 'topItems', 'lowStock', 'recentTransactions'], },
         loyalty: { enabled: true, pointsPerDollar: 100, redemptionRate: 100 },
         fontSettings: { baseSize: 16, menuItemName: 14, menuItemPrice: 14, orderSummaryItem: 14, orderSummaryTotal: 24, categoryTabs: 14 },
@@ -208,8 +211,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [lastAccountingSync, setLastAccountingSync] = usePersistentState<number | null>('lastAccountingSync', null);
     const [notifications, setNotifications] = usePersistentState<Notification[]>('notifications', []);
     
-    // --- POS State ---
-    const [cart, setCart] = useState<CartItem[]>([]);
+    // --- POS State (Single Source of Truth) ---
+    const [cart, setCart] = usePersistentState<CartItem[]>('posCart', []);
     const [activeCategory, setActiveCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -829,62 +832,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, [setCart]);
 
     const handleSendToKitchen = useCallback(() => {
-        if (cart.length === 0 || !currentTable) {
+        const cartToSend = [...cart];
+        const tableForOrder = currentTable;
+    
+        if (cartToSend.length === 0 || !tableForOrder) {
           addToast({ type: 'error', title: 'Action Failed', message: 'Please select a table and add items to the cart first.' });
           return;
         }
-      
-        const orderForKitchen = createOrderObject(cart, [], 'dine-in');
+        
+        const orderForKitchen = createOrderObject(cartToSend, [], 'dine-in');
         orderForKitchen.status = 'kitchen';
-        
+    
         setOrders(prev => [...(prev || []), orderForKitchen]);
-        
-        setTables(prev => (prev || []).map(t => 
-          t.id === currentTable.id 
-            ? { ...t, status: 'occupied' as TableStatus, orderId: t.orderId || orderForKitchen.id, occupiedSince: t.occupiedSince || Date.now() } 
-            : t
+        setTables(prev => (prev || []).map(t =>
+            t.id === tableForOrder.id
+                ? { ...t, status: 'occupied' as TableStatus, orderId: t.orderId || orderForKitchen.id, occupiedSince: t.occupiedSince || Date.now() }
+                : t
         ));
-      
+    
         handleKitchenPrinting(orderForKitchen);
+        addToast({ type: 'success', title: 'Order Sent', message: `New items for ${tableForOrder.name} sent to the kitchen.` });
         
-        addToast({ type: 'success', title: 'Order Sent', message: `New items for ${currentTable.name} sent to the kitchen.` });
-        
-        // Fulfill user request: Clear cart and reset category after sending to kitchen.
-        resetCartState();
-        setActiveCategory('all');
-        
-    }, [cart, currentTable, addToast, createOrderObject, setOrders, setTables, handleKitchenPrinting, resetCartState, setActiveCategory]);
-      
+        // COMPLETE reset of the POS screen for the next order.
+        resetPOSState();
+    
+    }, [cart, currentTable, addToast, createOrderObject, setOrders, setTables, handleKitchenPrinting, resetPOSState]);
+
     const handleInitiatePayment = useCallback(() => {
-        if (cart.length === 0) return;
-    
-        const placeOrderDirectly = () => {
-            const { total } = calculateOrderTotals(
-                cart,
-                currentLocation,
-                appliedDiscount,
-                appliedPromotion,
-                orderType,
-                settings,
-                selectedCustomer,
-                surcharges,
-                appliedLoyaltyPoints
-            );
-            const payment: Payment = {
-                method: settings.preferences.defaultPaymentMethod,
-                amount: total,
-                timestamp: Date.now(),
-            };
-            onProcessFinalOrder(cart, [payment], orderType);
-        };
-    
+        if (cart.length === 0) {
+            addToast({ type: 'info', title: 'Empty Cart', message: 'Add items to the cart before payment.' });
+            return;
+        }
+
         if (settings.advancedPOS.confirmPayment) {
             const tempOrder = createOrderObject(cart, [], orderType);
             openModal('payment', {
                 orderToPay: [tempOrder],
                 onFinalize: (payments: Payment[]) => {
-                    const finalOrder = onProcessFinalOrder(cart, payments, orderType);
-                    return finalOrder;
+                    return onProcessFinalOrder(cart, payments, orderType);
                 },
                 onDirectPrintReceipt: (order: Order) => {
                     const printerId = settings.devices.receiptPrinterId;
@@ -913,11 +898,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 addToast,
             });
         } else {
-            placeOrderDirectly();
+            const { total } = calculateOrderTotals(
+                cart,
+                currentLocation,
+                appliedDiscount,
+                appliedPromotion,
+                orderType,
+                settings,
+                selectedCustomer,
+                surcharges,
+                appliedLoyaltyPoints
+            );
+            const payment: Payment = {
+                method: settings.preferences.defaultPaymentMethod,
+                amount: total,
+                timestamp: Date.now(),
+            };
+            onProcessFinalOrder(cart, [payment], orderType);
         }
     }, [
-        cart, settings, currentLocation, appliedDiscount, appliedPromotion, orderType, selectedCustomer, surcharges, appliedLoyaltyPoints,
-        onProcessFinalOrder, createOrderObject, openModal, handlePrintA4, plugins, paymentTypes, setSettings, addToast, printers
+        cart, settings, currentLocation, appliedDiscount, appliedPromotion, orderType,
+        selectedCustomer, surcharges, appliedLoyaltyPoints, onProcessFinalOrder, createOrderObject,
+        openModal, handlePrintA4, plugins, paymentTypes, setSettings, addToast, printers, addPrintJobs
     ]);
       
     const handleSettleBill = useCallback(() => {
@@ -971,40 +973,60 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, [currentTable, orders, cart, currentLocation, appliedDiscount, appliedPromotion, settings, selectedCustomer, surcharges, appliedLoyaltyPoints, addToast, setActiveOrderToSettle, currentEmployee]);
 
     const handleInitiateSettlePayment = useCallback(() => {
-        if (!activeOrderToSettle) return;
-        openModal('payment', {
-            orderToPay: [activeOrderToSettle],
-            onFinalize: (payments: Payment[]) => {
-                const finalOrder = onProcessFinalOrder(activeOrderToSettle.cart, payments, activeOrderToSettle.orderType, activeOrderToSettle);
-                return finalOrder;
-            },
-            onDirectPrintReceipt: (order: Order) => {
-                const printerId = settings.devices.receiptPrinterId;
-                const printer = printers.find((p: Printer) => p.id === printerId);
-                if (!printer) {
-                    addToast({ type: 'error', title: 'Print Error', message: 'No receipt printer configured.' });
-                    return;
-                }
-                addPrintJobs([{
-                    component: 'TemplateRenderer',
-                    props: {
-                        format: 'thermal',
-                        order,
-                        location: currentLocation,
-                        settings,
-                        receiptSettings: printer.receiptSettings || settings.receipt,
+        const orderToSettle = activeOrderToSettle; // Create a stable snapshot for this render
+        if (!orderToSettle) return;
+    
+        const paymentHandler = (payments: Payment[]) => {
+            return onProcessFinalOrder(
+                orderToSettle.cart,
+                payments,
+                orderToSettle.orderType,
+                orderToSettle
+            );
+        };
+    
+        if (settings.advancedPOS.confirmPayment) {
+            openModal('payment', {
+                orderToPay: [orderToSettle],
+                onFinalize: paymentHandler,
+                onDirectPrintReceipt: (order: Order) => {
+                    const printerId = settings.devices.receiptPrinterId;
+                    const printer = printers.find((p: Printer) => p.id === printerId);
+                    if (!printer) {
+                        addToast({ type: 'error', title: 'Print Error', message: 'No receipt printer configured.' });
+                        return;
                     }
-                }]);
-            },
-            onPrintA4: handlePrintA4,
-            cardPlugin: plugins.find((p: AppPlugin) => p.id === 'payment-terminal'),
-            allPaymentTypes: paymentTypes,
-            currency: currentLocation.currency,
-            settings,
-            setSettings,
-            addToast,
-        });
-    }, [activeOrderToSettle, openModal, onProcessFinalOrder, settings, printers, addPrintJobs, currentLocation, addToast, handlePrintA4, plugins, paymentTypes, setSettings]);
+                    addPrintJobs([{
+                        component: 'TemplateRenderer',
+                        props: {
+                            format: 'thermal',
+                            order,
+                            location: currentLocation,
+                            settings,
+                            receiptSettings: printer.receiptSettings || settings.receipt,
+                        }
+                    }]);
+                },
+                onPrintA4: handlePrintA4,
+                cardPlugin: plugins.find((p: AppPlugin) => p.id === 'payment-terminal'),
+                allPaymentTypes: paymentTypes,
+                currency: currentLocation.currency,
+                settings,
+                setSettings,
+                addToast,
+            });
+        } else {
+            const payment: Payment = {
+                method: settings.preferences.defaultPaymentMethod,
+                amount: orderToSettle.total,
+                timestamp: Date.now(),
+            };
+            paymentHandler([payment]);
+        }
+    }, [
+        activeOrderToSettle, settings, onProcessFinalOrder, openModal, printers, addToast, 
+        currentLocation, handlePrintA4, plugins, paymentTypes, setSettings
+    ]);
     
     const handleSaveTab = useCallback(() => {
         if (!selectedCustomer) {
@@ -1127,10 +1149,60 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
         }
     }, [orders, resetPOSState, setActiveTab, setSelectedCustomer, setOrderType, addToast, cart, openModal, closeModal]);
+
+    const handleGetUpsellSuggestions = useCallback(async () => {
+        if (!settings.ai.enableAIFeatures || !settings.ai.enableUpsell || cart.length === 0) return;
+        setIsSuggestingUpsell(true);
+        setAIUpsellSuggestions(null);
+        try {
+            if (!process.env.API_KEY) {
+                throw new Error("API Key not found.");
+            }
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const cartItemsForPrompt = cart.map(item => ({ name: item.menuItem.name, quantity: item.quantity, category: item.menuItem.category }));
+            const menuNames = menuItems.map(item => item.name);
+            
+            const prompt = `Based on the current cart items: ${JSON.stringify(cartItemsForPrompt)}, suggest 2 relevant upsell items from this menu list: ${JSON.stringify(menuNames)}. Provide a brief reason for each suggestion. Format the response as JSON with a 'suggestions' array, where each object has 'itemName' and 'reason'.`;
+    
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: {
+                    responseMimeType: 'application/json',
+                    responseSchema: {
+                        type: Type.OBJECT,
+                        properties: {
+                            suggestions: {
+                                type: Type.ARRAY,
+                                items: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        itemName: { type: Type.STRING },
+                                        reason: { type: Type.STRING }
+                                    },
+                                    required: ['itemName', 'reason']
+                                }
+                            }
+                        },
+                         required: ['suggestions']
+                    }
+                }
+            });
+    
+            const suggestions = JSON.parse(response.text) as AIResponse;
+            setAIUpsellSuggestions(suggestions);
+    
+        } catch (error) {
+            console.error("AI upsell suggestion failed:", error);
+            addToast({ type: 'error', title: 'AI Suggestion Failed', message: 'Could not get suggestions at this time.' });
+        } finally {
+            setIsSuggestingUpsell(false);
+        }
+    }, [cart, menuItems, settings.ai, addToast]);
     // #endregion
 
-    const allContexts = {
-        // App
+    const contextValue = {
+        // App State
         activeView, setView: setActiveView, managementSubView, setManagementSubView, settingsSubView, setSettingsSubView,
         currentEmployee, handleLogout: () => { setCurrentEmployee(null); setActiveView('landing'); },
         handlePinLogin: (employeeId: string, pin: string) => {
@@ -1162,7 +1234,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           );
         },
         
-        // Data
+        // Data State
         locations, setLocations, categories, setCategories, menuItems, setMenuItems, customers, setCustomers,
         drivers, setDrivers, employees, setEmployees, suppliers, setSuppliers, wastageLog, setWastageLog,
         roles, setRoles, auditLog, setAuditLog, printers, setPrinters, tables, setTables,
@@ -1179,7 +1251,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleSaveCustomer,
         onToggleClockStatus, onSaveScheduleEntry, onDeleteScheduleEntry,
         
-        // POS
+        // POS State
         cart, setCart, activeCategory, onSelectCategory: setActiveCategory, searchQuery, onSearchChange: setSearchQuery,
         selectedCustomer, setSelectedCustomer, currentTable, setCurrentTable, orderType, setOrderType,
         appliedDiscount, setAppliedDiscount, appliedPromotion, setAppliedPromotion,
@@ -1188,24 +1260,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         appliedLoyaltyPoints, setAppliedLoyaltyPoints,
         resetPOSState, onNewSaleClick, onSelectItem,
         
-        // Modal
+        // Modal State
         modal, openModal, closeModal,
         
-        // Toast
+        // Toast State
         toasts, addToast, dismissToast: (id: number) => setToasts((prev: any) => prev.filter((t: any) => t.id !== id)),
 
-        // Print
+        // Print State
         printQueue, addPrintJobs, clearPrintQueue: () => setPrintQueue([]),
         updatePrintJobStatus: (id: string, status: PrintJobStatus) => setPrintQueue((prev: any) => prev.map((job: any) => job.id === id ? { ...job, status } : job)),
-    };
-    
-    const appContextValue = allContexts;
-    const dataContextValue = allContexts;
-    const modalContextValue = allContexts;
-    const toastContextValue = allContexts;
-
-    const posContextValue = {
-        ...allContexts,
+        
+        // POS Actions
         onUpdateCartQuantity,
         onRemoveItem, 
         onVoidOrder, 
@@ -1225,20 +1290,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleAddBurgerToCart,
         handleKitchenPrinting, 
         onPrintA4: handlePrintA4,
+        handleGetUpsellSuggestions,
+        onSelectUpsellSuggestion: (itemName: string) => {
+            const item = menuItems.find((mi: MenuItem) => mi.name === itemName);
+            if (item) {
+                onSelectItem(item);
+                setAIUpsellSuggestions(null);
+            }
+        },
     };
-    
 
     return (
-        <AppContext.Provider value={appContextValue}>
-            <DataContext.Provider value={dataContextValue}>
-                <POSContext.Provider value={posContextValue}>
-                    <ModalContext.Provider value={modalContextValue}>
-                        <ToastContext.Provider value={toastContextValue}>
-                            {children}
-                        </ToastContext.Provider>
-                    </ModalContext.Provider>
-                </POSContext.Provider>
-            </DataContext.Provider>
+        <AppContext.Provider value={contextValue}>
+            {children}
         </AppContext.Provider>
     );
 };

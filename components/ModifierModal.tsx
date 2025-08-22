@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { MenuItem, ModifierGroup, ModifierOption, Language } from '../types';
 import { useTranslations } from '../hooks/useTranslations';
 import { Button } from './ui/Button';
 import { Modal, ModalHeader, ModalTitle, ModalDescription, ModalContent, ModalFooter } from './ui/Modal';
-import { Checkbox } from './ui/Checkbox';
-import { useDataContext } from '../contexts/AppContext';
+import { useAppContext } from '../contexts/AppContext';
 
 interface ModifierModalProps {
   isOpen: boolean;
@@ -15,7 +15,7 @@ interface ModifierModalProps {
 }
 
 const ModifierModal: React.FC<ModifierModalProps> = ({ isOpen, onClose, item, onAddItem, language }) => {
-  const { modifierGroups } = useDataContext();
+  const { modifierGroups } = useAppContext();
   const [selectedModifiers, setSelectedModifiers] = useState<Record<string, ModifierOption | ModifierOption[] | null>>({});
   const t = useTranslations(language);
 
