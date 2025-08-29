@@ -1,13 +1,15 @@
+
+
 import React from 'react';
-import { Order, Location, AppSettings, CartItem } from '../../types';
+import { Order, Location, AppSettings, CartItem, Employee } from '../../types';
 import { getPriceForItem, generateZatcaQRCode } from '../../utils/calculations';
-import { useDataContext } from '../../contexts/AppContext';
 import QRCode from 'react-qr-code';
 
 interface TemplateProps {
     order: Order;
     location: Location;
     settings: AppSettings;
+    employees: Employee[];
 }
 
 const BilingualText: React.FC<{ en: string; ar: string; className?: string }> = ({ en, ar, className }) => (
@@ -17,9 +19,8 @@ const BilingualText: React.FC<{ en: string; ar: string; className?: string }> = 
     </div>
 );
 
-const ZatcaA4Invoice: React.FC<TemplateProps> = ({ order, location, settings }) => {
-    const { employees } = useDataContext();
-    const employeeName = employees.find((e: any) => e.id === order.employeeId)?.name || 'N/A';
+const ZatcaA4Invoice: React.FC<TemplateProps> = ({ order, location, settings, employees }) => {
+    const employeeName = (employees || []).find((e: any) => e.id === order.employeeId)?.name || 'N/A';
     
     const isSaudiOrder = location.countryCode === 'SA' && !!location.vatNumber && settings.zatca.enabled;
     const currency = isSaudiOrder ? 'SAR' : location.currency;

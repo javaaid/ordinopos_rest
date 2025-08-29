@@ -13,7 +13,7 @@ interface CustomerEditModalProps {
 
 const CustomerEditModal: React.FC<CustomerEditModalProps> = ({ isOpen, onClose, onSave, customer }) => {
     const [formData, setFormData] = useState<Partial<Omit<Customer, 'id' | 'locationId'>>>({
-        name: '', phone: '', email: '', address: '', zipCode: '', country: 'US', allergies: '', notes: '', membershipTier: undefined,
+        name: '', phone: '', email: '', address: '', zipCode: '', country: 'US', allergies: '', notes: '', membershipTier: undefined, membershipId: '',
     });
 
     useEffect(() => {
@@ -28,9 +28,10 @@ const CustomerEditModal: React.FC<CustomerEditModalProps> = ({ isOpen, onClose, 
                 allergies: customer.allergies || '',
                 notes: customer.notes || '',
                 membershipTier: customer.membershipTier,
+                membershipId: customer.membershipId || `CUST-${Date.now()}`,
             });
         } else {
-            setFormData({ name: '', phone: '', email: '', address: '', zipCode: '', country: 'US', allergies: '', notes: '', membershipTier: undefined });
+            setFormData({ name: '', phone: '', email: '', address: '', zipCode: '', country: 'US', allergies: '', notes: '', membershipTier: undefined, membershipId: `CUST-${Date.now()}` });
         }
     }, [customer, isOpen]);
 
@@ -56,6 +57,7 @@ const CustomerEditModal: React.FC<CustomerEditModalProps> = ({ isOpen, onClose, 
             phone: formData.phone!,
             email: formData.email!,
             address: formData.address!,
+            membershipId: formData.membershipId,
             membershipTier: formData.membershipTier ? parseInt(String(formData.membershipTier), 10) as (1 | 2 | 3) : undefined,
         };
         
@@ -83,6 +85,10 @@ const CustomerEditModal: React.FC<CustomerEditModalProps> = ({ isOpen, onClose, 
                         <div>
                             <label className="block text-sm font-medium text-muted-foreground mb-1">Email Address</label>
                             <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full bg-input p-2 rounded-md border border-border text-foreground" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">Membership ID</label>
+                            <input type="text" name="membershipId" value={formData.membershipId} className="w-full bg-input p-2 rounded-md border border-border text-muted-foreground font-mono" readOnly />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-muted-foreground mb-1">Address</label>

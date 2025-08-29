@@ -1,17 +1,18 @@
+
+
 import React from 'react';
-import { Order, Location, AppSettings, CartItem } from '../../types';
+import { Order, Location, AppSettings, CartItem, Employee } from '../../types';
 import { getPriceForItem } from '../../utils/calculations';
-import { useDataContext } from '../../contexts/AppContext';
 
 interface TemplateProps {
     order: Order;
     location: Location;
     settings: AppSettings;
+    employees: Employee[];
 }
 
-const ClassicA4Invoice: React.FC<TemplateProps> = ({ order, location, settings }) => {
-    const { employees } = useDataContext();
-    const employeeName = employees.find((e: any) => e.id === order.employeeId)?.name || 'N/A';
+const ClassicA4Invoice: React.FC<TemplateProps> = ({ order, location, settings, employees }) => {
+    const employeeName = (employees || []).find((e: any) => e.id === order.employeeId)?.name || 'N/A';
     const { currency } = location;
 
     const calculateLineItemTotal = (item: CartItem): number => {

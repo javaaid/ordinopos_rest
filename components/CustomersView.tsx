@@ -9,6 +9,7 @@ import { cn } from '../lib/utils';
 import ArrowsPointingOutIcon from './icons/ArrowsPointingOutIcon';
 import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
 import ExportButtons from './ExportButtons';
+import { exportToCsv } from '../lib/utils';
 
 const CustomersView: React.FC = () => {
     const { openModal, closeModal } = useModalContext();
@@ -16,7 +17,7 @@ const CustomersView: React.FC = () => {
     const { addToast } = useToastContext();
     const [selectedCustomers, setSelectedCustomers] = useState<Set<string>>(new Set());
     const [isFullScreen, setIsFullScreen] = useState(false);
-    const [columnWidths, setColumnWidths] = useState([250, 150, 250, 150, 120, 120]);
+    const [columnWidths, setColumnWidths] = useState([250, 150, 150, 250, 150, 120, 120]);
     const tableContainerRef = useRef<HTMLDivElement>(null);
     const resizingColumnIndex = useRef<number | null>(null);
     const startX = useRef(0);
@@ -62,16 +63,11 @@ const CustomersView: React.FC = () => {
         });
     };
 
-     const handleCsvExport = () => {
-        const headers = ["ID", "Name", "Phone", "Email", "Address", "LoyaltyPoints"];
-        const rows = (customers || []).map((c: Customer) => [c.id, `"${c.name}"`, c.phone, c.email, `"${c.address}"`, c.loyaltyPoints || 0].join(','));
-        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
-        const link = document.createElement("a");
-        link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", "customers.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+     const handleCsvExport = (filename: string = 'customers.csv') => {
+        const headers = ["ID", "Name", "Phone", "Email", "Address", "LoyaltyPoints", "MembershipID"];
+        const rows = (customers || []).map((c: Customer) => [c.id, c.name, c.phone, c.email, c.address, c.loyaltyPoints || 0, c.membershipId || '']);
+        exportToCsv(headers, rows, filename);
+        addToast({ type: 'success', title: 'Export Successful', message: `Exported ${rows.length} customers.` });
     };
 
     const handlePrint = () => window.print();
@@ -148,12 +144,7 @@ const CustomersView: React.FC = () => {
                     <table className="min-w-full divide-y divide-border" style={{ tableLayout: 'fixed' }}>
                         <colgroup>
                             <col style={{ width: `50px` }} />
-                            <col style={{ width: `${columnWidths[0]}px` }} />
-                            <col style={{ width: `${columnWidths[1]}px` }} />
-                            <col style={{ width: `${columnWidths[2]}px` }} />
-                            <col style={{ width: `${columnWidths[3]}px` }} />
-                            <col style={{ width: `${columnWidths[4]}px` }} />
-                            <col style={{ width: `${columnWidths[5]}px` }} />
+                            {columnWidths.map((width, i) => <col key={i} style={{ width: `${width}px` }} />)}
                         </colgroup>
                         <thead className="bg-card sticky top-0 z-10 border-b border-border">
                             <tr className="no-print">
@@ -162,9 +153,10 @@ const CustomersView: React.FC = () => {
                                 </th>
                                 <th className={`${thClass} relative`}>Name <div onMouseDown={e => onMouseDown(0, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
                                 <th className={`${thClass} relative`}>Phone <div onMouseDown={e => onMouseDown(1, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                                <th className={`${thClass} relative`}>Email <div onMouseDown={e => onMouseDown(2, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                                <th className={`${thClass} relative`}>Total Spent <div onMouseDown={e => onMouseDown(3, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                                <th className={`${thClass} relative`}>Loyalty Points <div onMouseDown={e => onMouseDown(4, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                                <th className={`${thClass} relative`}>Membership ID <div onMouseDown={e => onMouseDown(2, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                                <th className={`${thClass} relative`}>Email <div onMouseDown={e => onMouseDown(3, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                                <th className={`${thClass} relative`}>Total Spent <div onMouseDown={e => onMouseDown(4, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                                <th className={`${thClass} relative`}>Loyalty Points <div onMouseDown={e => onMouseDown(5, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
                                 <th className={`${thClass} text-right`}>Actions</th>
                             </tr>
                         </thead>
@@ -179,6 +171,7 @@ const CustomersView: React.FC = () => {
                                         </td>
                                         <td className="p-3 font-medium text-foreground truncate">{customer.name}</td>
                                         <td className="p-3 text-muted-foreground truncate">{customer.phone}</td>
+                                        <td className="p-3 text-muted-foreground truncate font-mono">{customer.membershipId}</td>
                                         <td className="p-3 text-muted-foreground truncate">{customer.email}</td>
                                         <td className="p-3 text-green-500 font-semibold truncate">${totalSpent.toFixed(2)}</td>
                                         <td className="p-3 text-blue-500 font-semibold truncate">{customer.loyaltyPoints || 0}</td>

@@ -300,7 +300,8 @@ export const COUNTRIES = [
     { code: 'PL', name: 'Poland' }, { code: 'PT', name: 'Portugal' }, { code: 'PR', name: 'Puerto Rico' }, { code: 'QA', name: 'Qatar' },
     { code: 'CG', name: 'Republic of the Congo' }, { code: 'RE', name: 'Reunion' }, { code: 'RO', name: 'Romania' }, { code: 'RU', name: 'Russia' },
     { code: 'RW', name: 'Rwanda' }, { code: 'BL', name: 'Saint Barthelemy' }, { code: 'SH', name: 'Saint Helena' }, { code: 'KN', name: 'Saint Kitts and Nevis' },
-    { code: 'LC', name: 'Saint Lucia' }, { code: 'MF', name: 'Saint Martin' }, { code: 'PM', name: 'Saint Pierre and Miquelon' }, { code: 'VC', name: 'Saint Vincent and the Grenadines' }, { code: 'WS', name: 'Samoa' }, { code: 'SM', name: 'San Marino' },
+    { code: 'LC', name: 'Saint Lucia' }, { code: 'MF', name: 'Saint Martin' }, { code: 'PM', name: 'Saint Pierre and Miquelon' }, { code: 'VC', name: 'Saint Vincent and the Grenadines' },
+    { code: 'WS', name: 'Samoa' }, { code: 'SM', name: 'San Marino' },
     { code: 'ST', name: 'Sao Tome and Principe' }, { code: 'SA', name: 'Saudi Arabia' }, { code: 'SN', name: 'Senegal' }, { code: 'RS', name: 'Serbia' },
     { code: 'SC', name: 'Seychelles' }, { code: 'SL', name: 'Sierra Leone' }, { code: 'SG', name: 'Singapore' }, { code: 'SX', name: 'Sint Maarten' },
     { code: 'SK', name: 'Slovakia' }, { code: 'SI', name: 'Slovenia' }, { code: 'SB', name: 'Solomon Islands' }, { code: 'SO', name: 'Somalia' },
@@ -417,8 +418,8 @@ export const MENU_ITEMS: MenuItem[] = [
 ];
 
 export const CUSTOMERS: Customer[] = [
-    { id: 'cust_1', name: 'John Doe', phone: '555-1234', email: 'john.d@example.com', address: '123 Main St', locationId: 'loc_1', loyaltyPoints: 1250 },
-    { id: 'cust_2', name: 'Jane Smith', phone: '555-5678', email: 'jane.s@example.com', address: '456 Oak Ave', locationId: 'loc_2', loyaltyPoints: 540 },
+    { id: 'cust_1', name: 'John Doe', phone: '555-1234', email: 'john.d@example.com', address: '123 Main St', locationId: 'loc_1', loyaltyPoints: 1250, membershipId: 'CUST-1704067201' },
+    { id: 'cust_2', name: 'Jane Smith', phone: '555-5678', email: 'jane.s@example.com', address: '456 Oak Ave', locationId: 'loc_2', loyaltyPoints: 540, membershipId: 'CUST-1704067202' },
 ];
 
 export const DRIVERS: Driver[] = [
@@ -499,12 +500,12 @@ export const DEFAULT_KITCHEN_PRINT_SETTINGS: KitchenPrintSettings = {
 };
 
 export const PRINTERS: Printer[] = [
-    { id: 'p1', name: 'Receipt Printer', type: 'thermal', connection: 'PDF Printer', model: 'Generic Thermal', paperWidth: 48, initialCommand: '1b,40', cutterCommand: '1d,56,30', drawerCommand: '1b,70,00,19,fa', useRasterImage: false, hasDrawer: true, isEnabled: true, status: 'connected', receiptSettings: { ...DEFAULT_RECEIPT_SETTINGS }, isDefault: true },
+    { id: 'p1', name: 'Receipt Printer', type: 'thermal', connection: 'Print Server', model: 'Generic Thermal', paperWidth: 48, initialCommand: '1b,40', cutterCommand: '1d,56,30', drawerCommand: '1b,70,00,19,fa', useRasterImage: false, hasDrawer: true, isEnabled: true, status: 'connected', receiptSettings: { ...DEFAULT_RECEIPT_SETTINGS }, isDefault: true },
     { 
         id: 'kp1', 
         name: 'Kitchen Printer 1', 
         type: 'thermal', 
-        connection: 'PDF Printer', 
+        connection: 'Print Server', 
         model: 'Generic Thermal', 
         paperWidth: 80, 
         initialCommand: '1b,40',

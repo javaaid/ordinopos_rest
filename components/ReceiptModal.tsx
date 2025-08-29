@@ -1,9 +1,5 @@
 
 
-
-
-
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Order, Location, CartItem, AppSettings, ReceiptSettings, Language, Employee, Printer, PrintJob } from '../types';
 import PrinterIcon from './icons/PrinterIcon';
@@ -31,12 +27,12 @@ interface ReceiptModalProps {
 
 const ReceiptModal: React.FC<ReceiptModalProps> = (props) => {
     const { isOpen, onClose, order, onSendDigitalReceipt, onPrintA4, showPrintInvoiceButton = false } = props;
-    const { handleFullRefund } = useDataContext();
+    const { employees } = useDataContext();
     const { addPrintJobs } = useAppContext();
     const [email, setEmail] = useState('');
     const [sms, setSms] = useState('');
 
-    const receiptBody = <TemplateRenderer format="thermal" {...props} />;
+    const receiptBody = <TemplateRenderer format="thermal" {...props} employees={employees} />;
 
     useEffect(() => {
         if(order.customer) {
@@ -48,7 +44,7 @@ const ReceiptModal: React.FC<ReceiptModalProps> = (props) => {
     const handlePrint = () => {
         const newJob: Omit<PrintJob, 'id' | 'timestamp' | 'status'> = {
             component: 'TemplateRenderer',
-            props: { ...props, format: 'thermal' }
+            props: { ...props, format: 'thermal', employees }
         };
         addPrintJobs([newJob]);
         onClose();

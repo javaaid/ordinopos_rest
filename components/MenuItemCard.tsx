@@ -7,16 +7,24 @@ interface MenuItemCardProps {
   item: MenuItem;
   cartQuantity: number;
   onSelectItem: (item: MenuItem) => void;
+  onOpenPizzaBuilder: (item: MenuItem) => void;
+  onOpenBurgerBuilder: (item: MenuItem) => void;
   isOutOfStock: boolean;
   onContextMenu: (event: React.MouseEvent) => void;
 }
 
-const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, cartQuantity, onSelectItem, isOutOfStock, onContextMenu }) => {
+const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, cartQuantity, onSelectItem, onOpenPizzaBuilder, onOpenBurgerBuilder, isOutOfStock, onContextMenu }) => {
   
   const handleAction = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isOutOfStock) return;
-    onSelectItem(item);
+    if (item.isCustomizablePizza) {
+      onOpenPizzaBuilder(item);
+    } else if (item.isCustomizableBurger) {
+      onOpenBurgerBuilder(item);
+    } else {
+      onSelectItem(item);
+    }
   };
 
   const handleContextMenu = (e: React.MouseEvent) => {

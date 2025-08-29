@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { View, Role } from '../types';
 import HomeIcon from './icons/HomeIcon';
@@ -29,7 +30,7 @@ interface SidebarNavItem extends SidebarNavItemDef {
 export const MainSidebar = (): React.ReactElement | null => {
   const { 
     activeView, setView: onSelectView, currentEmployee: currentUser, handleLogout, 
-    settings, onToggleSidebar, isSidebarCollapsed, onToggleSidebarCollapse 
+    settings, onToggleSidebarCollapse, isSidebarCollapsed
   } = useAppContext();
   
   if (!settings) {
@@ -92,15 +93,7 @@ export const MainSidebar = (): React.ReactElement | null => {
         'relative h-full flex flex-col bg-card shadow-lg border-r border-border shrink-0 p-4 transition-all duration-300 ease-in-out',
         isSidebarCollapsed ? 'w-20' : 'w-64'
     )}>
-      <button 
-        onClick={onToggleSidebar} 
-        className="absolute top-6 -right-4 z-10 bg-card p-2 rounded-full border border-border shadow-md hover:bg-accent transition-all focus:outline-none focus:ring-2 focus:ring-ring"
-        title="Hide sidebar"
-        aria-label="Hide sidebar"
-      >
-        <ChevronDoubleLeftIcon className="w-4 h-4 text-foreground" />
-      </button>
-
+      
       <div className='p-4 mb-8 bg-background rounded-xl shadow-inner'>
         <div className='flex items-center justify-center h-10'>
             {logoError || !settings.receipt.logoUrl ? (

@@ -6,6 +6,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import ShoppingCartIcon from './icons/ShoppingCartIcon';
 import ArchiveBoxXMarkIcon from './icons/ArchiveBoxXMarkIcon';
 import BarcodeScannerIcon from './icons/BarcodeScannerIcon';
+import ExclamationTriangleIcon from './icons/ExclamationTriangleIcon';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { Badge } from './ui/Badge';
 
@@ -91,6 +92,10 @@ const InventoryReport: React.FC<{
     const [sortKey, setSortKey] = useState<keyof Ingredient | 'onHandValue'>('stock');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+    const lowStockItemsCount = useMemo(() =>
+        (ingredients || []).filter(item => item.stock <= item.reorderThreshold).length
+    , [ingredients]);
+
     const wastageInPeriod = useMemo(() => {
         const start = startDate.getTime();
         const end = endDate.getTime();
@@ -139,6 +144,21 @@ const InventoryReport: React.FC<{
 
     return (
         <div className="w-full space-y-8">
+            {lowStockItemsCount > 0 && (
+                <div className="bg-red-100 dark:bg-red-900/40 border-l-4 border-red-500 text-red-800 dark:text-red-200 p-4 rounded-md" role="alert">
+                    <div className="flex">
+                        <div className="py-1">
+                            <ExclamationTriangleIcon className="h-6 w-6 text-red-500 mr-4" />
+                        </div>
+                        <div>
+                            <p className="font-bold">Action Required</p>
+                            <p className="text-sm">
+                                {lowStockItemsCount} ingredient(s) are at or below their reorder threshold. Use the AI suggestions below or create a purchase order.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
             <div className="flex justify-between items-center">
                  <h2 className="text-2xl font-bold text-foreground">Inventory Report</h2>
                  <div className="flex gap-2">

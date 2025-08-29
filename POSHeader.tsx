@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Role } from '../types';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { View, Role, Notification, Customer, Order, Employee } from '../types';
 import ChefHatIcon from './icons/ChefHatIcon';
 import TvIcon from './icons/TvIcon';
 import ComputerDesktopIcon from './icons/ComputerDesktopIcon';
@@ -9,7 +9,7 @@ import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
 import SearchIcon from './icons/SearchIcon';
 import BuildingStorefrontIcon from './icons/BuildingStorefrontIcon';
 import PizzaIcon from './icons/PizzaIcon';
-import { useAppContext, useDataContext, usePOSContext, useModalContext } from '../contexts/AppContext';
+import { useAppContext } from './contexts/AppContext';
 import QueueListIcon from './icons/QueueListIcon';
 import Squares2X2Icon from './icons/Squares2X2Icon';
 import PhoneIcon from './icons/PhoneIcon';
@@ -24,6 +24,11 @@ import SunIcon from './icons/SunIcon';
 import MoonIcon from './icons/MoonIcon';
 import NotificationsPanel from './NotificationsPanel';
 import BarcodeScannerIcon from './icons/BarcodeScannerIcon';
+import Bars3Icon from './icons/Bars3Icon';
+import { Button } from './ui/Button';
+import UserCircleIcon from './icons/UserCircleIcon';
+import UserIcon from './icons/UserIcon';
+
 
 interface POSHeaderProps {
 }
@@ -36,11 +41,13 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
         isCallerIdPluginActive, handleIncomingCall,
         setView, currentEmployee, handleLogout, notifications,
         theme, onToggleTheme, handleMarkAllNotificationsAsRead,
-        handleBarcodeScanned
+        handleBarcodeScanned,
+        locations, menuItems, heldOrders, roles,
+        searchQuery, onSearchChange, handleReopenOrder, handleDeleteHeldOrder,
+        openModal, closeModal, addToast,
+        onToggleSidebarCollapse,
+        cart, activeTab, activeOrderToSettle, onNewSaleClick, onVoidOrder
     } = useAppContext();
-    const { locations, menuItems, heldOrders, roles } = useDataContext();
-    const { searchQuery, onSearchChange, handleReopenOrder, handleDeleteHeldOrder } = usePOSContext();
-    const { openModal } = useModalContext();
 
     const [isLaunchpadOpen, setIsLaunchpadOpen] = useState(false);
     const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
@@ -52,8 +59,13 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
     const userMenuRef = useRef<HTMLDivElement>(null);
     const notificationPanelRef = useRef<HTMLDivElement>(null);
 
-    const t = useTranslations(settings.language.staff);
+    // Add a guard clause to prevent crashes if settings are not yet loaded.
+    if (!settings || !settings.advancedPOS) {
+        return null;
+    }
 
+    const t = useTranslations(settings.language.staff);
+    
      useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (launchpadRef.current && !launchpadRef.current.contains(event.target as Node)) setIsLaunchpadOpen(false);
@@ -76,7 +88,7 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
         if (pizzaItem) {
             openModal('pizzaBuilder', { item: pizzaItem });
         } else {
-            alert("Pizza builder item not found in menu!");
+            addToast({type: 'error', title: 'Setup Required', message: 'Pizza builder menu item not found.'});
         }
         setIsLaunchpadOpen(false);
     };
@@ -90,11 +102,15 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
     };
 
     const dropdownItemClass = "w-full flex items-center gap-3 px-3 py-2 text-left text-sm rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground";
-    const unreadNotificationCount = (notifications || []).filter((n: any) => !n.read).length;
+    const unreadNotificationCount = (notifications || []).filter((n: Notification) => !n.read).length;
+    const hasCriticalNotifications = (notifications || []).some((n: Notification) => !n.read && n.type === 'error');
 
     return (
         <header className="p-1.5 flex items-center justify-between gap-2 border-b border-border shrink-0">
             <div className="flex items-center gap-2 flex-1">
+                 <button onClick={onToggleSidebarCollapse} className="flex-shrink-0 flex items-center justify-center bg-secondary hover:bg-muted text-secondary-foreground font-semibold h-9 w-9 rounded-lg text-sm transition-colors" title="Toggle Sidebar">
+                    <Bars3Icon className="w-5 h-5" />
+                </button>
                  <div className="relative w-full max-w-sm">
                     <SearchIcon className="w-4 h-4 text-muted-foreground absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none"/>
                     <input 
@@ -105,22 +121,18 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
                         className="w-full bg-background rounded-lg ps-9 pe-4 h-9 text-sm text-foreground border border-border focus:border-primary focus:ring-0"
                     />
                 </div>
-                <button onClick={handleOpenBarcodeScanner} className="flex-shrink-0 flex items-center justify-center bg-secondary hover:bg-muted text-secondary-foreground font-semibold h-9 w-9 rounded-lg text-sm transition-colors" title="Scan Barcode">
-                    <BarcodeScannerIcon className="w-5 h-5" />
-                </button>
-                <button onClick={handleOpenHeldOrders} className="flex items-center gap-2 bg-secondary hover:bg-muted text-secondary-foreground font-semibold h-9 px-3 rounded-lg text-sm transition-colors relative">
+            </div>
+            <div className="flex items-center gap-2">
+                 <button onClick={handleOpenHeldOrders} className="flex items-center gap-2 bg-secondary hover:bg-muted text-secondary-foreground font-semibold h-9 px-3 rounded-lg text-sm transition-colors relative">
                     {t('held_orders')}
                     {heldOrders.length > 0 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">{heldOrders.length}</span>}
-                </button>
-                 <button onClick={() => setView('dashboard')} className="flex items-center gap-2 bg-secondary hover:bg-muted text-secondary-foreground font-semibold h-9 w-9 justify-center rounded-lg text-sm transition-colors" title={t('dashboard')}>
-                    <HomeIcon className="w-5 h-5" />
                 </button>
                  <div className="relative" ref={launchpadRef}>
                     <button onClick={() => setIsLaunchpadOpen(p => !p)} className="flex items-center gap-2 bg-secondary hover:bg-muted text-secondary-foreground font-semibold h-9 w-9 justify-center rounded-lg text-sm transition-colors" title={t('launchpad')}>
                         <Squares2X2Icon className="w-5 h-5" />
                     </button>
                     {isLaunchpadOpen && (
-                        <div className="absolute top-full left-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50 animate-fade-in-down">
+                        <div className="absolute top-full right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50 animate-fade-in-down">
                             <div className="p-1">
                                 {isPizzaBuilderPluginActive && (<button onClick={handleOpenPizzaBuilder} className={dropdownItemClass}><PizzaIcon className="w-5 h-5" /> {t('pizza_builder')}</button>)}
                                 <button onClick={() => { onLaunchView('kds'); setIsLaunchpadOpen(false); }} className={dropdownItemClass}><ChefHatIcon className="w-5 h-5" /> {t('kds')}</button>
@@ -131,8 +143,6 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
                         </div>
                     )}
                 </div>
-            </div>
-            <div className="flex items-center gap-2">
                  {!settings.advancedPOS.lockTillToLocation && isMultiStorePluginActive && locations.length > 1 && (
                     <div className="relative" ref={locationDropdownRef}>
                         <button onClick={() => setIsLocationDropdownOpen(p => !p)} className="flex items-center gap-2 bg-secondary hover:bg-muted text-secondary-foreground font-semibold h-9 px-3 rounded-lg text-sm transition-colors" title={t('change_location')}>
@@ -154,7 +164,14 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
                 <div className="relative" ref={notificationPanelRef}>
                     <button onClick={() => setIsNotificationsOpen(p => !p)} className="relative flex items-center gap-2 bg-secondary hover:bg-muted text-secondary-foreground font-semibold h-9 w-9 justify-center rounded-lg text-sm transition-colors" title="Notifications">
                         <BellIcon className="w-5 h-5" />
-                        {unreadNotificationCount > 0 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">{unreadNotificationCount}</span>}
+                        {unreadNotificationCount > 0 && 
+                            <span className={cn(
+                                "absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground",
+                                hasCriticalNotifications && "animate-pulse ring-2 ring-destructive ring-offset-2 ring-offset-card"
+                            )}>
+                                {unreadNotificationCount}
+                            </span>
+                        }
                     </button>
                     {isNotificationsOpen && (
                         <NotificationsPanel
@@ -193,4 +210,3 @@ const POSHeader: React.FC<POSHeaderProps> = () => {
 };
 
 export default POSHeader;
-  

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useModalContext } from '../contexts/AppContext';
@@ -64,6 +63,7 @@ import DashboardCustomizeModal from './DashboardCustomizeModal';
 import LoyaltyRedemptionModal from './LoyaltyRedemptionModal';
 import BarcodeScannerModal from './BarcodeScannerModal';
 import BurgerOptionEditModal from './BurgerOptionEditModal';
+import ItemDiscountModal from './ItemDiscountModal';
 
 const ModalManager: React.FC = () => {
     const { modal, closeModal } = useModalContext();
@@ -75,7 +75,6 @@ const ModalManager: React.FC = () => {
         modifier: ModifierModal,
         pizzaBuilder: PizzaBuilder,
         burgerBuilder: BurgerBuilder,
-        burgerOptionEdit: BurgerOptionEditModal,
         payment: PaymentModal,
         receipt: ReceiptModal,
         reservation: ReservationModal,
@@ -113,6 +112,7 @@ const ModalManager: React.FC = () => {
         productBulkEdit: ProductBulkEditModal,
         A4Invoice: A4Invoice, // Retained for modal-like preview if needed, but not for printing.
         discount: DiscountModal,
+        itemDiscount: ItemDiscountModal,
         paymentTerminalSettings: PaymentTerminalSettingsModal,
         pizzaOptionEdit: PizzaOptionEditModal,
         livePayment: LivePaymentModal,
@@ -132,6 +132,7 @@ const ModalManager: React.FC = () => {
         dashboardCustomize: DashboardCustomizeModal,
         loyaltyRedemption: LoyaltyRedemptionModal,
         barcodeScanner: BarcodeScannerModal,
+        burgerOptionEdit: BurgerOptionEditModal,
     };
 
     const SpecificModal = type ? MODAL_COMPONENTS[type] : null;
@@ -147,4 +148,3 @@ const ModalManager: React.FC = () => {
 };
 
 export default ModalManager;
-  

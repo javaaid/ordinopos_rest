@@ -1,5 +1,6 @@
+
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
-import { useDataContext, useModalContext } from '../contexts/AppContext';
+import { useDataContext, useModalContext, useToastContext } from '../contexts/AppContext';
 import { ManualDiscount } from '../types';
 import PlusIcon from './icons/PlusIcon';
 import PencilSquareIcon from './icons/PencilSquareIcon';
@@ -9,10 +10,12 @@ import { cn } from '../lib/utils';
 import ArrowsPointingOutIcon from './icons/ArrowsPointingOutIcon';
 import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
 import ExportButtons from './ExportButtons';
+import { exportToCsv } from '../lib/utils';
 
 const DiscountManagementTab: React.FC = () => {
     const { manualDiscounts, handleSaveManualDiscount, handleDeleteManualDiscount } = useDataContext();
     const { openModal, closeModal } = useModalContext();
+    const { addToast } = useToastContext();
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [columnWidths, setColumnWidths] = useState([400, 200, 120]);
     const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -44,16 +47,11 @@ const DiscountManagementTab: React.FC = () => {
         handleSaveManualDiscount({ ...discount, id: `md_${Date.now()}`, name: `${discount.name} (Copy)` });
     };
     
-    const handleCsvExport = () => {
+    const handleCsvExport = (filename: string = 'manual_discounts.csv') => {
         const headers = ["ID", "Name", "Percentage"];
-        const rows = (manualDiscounts || []).map((d: ManualDiscount) => [d.id, `"${d.name}"`, d.percentage].join(','));
-        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
-        const link = document.createElement("a");
-        link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", "manual_discounts.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const rows = (manualDiscounts || []).map((d: ManualDiscount) => [d.id, d.name, d.percentage]);
+        exportToCsv(headers, rows, filename);
+        addToast({ type: 'success', title: 'Export Successful', message: `Exported ${rows.length} discounts.` });
     };
 
     const handlePrint = () => window.print();

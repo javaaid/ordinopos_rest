@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext, useDataContext, useToastContext, useModalContext } from '../contexts/AppContext';
 import { AppSettings, DeviceSettings, Printer, KitchenDisplay, CustomerDisplay, GenericDevice } from '../types';
@@ -7,6 +8,7 @@ import { Button } from './ui/Button';
 import { Select } from './ui/Select';
 import { Input } from './ui/Input';
 import QuestionMarkCircleIcon from './icons/QuestionMarkCircleIcon';
+import PingButton from './PingButton';
 
 const DeviceSettingsView: React.FC = () => {
     const { settings, setSettings } = useAppContext();
@@ -83,9 +85,10 @@ const DeviceSettingsView: React.FC = () => {
                                 name="printServerUrl" 
                                 value={localSettings.printServerUrl || ''} 
                                 onChange={handleChange} 
-                                placeholder="http://localhost:3000"
+                                placeholder="http://localhost:5000"
                             />
-                             <Button type="button" variant="ghost" size="icon" onClick={() => openModal('printServerGuide')}>
+                             <PingButton ipAddress={localSettings.printServerUrl} />
+                             <Button type="button" variant="ghost" size="icon" onClick={() => openModal('printServerGuide')} title="Open Print Server Guide">
                                 <QuestionMarkCircleIcon className="w-6 h-6" />
                             </Button>
                         </div>

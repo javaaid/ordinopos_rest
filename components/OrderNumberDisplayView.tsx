@@ -3,8 +3,6 @@ import { Button } from './ui/Button';
 import { AppSettings, Language } from '../types';
 import { useTranslations } from '../hooks/useTranslations';
 import { hexToHsl } from '../lib/utils';
-// NOTE: useAppContext is removed as this component must function in a separate window without context.
-// State will be synced via BroadcastChannel.
 
 const OrderNumberDisplayView: React.FC = () => {
     const [calledOrderNumber, setCalledOrderNumber] = useState<string | null>(null);
@@ -60,7 +58,6 @@ const OrderNumberDisplayView: React.FC = () => {
     };
 
      useEffect(() => {
-        // Cleanup listeners on component unmount
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
@@ -79,12 +76,6 @@ const OrderNumberDisplayView: React.FC = () => {
                     if (payload.allSettings) {
                         setSettings(payload.allSettings);
                     }
-                } else if (type === 'CALLED_ORDER_NUMBER_UPDATE') {
-                    setCalledOrderNumber(payload || null);
-                } else if (type === 'SETTINGS_UPDATE') {
-                    if (payload) {
-                        setSettings(payload);
-                    }
                 }
             } catch(e) {
                 console.error("Order Number Display failed to handle message", e);
@@ -101,11 +92,9 @@ const OrderNumberDisplayView: React.FC = () => {
     }, []);
 
     const handleClose = () => {
-        // This component is designed to be opened in a new window.
         if (window.opener) {
             window.close();
         } else {
-            // For the edge case where it's embedded, navigate back to POS view.
             window.location.hash = '#/pos';
         }
     };
@@ -129,8 +118,9 @@ const OrderNumberDisplayView: React.FC = () => {
                 </div>
             </div>
 
-             <footer className="absolute bottom-4 right-4 text-xs text-muted-foreground/50 z-10">
-                powered by ordinopos.com
+             <footer className="absolute bottom-4 text-center w-full z-10">
+                {settings?.receipt.logoUrl && <img src={settings.receipt.logoUrl} alt="Logo" className="h-12 w-auto mx-auto mb-2 opacity-80" />}
+                <p className="text-xl text-muted-foreground mb-1">Fast • Reliable • Smart POS</p>
             </footer>
         </div>
     );

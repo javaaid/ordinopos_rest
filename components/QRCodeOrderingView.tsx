@@ -31,19 +31,23 @@ const QRCodeOrderingView: React.FC = () => {
 
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
-            if (event.data.type === 'STATE_SYNC') {
-                const { payload } = event.data;
-                if (payload.allMenuItems && payload.allLocations && payload.allTables) {
-                    const currentLocation = payload.allLocations.find((l: Location) => l.id === locationId);
-                    const currentTable = payload.allTables.find((t: Table) => t.id === tableId);
-                    
-                    setMenuItems(payload.allMenuItems.filter((item: MenuItem) => item.locationIds.includes(locationId) && item.isActive !== false));
-                    setLocation(currentLocation);
-                    setTable(currentTable);
-                    setStep('ordering');
+            try {
+                if (event.data.type === 'STATE_SYNC') {
+                    const { payload } = event.data;
+                    if (payload.allMenuItems && payload.allLocations && payload.allTables) {
+                        const currentLocation = payload.allLocations.find((l: Location) => l.id === locationId);
+                        const currentTable = payload.allTables.find((t: Table) => t.id === tableId);
+                        
+                        setMenuItems(payload.allMenuItems.filter((item: MenuItem) => item.locationIds.includes(locationId) && item.isActive !== false));
+                        setLocation(currentLocation);
+                        setTable(currentTable);
+                        setStep('ordering');
+                    }
+                } else if (event.data.type === 'QR_ORDER_CONFIRMED') {
+                    setLastOrderNumber(event.data.payload.orderNumber);
                 }
-            } else if (event.data.type === 'QR_ORDER_CONFIRMED') {
-                setLastOrderNumber(event.data.payload.orderNumber);
+            } catch (e) {
+                console.error("QR Ordering view failed to handle message", e);
             }
         };
         channel.addEventListener('message', handleMessage);

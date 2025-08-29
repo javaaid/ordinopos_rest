@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { CartItem, Customer, OrderType, Employee, AppliedDiscount, Language, Table, Location, Order, AppSettings, AIResponse, AISettings, Promotion, ManualDiscount, Surcharge } from '../types';
 import OrderItem from './OrderItem';
 import UserCircleIcon from './icons/UserCircleIcon';
@@ -35,7 +34,7 @@ export default function OrderSummary() {
     selectedStaff, setSelectedStaff,
     activeTab, setActiveTab, handleSaveTab, handleSettleTab,
     handleInitiatePayment, appliedLoyaltyPoints, setAppliedLoyaltyPoints,
-    openModal, closeModal
+    openModal, closeModal, handleApplyDiscountToItem
   } = useAppContext();
   
   if (!settings) {
@@ -45,20 +44,65 @@ export default function OrderSummary() {
   const t = useTranslations(settings.language.staff);
   
   const isSettlingOrder = !!activeOrderToSettle;
+
+  const selectCustomerAndLoadTab = useCallback((customer: Customer) => {
+    setSelectedCustomer(customer);
+    const openTab = (orders || []).find((o: Order) => o.customer?.id === customer.id && o.status === 'partially-paid');
+    if (openTab) {
+        setActiveTab(openTab);
+    } else {
+        setActiveTab(null);
+    }
+  }, [setSelectedCustomer, orders, setActiveTab]);
+
+  const handleSelectCustomer = useCallback((customer: Customer) => {
+      selectCustomerAndLoadTab(customer);
+      closeModal();
+  }, [selectCustomerAndLoadTab, closeModal]);
+
+  const handleAddNewCustomer = useCallback(() => {
+      openModal('customerEdit', { 
+        onSave: (customer: Customer, isNew: boolean) => {
+            handleSaveCustomer(customer, isNew);
+            if (isNew) {
+              setSelectedCustomer(customer);
+            }
+            closeModal();
+        },
+    });
+  }, [openModal, handleSaveCustomer, setSelectedCustomer, closeModal]);
+
+  const handleChooseCustomer = () => {
+      openModal('customerSelect', { 
+          customers, 
+          onSelectCustomer: handleSelectCustomer, 
+          onAddNewCustomer: handleAddNewCustomer 
+      });
+  };
+  
+  const handleChooseStaff = useCallback(() => {
+    const availableEmployees = (employees || []).filter((e: Employee) => e.locationId === currentLocation.id);
+    openModal('chooseStaff', {
+        employees: availableEmployees,
+        onSelectStaff: setSelectedStaff,
+        selectedStaffId: selectedStaff?.id,
+    });
+  }, [employees, currentLocation, openModal, setSelectedStaff, selectedStaff]);
+
+  const showStaffSelection = settings.dineIn.enabled && settings.dineIn.enableStaffSelection;
   
   useEffect(() => {
     if (isSettlingOrder && activeOrderToSettle) {
       setOrderType(activeOrderToSettle.orderType);
       setAppliedLoyaltyPoints(activeOrderToSettle.appliedLoyaltyPoints || 0);
-    } else if (currentTable) {
-      setOrderType('dine-in');
     } else if (activeTab) {
       setOrderType('tab');
-    } else {
-      // Fallback to default when no context is set
+    } else if (!currentTable && orderType === 'dine-in') {
+      // If we are not on a table but orderType is still dine-in, reset to default.
+      // This handles the case after a dine-in order is completed.
       setOrderType(settings.preferences.defaultOrderType);
     }
-  }, [isSettlingOrder, currentTable, activeTab, settings.preferences.defaultOrderType, activeOrderToSettle, setOrderType, setAppliedLoyaltyPoints]);
+  }, [isSettlingOrder, currentTable, activeTab, settings.preferences.defaultOrderType, activeOrderToSettle, orderType, setOrderType, setAppliedLoyaltyPoints]);
   
   const pendingTableOrders = useMemo(() => {
     if (!currentTable) return [];
@@ -71,40 +115,10 @@ export default function OrderSummary() {
   }, [pendingTableOrders, activeTab]);
   
   const allItemsForBill = isSettlingOrder && activeOrderToSettle ? (activeOrderToSettle.cart || []) : [...sentItems, ...(cart || [])];
-
+  
   const { subtotal, tax, total, taxDetails, discountAmount, finalAppliedDiscount, surchargeAmount, surchargeDetails, loyaltyDiscountAmount } = useMemo(() => 
     calculateOrderTotals(allItemsForBill, currentLocation, appliedDiscount, appliedPromotion, orderType, settings, selectedCustomer, surcharges, appliedLoyaltyPoints),
   [allItemsForBill, currentLocation, appliedDiscount, appliedPromotion, orderType, settings, selectedCustomer, surcharges, appliedLoyaltyPoints]);
-  
-  const selectCustomerAndLoadTab = (customer: Customer) => {
-      setSelectedCustomer(customer);
-      const openTab = (orders || []).find((o: Order) => o.customer?.id === customer.id && o.status === 'partially-paid');
-      
-      if (openTab) {
-          setActiveTab(openTab);
-          // setAppliedDiscount(openTab.appliedDiscount || null);
-          // setAppliedPromotion(openTab.appliedPromotion || null);
-      } else {
-          setActiveTab(null);
-      }
-  };
-
-  const handleSelectCustomer = (customer: Customer) => {
-    selectCustomerAndLoadTab(customer);
-    closeModal(); // This closes the customer select modal.
-  };
-
-  const handleAddNewCustomer = () => {
-      openModal('customerEdit', { 
-        onSave: (customer: Customer, isNew: boolean) => {
-            handleSaveCustomer(customer, isNew);
-            if (isNew) {
-              setSelectedCustomer(customer);
-            }
-            closeModal();
-        },
-    });
-  };
   
   const handleAddDiscountClick = () => {
       openModal('discount', { 
@@ -115,6 +129,14 @@ export default function OrderSummary() {
           onRemoveDiscount: handleRemoveDiscount,
           currentDiscount: finalAppliedDiscount
       });
+  };
+
+  const handleItemClick = (cartItem: CartItem) => {
+    openModal('itemDiscount', {
+      cartItem,
+      discounts: manualDiscounts,
+      onApply: handleApplyDiscountToItem,
+    });
   };
 
   const handleRedeemLoyalty = () => {
@@ -148,25 +170,16 @@ export default function OrderSummary() {
     }
   };
   
-  const handleSelectStaff = (employee: Employee) => {
-    setSelectedStaff(employee);
-  };
-
-  const handleChooseStaff = () => {
-    const availableEmployees = (employees || []).filter((e: Employee) => e.locationId === currentLocation.id);
-    openModal('chooseStaff', {
-        employees: availableEmployees,
-        onSelectStaff: handleSelectStaff,
-        selectedStaffId: selectedStaff?.id,
-    });
-  };
-
-  const showStaffSelection = settings.dineIn.enabled && settings.dineIn.enableStaffSelection;
   const { currency, ai: aiSettings, language } = settings;
 
   const OrderTypeButton = ({ type, label }: { type: OrderType; label: string }) => (
     <button
-        onClick={() => { if(type !== 'dine-in') onSetCurrentTable(null); setOrderType(type); }}
+        onClick={() => { 
+            if (type !== 'dine-in') {
+                onSetCurrentTable(null);
+            }
+            setOrderType(type);
+        }}
         disabled={isSettlingOrder}
         className={`py-1.5 rounded-md font-bold text-xs transition-colors w-full ${
             orderType === type
@@ -252,34 +265,13 @@ export default function OrderSummary() {
   return (
     <div className="bg-card rounded-xl shadow-md flex flex-col h-full border border-border">
       <div className="p-2 border-b border-border bg-card">
-        <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2 overflow-hidden">
-                 <Button onClick={() => openModal('customerSelect', { customers, onSelectCustomer: handleSelectCustomer, onAddNewCustomer: handleAddNewCustomer })} className="rounded-full h-8 w-8 bg-primary/10 text-primary hover:bg-primary/20 flex-shrink-0">
-                    <UserCircleIcon className="w-5 h-5"/>
-                </Button>
-                <div className="overflow-hidden">
-                     <p className="font-bold text-foreground text-sm truncate">{selectedCustomer ? selectedCustomer.name : t('walk_in_customer')}</p>
-                     <p className="text-xs text-muted-foreground">{selectedCustomer ? t('member') : t('guest')}</p>
-                </div>
-                 {showStaffSelection && (
-                    <>
-                        <div className="w-px h-6 bg-border mx-1"></div>
-                        <Button onClick={handleChooseStaff} className="rounded-full h-8 w-8 bg-primary/10 text-primary hover:bg-primary/20 flex-shrink-0">
-                            <UserIcon className="w-5 h-5" />
-                        </Button>
-                        <div className="overflow-hidden">
-                            <p className="font-bold text-foreground text-sm truncate">{selectedStaff ? selectedStaff.name : t('choose_staff')}</p>
-                            <p className="text-xs text-muted-foreground">{t('serving')}</p>
-                        </div>
-                    </>
-                )}
-            </div>
+        <div className="flex justify-end items-center h-8">
             <div className="flex items-center gap-0.5">
                 <Button onClick={handleGetUpsellSuggestions} disabled={(cart || []).length === 0 || isSuggestingUpsell || !aiSettings.enableAIFeatures || !aiSettings.enableUpsell} size="icon" variant="ghost" title={t('ai_upsell')} className="text-muted-foreground hover:text-primary h-8 w-8"><SparklesIcon className={`w-5 h-5 ${isSuggestingUpsell ? 'animate-spin' : ''}`} /></Button>
                 {settings.preferences.enableOrderHold && (
                     <Button onClick={handleHoldOrder} disabled={(cart || []).length === 0 || isSettlingOrder} size="icon" variant="ghost" title={t('hold_order')} className="text-muted-foreground hover:text-primary h-8 w-8"><PauseIcon className="w-5 h-5"/></Button>
                 )}
-                <Button onClick={onVoidOrder} size="icon" variant="ghost" title={t('void_order')} className="text-muted-foreground hover:text-destructive h-8 w-8"><TrashIcon className="w-5 h-5"/></Button>
+                <Button onClick={onVoidOrder} disabled={(cart || []).length === 0 && !activeTab && !activeOrderToSettle} size="icon" variant="ghost" title={t('void_order')} className="text-muted-foreground hover:text-destructive h-8 w-8"><TrashIcon className="w-5 h-5"/></Button>
                 <Button onClick={onNewSaleClick} size="icon" variant="ghost" title={t('new_sale')} className="text-muted-foreground hover:text-primary h-8 w-8"><PlusCircleIcon className="w-5 h-5"/></Button>
             </div>
         </div>
@@ -332,6 +324,25 @@ export default function OrderSummary() {
            )}
       </div>
       
+       <div className="p-2 space-y-2 border-y border-border">
+          <button onClick={handleChooseCustomer} className="w-full flex items-center gap-3 p-2 bg-secondary rounded-lg hover:bg-muted transition-colors">
+            <UserCircleIcon className="w-8 h-8 text-primary"/>
+            <div className="text-left">
+              <p className="font-bold text-foreground text-sm">{selectedCustomer ? selectedCustomer.name : t('walk_in_customer')}</p>
+              <p className="text-xs text-muted-foreground">{selectedCustomer ? (selectedCustomer.membershipId ? `ID: ${selectedCustomer.membershipId}` : t('guest')) : 'Tap to select a customer'}</p>
+            </div>
+          </button>
+          {showStaffSelection && (
+            <button onClick={handleChooseStaff} className="w-full flex items-center gap-3 p-2 bg-secondary rounded-lg hover:bg-muted transition-colors">
+              <UserIcon className="w-8 h-8 text-primary"/>
+              <div className="text-left">
+                <p className="font-bold text-foreground text-sm">{selectedStaff ? selectedStaff.name : t('choose_staff')}</p>
+                <p className="text-xs text-muted-foreground">{t('serving')}</p>
+              </div>
+            </button>
+          )}
+        </div>
+
       <div className="flex-grow overflow-y-auto p-2 space-y-1.5 bg-background">
         {allItemsForBill.length === 0 ? (
           <div className="flex-grow flex flex-col justify-center items-center text-muted-foreground p-4 h-full">
@@ -348,23 +359,23 @@ export default function OrderSummary() {
                   {t('new_items')}
                 </h3>
                 <div className="space-y-1.5">
-                  {(cart || []).map((item) => <OrderItem key={item.cartId} cartItem={item} onRemoveItem={onRemoveItem} onUpdateCartQuantity={onUpdateCartQuantity} orderType={orderType} customer={selectedCustomer} />)}
+                  {(cart || []).map((item) => <OrderItem key={item.cartId} cartItem={item} onRemoveItem={onRemoveItem} onUpdateCartQuantity={onUpdateCartQuantity} orderType={orderType} customer={selectedCustomer} onClick={() => handleItemClick(item)} />)}
                 </div>
               </div>
             )}
             {sentItems.length > 0 && !isSettlingOrder && (
               <div>
                 <h3 className="text-xs font-bold uppercase text-muted-foreground mb-1.5 mt-2 px-1">{t('running_tab')}</h3>
-                <div className="space-y-1.5 opacity-70 pointer-events-none">
-                  {sentItems.map((item) => <OrderItem key={item.cartId} cartItem={item} onRemoveItem={() => {}} onUpdateCartQuantity={() => {}} orderType={orderType} customer={selectedCustomer} />)}
+                <div className="space-y-1.5 opacity-70">
+                  {sentItems.map((item) => <OrderItem key={item.cartId} cartItem={item} onRemoveItem={() => {}} onUpdateCartQuantity={() => {}} orderType={orderType} customer={selectedCustomer} onClick={() => {}} />)}
                 </div>
               </div>
             )}
             {isSettlingOrder && activeOrderToSettle && (
                  <div>
                     <h3 className="text-xs font-bold uppercase text-muted-foreground mb-1.5 mt-2 px-1">{t('items_on_bill')}</h3>
-                     <div className="space-y-1.5 opacity-70 pointer-events-none">
-                        {(activeOrderToSettle.cart || []).map((item) => <OrderItem key={item.cartId} cartItem={item} onRemoveItem={() => {}} onUpdateCartQuantity={() => {}} orderType={orderType} customer={selectedCustomer}/>)}
+                     <div className="space-y-1.5 opacity-70">
+                        {(activeOrderToSettle.cart || []).map((item) => <OrderItem key={item.cartId} cartItem={item} onRemoveItem={() => {}} onUpdateCartQuantity={() => {}} orderType={orderType} customer={selectedCustomer} onClick={() => {}}/>)}
                     </div>
                 </div>
             )}
@@ -395,7 +406,7 @@ export default function OrderSummary() {
             {discountAmount > 0 ? (
               <div className="flex justify-between text-primary">
                 <button onClick={handleAddDiscountClick} className="text-primary hover:underline font-semibold">
-                  {t('discount')} ({finalAppliedDiscount?.name})
+                  {t('discount')} {finalAppliedDiscount ? `(${finalAppliedDiscount.name})` : ''}
                 </button>
                 <span className="font-medium">-{currency}{discountAmount.toFixed(2)}</span>
               </div>

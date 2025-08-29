@@ -4,15 +4,17 @@ import React, { useState } from 'react';
 import UserPlusIcon from './icons/UserPlusIcon';
 import PencilSquareIcon from './icons/PencilSquareIcon';
 import TrashIcon from './icons/TrashIcon';
-import { useDataContext, useModalContext, useAppContext } from '../contexts/AppContext';
+import { useDataContext, useModalContext, useAppContext, useToastContext } from '../contexts/AppContext';
 import ExportButtons from './ExportButtons';
 import { Location } from '../types';
 import { Select } from './ui/Select';
+import { exportToCsv } from '../lib/utils';
 
 const TaxRatesView: React.FC = () => {
     const { locations, handleSaveTaxRate, handleDeleteTaxRate } = useDataContext();
     const { currentLocation, onLocationChange } = useAppContext();
     const { openModal } = useModalContext();
+    const { addToast } = useToastContext();
 
     const [selectedLocationId, setSelectedLocationId] = useState(currentLocation.id);
 
@@ -32,16 +34,11 @@ const TaxRatesView: React.FC = () => {
         selectedLocationId: selectedLocationId
     });
     
-    const handleCsvExport = () => {
+    const handleCsvExport = (filename: string = `tax_rates_${selectedLocation.name}.csv`) => {
         const headers = ["Location", "Tax Name", "Rate"];
-        const rows = Object.entries(taxRates).map(([name, rate]) => [`"${selectedLocation.name}"`, `"${name}"`, rate].join(','));
-        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
-        const link = document.createElement("a");
-        link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", `tax_rates_${selectedLocation.name}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const rows = Object.entries(taxRates).map(([name, rate]) => [selectedLocation.name, name, rate]);
+        exportToCsv(headers, rows, filename);
+        addToast({ type: 'success', title: 'Export Successful', message: `Exported ${rows.length} tax rates.` });
     };
 
     const handlePrint = () => window.print();

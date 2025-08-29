@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo, useCallback } from 'react';
 import { Order, Ingredient, View, ManagementSubView, SalesDashboardWidgetId, AppSettings } from '../types';
 import CurrencyDollarIcon from './icons/CurrencyDollarIcon';
@@ -149,9 +151,13 @@ const RecentTransactionsWidget: React.FC<{ orders: Order[], currency: string }> 
 // #endregion
 
 const DashboardView: React.FC = () => {
-    const { settings, setSettings } = useAppContext();
+    const { settings, setSettings, setView, setManagementSubView } = useAppContext();
     const { openModal, closeModal } = useModalContext();
     const { orders: allOrders, ingredients } = useDataContext();
+
+    const lowStockItemsCount = useMemo(() =>
+        (ingredients || []).filter((i: Ingredient) => i.stock <= i.reorderThreshold).length
+    , [ingredients]);
 
     const todayStart = useMemo(() => {
         const d = new Date();
@@ -225,6 +231,27 @@ const DashboardView: React.FC = () => {
             </header>
             
             <main className="flex-grow p-6 overflow-y-auto">
+                {lowStockItemsCount > 0 && (
+                    <div className="bg-yellow-100 dark:bg-yellow-900/30 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-200 p-4 rounded-md mb-6 shadow-md" role="alert">
+                        <div className="flex">
+                            <div className="py-1">
+                                <ExclamationTriangleIcon className="h-6 w-6 text-yellow-500 mr-4" />
+                            </div>
+                            <div>
+                                <p className="font-bold">Low Stock Alert</p>
+                                <p className="text-sm">
+                                    {lowStockItemsCount} ingredient(s) are below their reorder threshold.
+                                    <button 
+                                        onClick={() => { setView('management'); setManagementSubView('reports'); }} 
+                                        className="ml-2 font-semibold underline hover:text-yellow-900 dark:hover:text-yellow-100"
+                                    >
+                                        View Reports
+                                    </button>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                    {widgetOrder.map(widgetId => (
                         <div key={widgetId} className={widgetSpans[widgetId]}>

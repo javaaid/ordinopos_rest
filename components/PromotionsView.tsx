@@ -3,15 +3,17 @@ import { Promotion } from '../types';
 import PlusIcon from './icons/PlusIcon';
 import PencilSquareIcon from './icons/PencilSquareIcon';
 import TrashIcon from './icons/TrashIcon';
-import { useDataContext, useModalContext } from '../contexts/AppContext';
+import { useDataContext, useModalContext, useToastContext } from '../contexts/AppContext';
 import { cn } from '../lib/utils';
 import ArrowsPointingOutIcon from './icons/ArrowsPointingOutIcon';
 import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
 import ExportButtons from './ExportButtons';
+import { exportToCsv } from '../lib/utils';
 
 const PromotionsView: React.FC = () => {
     const { promotions, handleDeletePromotion, handleSavePromotion } = useDataContext();
     const { openModal } = useModalContext();
+    const { addToast } = useToastContext();
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [columnWidths, setColumnWidths] = useState([300, 200, 200, 120, 120]);
     const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -31,16 +33,11 @@ const PromotionsView: React.FC = () => {
         handleSavePromotion({ ...promotion, isActive: !promotion.isActive });
     };
     
-    const handleCsvExport = () => {
+    const handleCsvExport = (filename: string = 'promotions.csv') => {
         const headers = ["ID", "Name", "Type", "Value", "Active"];
-        const rows = (promotions || []).map((p: Promotion) => [p.id, `"${p.name}"`, p.type, p.value, p.isActive].join(','));
-        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
-        const link = document.createElement("a");
-        link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", "promotions.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const rows = (promotions || []).map((p: Promotion) => [p.id, p.name, p.type, p.value, p.isActive]);
+        exportToCsv(headers, rows, filename);
+        addToast({ type: 'success', title: 'Export Successful', message: `Exported ${rows.length} promotions.` });
     };
 
     const handlePrint = () => window.print();

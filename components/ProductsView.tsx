@@ -11,6 +11,7 @@ import ProductManagementTab from './ProductManagementTab';
 import { Button } from './ui/Button';
 import PencilSquareIcon from './icons/PencilSquareIcon';
 import ExportButtons from './ExportButtons';
+import { exportToCsv } from '../lib/utils';
 
 
 const ProductsView: React.FC = () => {
@@ -26,7 +27,7 @@ const ProductsView: React.FC = () => {
         handleBulkUpdateProducts,
     } = useDataContext();
 
-    const { openModal, closeModal } = useModalContext();
+    const { openModal, closeModal, addToast } = useModalContext();
     const { justAddedCategoryId, onClearJustAddedCategoryId } = useAppContext();
     const importInputRef = useRef<HTMLInputElement>(null);
 
@@ -87,59 +88,20 @@ const ProductsView: React.FC = () => {
         const rows = menuItems.map((item: MenuItem) => {
             const categoryName = categories.find((c: Category) => c.id === item.category)?.name || item.category;
             
-            const escapeCSV = (val: any) => {
-                if (val === undefined || val === null) return '';
-                const str = String(val);
-                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-                    return `"${str.replace(/"/g, '""')}"`;
-                }
-                return str;
-            };
-            
             return [
-                escapeCSV(item.name),
-                escapeCSV(categoryName),
-                escapeCSV(item.kitchenName),
-                escapeCSV(item.barcodes?.[0]), // Exporting only the first barcode
-                item.price ?? 0,
-                item.takeawayPrice ?? 0,
-                item.deliveryPrice ?? 0,
-                item.memberPrice1 ?? 0,
-                item.memberPrice2 ?? 0,
-                item.memberPrice3 ?? 0,
-                item.cost ?? 0,
-                item.stock ?? 0,
-                item.warnQty ?? 0,
-                !!item.stopSaleAtZeroStock,
-                !!item.askPrice,
-                !!item.askQuantity,
-                !!item.hideName,
-                !!item.promptForKitchenNote,
-                !!item.alwaysShowModifiers,
-                !!item.isDiscountable,
-                !!item.useScale,
-                escapeCSV(item.kitchenPrinterId),
-                escapeCSV(item.kdsId),
-                escapeCSV(item.color),
-                item.displayOrder ?? '',
-                item.isActive !== false,
-                escapeCSV(item.imageUrl)
-            ].join(',');
+                item.name, categoryName, item.kitchenName, item.barcodes?.[0], item.price, item.takeawayPrice, item.deliveryPrice, item.memberPrice1, item.memberPrice2, item.memberPrice3, item.cost, item.stock, item.warnQty, !!item.stopSaleAtZeroStock, !!item.askPrice, !!item.askQuantity, !!item.hideName, !!item.promptForKitchenNote, !!item.alwaysShowModifiers, !!item.isDiscountable, !!item.useScale, item.kitchenPrinterId, item.kdsId, item.color, item.displayOrder, item.isActive !== false, item.imageUrl
+            ];
         });
 
-        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", filename);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        exportToCsv(headers, rows, filename);
+        addToast({ type: 'success', title: 'Export Successful', message: `Exported ${rows.length} products.` });
     };
 
-    const handlePrint = () => window.print();
+    const handlePrint = () => {
+        window.print();
+    };
 
-    const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
@@ -148,9 +110,14 @@ const ProductsView: React.FC = () => {
             const text = e.target?.result as string;
             if (text) {
                 await handleImportMenuItems(text);
+            } else {
+                 addToast({ type: 'error', title: 'Import Failed', message: 'Could not read the file.' });
             }
         };
         reader.readAsText(file);
+        if (importInputRef.current) {
+            importInputRef.current.value = '';
+        }
     };
 
     const triggerImport = () => {

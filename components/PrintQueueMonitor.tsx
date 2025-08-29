@@ -1,10 +1,9 @@
-
-
 import React, { useState, useEffect, useRef, Fragment, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { renderToString } from 'react-dom/server';
 import { useAppContext, useDataContext, useToastContext } from '../contexts/AppContext';
-import { PrintJob, PrintJobStatus, Printer } from '../types';
-import { cn } from '../lib/utils';
+import { PrintJob, PrintJobStatus, Printer, Employee, Table } from '../types';
+import { cn, getErrorMessage } from '../lib/utils';
 import PrinterIcon from './icons/PrinterIcon';
 import XMarkIcon from './icons/XMarkIcon';
 import PauseIcon from './icons/PauseIcon';
@@ -15,7 +14,6 @@ import ExclamationCircleIcon from './icons/ExclamationCircleIcon';
 import ClockIcon from './icons/ClockIcon';
 import { Button } from './ui/Button';
 import { useTranslations } from '../hooks/useTranslations';
-import { renderToString } from 'react-dom/server';
 
 // Import printable components
 import { KitchenReceiptContent } from './KitchenReceiptContent';
@@ -28,16 +26,18 @@ const componentMap: { [key: string]: React.FC<any> } = {
     A4Invoice,
 };
 
-const PrintableContent: React.FC<{ job: PrintJob }> = ({ job }) => {
+const PrintableContent: React.FC<{ job: PrintJob; employees: Employee[]; tables: Table[] }> = ({ job, employees, tables }) => {
     const Component = componentMap[job.component];
     let contentToPrint = null;
+    
+    const allProps = { ...job.props, employees, tables };
 
     if (job.component === 'KitchenReceiptContent') {
-        contentToPrint = <div id="kitchen-receipt-printable-area"><Component {...job.props} /></div>;
+        contentToPrint = <div id="kitchen-receipt-printable-area"><Component {...allProps} /></div>;
     } else if (job.component === 'TemplateRenderer') {
-        contentToPrint = <div id="receipt-printable-area"><Component {...job.props} /></div>;
+        contentToPrint = <div id="receipt-printable-area"><Component {...allProps} /></div>;
     } else if (job.component === 'A4Invoice') {
-        contentToPrint = <Component {...job.props} />;
+        contentToPrint = <Component {...allProps} />;
     }
 
     return <div className="printable-area-container">{contentToPrint}</div>;
@@ -46,7 +46,7 @@ const PrintableContent: React.FC<{ job: PrintJob }> = ({ job }) => {
 const PrintJobProcessor: React.FC<{ isPaused: boolean }> = ({ isPaused }) => {
     const { printQueue, updatePrintJobStatus, settings } = useAppContext();
     const { addToast } = useToastContext();
-    const { printers } = useDataContext();
+    const { printers, employees, tables } = useDataContext();
     const [currentlyPrintingJob, setCurrentlyPrintingJob] = useState<PrintJob | null>(null);
     const isPrintingRef = useRef(false);
     const printContainer = document.getElementById('print-root');
@@ -64,31 +64,65 @@ const PrintJobProcessor: React.FC<{ isPaused: boolean }> = ({ isPaused }) => {
     useEffect(() => {
         if (!currentlyPrintingJob || !printContainer) return;
         
-        // This effect runs when a job is picked for printing
         const processJob = async () => {
             const { component, props } = currentlyPrintingJob;
             const targetPrinterId = props.order?.kitchenPrinterId || settings.devices.receiptPrinterId;
             const printer: Printer | undefined = (printers || []).find((p: Printer) => p.id === targetPrinterId);
             
             if (printer?.connection === 'Print Server' && settings.devices.printServerUrl) {
-                // SIMULATED Print Server logic
+                const htmlString = renderToString(<PrintableContent job={currentlyPrintingJob} employees={employees} tables={tables} />);
+                const base64Data = btoa(unescape(encodeURIComponent(htmlString)));
+                
                 try {
-                    addToast({type: 'info', title: 'Simulating Print', message: `Sending job to ${printer.name} via Print Server...`});
-                    // Simulate network delay
-                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    let fullUrl = settings.devices.printServerUrl;
+                    if (!/^https?:\/\//i.test(fullUrl)) {
+                        fullUrl = 'http://' + fullUrl;
+                    }
+                    const printUrl = new URL('/print', fullUrl).toString();
                     
-                    // Simulate success
-                    updatePrintJobStatus(currentlyPrintingJob.id, 'completed');
+                    const response = await fetch(printUrl, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ printer: printer.name, data: base64Data }),
+                        signal: AbortSignal.timeout(5000)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ error: `HTTP error! Status: ${response.status}` }));
+                        throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        updatePrintJobStatus(currentlyPrintingJob.id, 'completed');
+                        addToast({type: 'success', title: 'Print Successful', message: `Job for ${printer.name} sent.`});
+                    } else {
+                        throw new Error(result.error || 'Print server returned an unspecified error.');
+                    }
                 } catch (error: any) {
-                    console.error("Print Server job simulation failed (this should not happen):", error);
-                    addToast({type: 'error', title: 'Print Failed', message: `Job for ${printer.name} failed unexpectedly.`});
+                    const errorMessage = getErrorMessage(error);
+                    let message = `Could not connect to ${printer.name}. Job remains in queue.`;
+
+                    if (error instanceof TypeError && errorMessage.includes('Failed to fetch')) {
+                        message = `Print Server connection failed for ${printer.name}. Check URL, CORS settings, and ensure it's running. See guide in Device Settings.`;
+                    } else {
+                        message = `Print job for ${printer.name} failed: ${errorMessage}`;
+                    }
+
+                    console.error("Print Server job failed:", {
+                        error: errorMessage,
+                        printerName: printer.name,
+                        url: settings.devices.printServerUrl
+                    });
+                    addToast({type: 'error', title: 'Print Failed', message});
                     updatePrintJobStatus(currentlyPrintingJob.id, 'error');
                 } finally {
                     setCurrentlyPrintingJob(null);
                     isPrintingRef.current = false;
                 }
             } else {
-                // Handle Browser Print logic
                 const handleAfterPrint = () => {
                     window.removeEventListener('afterprint', handleAfterPrint);
                     updatePrintJobStatus(currentlyPrintingJob.id, 'completed');
@@ -110,20 +144,19 @@ const PrintJobProcessor: React.FC<{ isPaused: boolean }> = ({ isPaused }) => {
 
         processJob();
 
-    }, [currentlyPrintingJob, printContainer, printers, settings.devices, updatePrintJobStatus, addToast]);
+    }, [currentlyPrintingJob, printContainer, printers, settings.devices, updatePrintJobStatus, addToast, employees, tables]);
 
 
     if (!currentlyPrintingJob || !printContainer) {
         return null;
     }
     
-    // Only render to the hidden div if it's a browser print job
     const printer = (printers || []).find((p: Printer) => p.id === (currentlyPrintingJob.props.order?.kitchenPrinterId || settings.devices.receiptPrinterId));
     if (printer?.connection === 'Print Server') {
         return null;
     }
 
-    return createPortal(<PrintableContent job={currentlyPrintingJob} />, printContainer);
+    return createPortal(<PrintableContent job={currentlyPrintingJob} employees={employees} tables={tables} />, printContainer);
 };
 
 const getJobName = (job: PrintJob) => {
@@ -146,63 +179,39 @@ const statusIcons: Record<PrintJobStatus, React.ReactNode> = {
 };
 
 const PrintQueueMonitor: React.FC = () => {
-    const { printQueue, clearPrintQueue, settings } = useAppContext();
+    const { printQueue, clearPrintQueue, settings, updatePrintJobStatus } = useAppContext();
     const [isOpen, setIsOpen] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const t = useTranslations(settings.language.staff);
 
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const dragInfoRef = useRef({
-        isDragging: false,
-        startX: 0,
-        startY: 0,
-        initialX: 0,
-        initialY: 0,
-        hasMoved: false,
+        isDragging: false, startX: 0, startY: 0, initialX: 0, initialY: 0, hasMoved: false,
     });
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (!dragInfoRef.current.isDragging) return;
-
         const dx = e.clientX - dragInfoRef.current.startX;
         const dy = e.clientY - dragInfoRef.current.startY;
-        
-        if (!dragInfoRef.current.hasMoved && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
-            dragInfoRef.current.hasMoved = true;
-        }
-
-        setPosition({
-            x: dragInfoRef.current.initialX + dx,
-            y: dragInfoRef.current.initialY + dy,
-        });
+        if (!dragInfoRef.current.hasMoved && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) dragInfoRef.current.hasMoved = true;
+        setPosition({ x: dragInfoRef.current.initialX + dx, y: dragInfoRef.current.initialY + dy });
     }, []);
 
     const handleMouseUp = useCallback(() => {
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
-        
-        if (!dragInfoRef.current.hasMoved) {
-            setIsOpen(p => !p);
-        }
-
+        if (!dragInfoRef.current.hasMoved) setIsOpen(p => !p);
         dragInfoRef.current.isDragging = false;
     }, [handleMouseMove]);
 
     const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
         if (e.button !== 0) return;
-        dragInfoRef.current = {
-            isDragging: true,
-            startX: e.clientX,
-            startY: e.clientY,
-            initialX: position.x,
-            initialY: position.y,
-            hasMoved: false,
-        };
+        dragInfoRef.current = { isDragging: true, startX: e.clientX, startY: e.clientY, initialX: position.x, initialY: position.y, hasMoved: false };
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('mouseup', handleMouseUp);
     };
 
-    const pendingCount = (printQueue || []).filter((job: PrintJob) => job.status === 'pending').length;
+    const pendingCount = (printQueue || []).filter((job: PrintJob) => job.status === 'pending' || job.status === 'error').length;
 
     return (
         <>

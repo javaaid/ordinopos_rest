@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
-import { useDataContext, useModalContext } from '../contexts/AppContext';
+import { useDataContext, useModalContext, useToastContext } from '../contexts/AppContext';
 import { VoidReason } from '../types';
 import PlusIcon from './icons/PlusIcon';
 import PencilSquareIcon from './icons/PencilSquareIcon';
@@ -9,10 +9,12 @@ import { cn } from '../lib/utils';
 import ArrowsPointingOutIcon from './icons/ArrowsPointingOutIcon';
 import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
 import ExportButtons from './ExportButtons';
+import { exportToCsv } from '../lib/utils';
 
 const VoidReasonManagementTab: React.FC = () => {
     const { voidReasons, handleSaveVoidReason, handleDeleteVoidReason } = useDataContext();
     const { openModal, closeModal } = useModalContext();
+    const { addToast } = useToastContext();
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [columnWidths, setColumnWidths] = useState([600, 120]);
     const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -37,16 +39,11 @@ const VoidReasonManagementTab: React.FC = () => {
         handleSaveVoidReason({ ...reason, id: `vr_${Date.now()}`, reason: `${reason.reason} (Copy)` });
     };
     
-    const handleCsvExport = () => {
+    const handleCsvExport = (filename: string = 'void_reasons.csv') => {
         const headers = ["ID", "Reason"];
-        const rows = (voidReasons || []).map((r: VoidReason) => [r.id, `"${r.reason}"`].join(','));
-        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
-        const link = document.createElement("a");
-        link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", "void_reasons.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const rows = (voidReasons || []).map((r: VoidReason) => [r.id, r.reason]);
+        exportToCsv(headers, rows, filename);
+        addToast({ type: 'success', title: 'Export Successful', message: `Exported ${rows.length} void reasons.` });
     };
 
     const handlePrint = () => window.print();

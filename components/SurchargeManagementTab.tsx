@@ -1,5 +1,7 @@
+
+
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
-import { useDataContext, useModalContext } from '../contexts/AppContext';
+import { useDataContext, useModalContext, useToastContext } from '../contexts/AppContext';
 import { Surcharge } from '../types';
 import PlusIcon from './icons/PlusIcon';
 import PencilSquareIcon from './icons/PencilSquareIcon';
@@ -9,10 +11,12 @@ import { cn } from '../lib/utils';
 import ArrowsPointingOutIcon from './icons/ArrowsPointingOutIcon';
 import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
 import ExportButtons from './ExportButtons';
+import { exportToCsv } from '../lib/utils';
 
 const SurchargeManagementTab: React.FC = () => {
     const { surcharges, handleSaveSurcharge, handleDeleteSurcharge } = useDataContext();
     const { openModal, closeModal } = useModalContext();
+    const { addToast } = useToastContext();
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [columnWidths, setColumnWidths] = useState([300, 150, 150, 120]);
     const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -44,16 +48,11 @@ const SurchargeManagementTab: React.FC = () => {
         handleSaveSurcharge({ ...surcharge, id: `sur_${Date.now()}`, name: `${surcharge.name} (Copy)` });
     };
 
-    const handleCsvExport = () => {
+    const handleCsvExport = (filename: string = 'surcharges.csv') => {
         const headers = ["ID", "Name", "Type", "Value"];
-        const rows = (surcharges || []).map((s: Surcharge) => [s.id, `"${s.name}"`, s.type, s.value].join(','));
-        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
-        const link = document.createElement("a");
-        link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", "surcharges.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const rows = (surcharges || []).map((s: Surcharge) => [s.id, s.name, s.type, s.value]);
+        exportToCsv(headers, rows, filename);
+        addToast({ type: 'success', title: 'Export Successful', message: `Exported ${rows.length} surcharges.` });
     };
 
     const handlePrint = () => window.print();

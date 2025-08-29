@@ -1,37 +1,50 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Order, Table, AppSettings } from '../types';
 import OrderTicket from './OrderTicket';
 import InformationCircleIcon from './icons/InformationCircleIcon';
 import ChevronDownIcon from './icons/ChevronDownIcon';
-import { hexToHsl } from '../lib/utils';
 import ArrowsPointingOutIcon from './icons/ArrowsPointingOutIcon';
 import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
 
 const KDSView: React.FC = () => {
-    const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
     const [isTipsOpen, setIsTipsOpen] = useState(false);
     const [orders, setOrders] = useState<Order[]>([]);
     const [tables, setTables] = useState<Table[]>([]);
     const [settings, setSettings] = useState<AppSettings | null>(null);
     const [currentLocationId, setCurrentLocationId] = useState<string | null>(null);
     const channelRef = useRef<BroadcastChannel | null>(null);
+    
+    const [isFullscreen, setIsFullscreen] = useState(() => !!(document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement));
 
-    const onToggleFullScreen = () => {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(err => {
-                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-            });
+    const onToggleFullScreen = useCallback(() => {
+        const docEl = document.documentElement as any;
+        const requestFullscreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
+        const exitFullscreen = document.exitFullscreen || (document as any).mozCancelFullScreen || (document as any).webkitExitFullscreen || (document as any).msExitFullscreen;
+
+        if (!document.fullscreenElement && !(document as any).webkitIsFullScreen && !(document as any).mozFullScreen && !(document as any).msFullscreenElement) {
+            if (requestFullscreen) {
+                requestFullscreen.call(docEl).catch((err: Error) => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+            }
         } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
+            if (exitFullscreen) {
+                exitFullscreen.call(document).catch((err: Error) => {
+                     console.error(`Error attempting to exit full-screen mode: ${err.message} (${err.name})`);
+                });
             }
         }
-    };
+    }, []);
 
     useEffect(() => {
-        const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!(document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement));
+        };
+        const events = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'msfullscreenchange'];
+        events.forEach(event => document.addEventListener(event, handleFullscreenChange));
+        return () => {
+            events.forEach(event => document.removeEventListener(event, handleFullscreenChange));
+        };
     }, []);
 
     useEffect(() => {
@@ -46,12 +59,6 @@ const KDSView: React.FC = () => {
                     if (payload.allTables && Array.isArray(payload.allTables)) setTables(payload.allTables);
                     if (payload.allSettings) setSettings(payload.allSettings);
                     if (payload.currentLocationId) setCurrentLocationId(payload.currentLocationId);
-                } else if (type === 'ORDERS_UPDATE') {
-                    if (payload && Array.isArray(payload)) {
-                        setOrders(payload);
-                    }
-                } else if (type === 'SETTINGS_UPDATE') {
-                    if (payload) setSettings(payload);
                 }
             } catch (e) {
                 console.error("KDS failed to handle message", e);
@@ -142,8 +149,9 @@ const KDSView: React.FC = () => {
                     </div>
                 </div>
             )}
-            <footer className="text-center text-xs text-muted-foreground/50 pt-4">
-                powered by ordinopos.com
+            <footer className="text-center pt-4 mt-auto">
+                {settings?.receipt.logoUrl && <img src={settings.receipt.logoUrl} alt="Logo" className="h-10 w-auto mx-auto mb-2 opacity-80" />}
+                <p className="text-lg text-muted-foreground mb-1">Fast • Reliable • Smart POS</p>
             </footer>
         </div>
     );

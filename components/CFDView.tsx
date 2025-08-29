@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { CartItem, AppliedDiscount, AIResponse, Order, Language, MenuItem, AppSettings, SignagePlaylist, SignageContentItem, Location, Theme } from '../types';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { CartItem, AppliedDiscount, AIResponse, Order, Language, MenuItem, AppSettings, SignagePlaylist, SignageContentItem, Location, Theme, OrderType } from '../types';
 import SparklesIcon from './icons/SparklesIcon';
 import QrCodeIcon from './icons/QrCodeIcon';
 import CheckCircleIcon from './icons/CheckCircleIcon';
@@ -11,35 +11,49 @@ import ArrowsPointingOutIcon from './icons/ArrowsPointingOutIcon';
 import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
 
 const CFDView: React.FC = () => {
-    // Local state for the CFD window
     const [cart, setCart] = useState<CartItem[]>([]);
+    const [orderType, setOrderType] = useState<OrderType>('dine-in');
     const [settings, setSettings] = useState<AppSettings | null>(null);
     const [lastCompletedOrder, setLastCompletedOrder] = useState<Order | null>(null);
     const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
     const [signagePlaylists, setSignagePlaylists] = useState<SignagePlaylist[]>([]);
     const [signageContent, setSignageContent] = useState<SignageContentItem[]>([]);
-    const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
     const [currentLocationId, setCurrentLocationId] = useState<string | null>(null);
     const [allLocations, setAllLocations] = useState<Location[]>([]);
     
     const channelRef = useRef<BroadcastChannel | null>(null);
 
-     const toggleFullScreen = () => {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(err => {
-                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-            });
+    const [isFullscreen, setIsFullscreen] = useState(() => !!(document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement));
+
+    const toggleFullScreen = useCallback(() => {
+        const docEl = document.documentElement as any;
+        const requestFullscreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
+        const exitFullscreen = document.exitFullscreen || (document as any).mozCancelFullScreen || (document as any).webkitExitFullscreen || (document as any).msExitFullscreen;
+
+        if (!document.fullscreenElement && !(document as any).webkitIsFullScreen && !(document as any).mozFullScreen && !(document as any).msFullscreenElement) {
+            if (requestFullscreen) {
+                requestFullscreen.call(docEl).catch((err: Error) => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+            }
         } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
+            if (exitFullscreen) {
+                exitFullscreen.call(document).catch((err: Error) => {
+                     console.error(`Error attempting to exit full-screen mode: ${err.message} (${err.name})`);
+                });
             }
         }
-    };
+    }, []);
 
     useEffect(() => {
-        const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!(document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement));
+        };
+        const events = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'msfullscreenchange'];
+        events.forEach(event => document.addEventListener(event, handleFullscreenChange));
+        return () => {
+            events.forEach(event => document.removeEventListener(event, handleFullscreenChange));
+        };
     }, []);
 
     useEffect(() => {
@@ -62,33 +76,27 @@ const CFDView: React.FC = () => {
         channelRef.current = channel;
 
         const handleMessage = (event: MessageEvent) => {
-            const { type, payload } = event.data;
-            if (type === 'STATE_SYNC') {
-                setCart(payload.currentCart || []);
-                setSettings(payload.allSettings || null);
-                setLastCompletedOrder(payload.lastCompletedOrder || null);
-                const locId = payload.currentLocationId;
-                const allItems = payload.allMenuItems || [];
-                if (locId) {
-                    setMenuItems(allItems.filter((item: MenuItem) => item.locationIds.includes(locId)));
-                } else {
-                    setMenuItems(allItems);
+            try {
+                const { type, payload } = event.data;
+                if (type === 'STATE_SYNC') {
+                    setCart(payload.currentCart || []);
+                    setOrderType(payload.currentOrderType || 'dine-in');
+                    setSettings(payload.allSettings || null);
+                    setLastCompletedOrder(payload.lastCompletedOrder || null);
+                    const locId = payload.currentLocationId;
+                    const allItems = payload.allMenuItems || [];
+                    if (locId) {
+                        setMenuItems(allItems.filter((item: MenuItem) => item.locationIds.includes(locId)));
+                    } else {
+                        setMenuItems(allItems);
+                    }
+                    setSignagePlaylists(payload.allSignagePlaylists || []);
+                    setSignageContent(payload.allSignageContent || []);
+                    setCurrentLocationId(payload.currentLocationId || null);
+                    setAllLocations(payload.allLocations || []);
                 }
-                setSignagePlaylists(payload.allSignagePlaylists || []);
-                setSignageContent(payload.allSignageContent || []);
-                setCurrentLocationId(payload.currentLocationId || null);
-                setAllLocations(payload.allLocations || []);
-            } else if (type === 'CART_UPDATE') {
-                setCart(payload || []);
-                 if ((payload || []).length === 0 && !lastCompletedOrder) {
-                    // Cart was cleared from POS, maybe a new sale was started.
-                    // Reset the lastCompletedOrder as well to go back to attract screen.
-                    setLastCompletedOrder(null);
-                }
-            } else if (type === 'SETTINGS_UPDATE') {
-                setSettings(payload || null);
-            } else if (type === 'LAST_COMPLETED_ORDER_UPDATE') {
-                setLastCompletedOrder(payload || null);
+            } catch (e) {
+                console.error("CFD failed to handle message", e);
             }
         };
 
@@ -99,7 +107,7 @@ const CFDView: React.FC = () => {
             channel.removeEventListener('message', handleMessage);
             channel.close();
         };
-    }, [lastCompletedOrder]);
+    }, []);
 
     const language = settings?.language.customer || 'en';
     const t = useTranslations(language);
@@ -129,8 +137,8 @@ const CFDView: React.FC = () => {
 
     const { subtotal, tax, total } = useMemo(() => {
         if (!locationForCalcs) return { subtotal: 0, tax: 0, total: 0 };
-        return calculateOrderTotals(cart, locationForCalcs, null, null, 'dine-in', settings ?? undefined, undefined, []);
-    }, [cart, locationForCalcs, settings]);
+        return calculateOrderTotals(cart, locationForCalcs, null, null, orderType, settings ?? undefined, undefined, []);
+    }, [cart, locationForCalcs, settings, orderType]);
 
 
     if (lastCompletedOrder) {
@@ -146,16 +154,16 @@ const CFDView: React.FC = () => {
     }
     
     if (cart.length === 0) {
-        return <CFDAttractScreen contentItems={attractScreenContent} menuItems={menuItems} />;
+        return <CFDAttractScreen contentItems={attractScreenContent} menuItems={menuItems} settings={settings} />;
     }
 
-    // Main order view
     return (
         <div className="w-full h-full bg-background text-foreground flex p-8 gap-8 relative">
-            {settings?.receipt.logoUrl && (
-                <img src={settings.receipt.logoUrl} alt="Logo" className="absolute top-8 left-8 h-12 w-auto opacity-80 drop-shadow-lg" />
-            )}
-            {/* Left side: Order Summary */}
+            <div className="absolute top-8 left-8">
+                {settings?.receipt.logoUrl && (
+                    <img src={settings.receipt.logoUrl} alt="Logo" className="h-16 w-auto opacity-80 drop-shadow-lg" />
+                )}
+            </div>
             <div className="w-1/2 flex flex-col bg-card rounded-2xl p-6 shadow-2xl border border-border">
                 <h1 className="text-5xl font-bold pb-4 border-b border-border">{t('your_order')}</h1>
                 <div className="flex-grow overflow-y-auto py-4 space-y-4">
@@ -176,7 +184,6 @@ const CFDView: React.FC = () => {
                     <div className="flex justify-between text-4xl font-bold text-foreground mt-2"><span>{t('total')}</span><span className="text-primary">${total.toFixed(2)}</span></div>
                 </div>
             </div>
-            {/* Right side: Upsell/Info */}
             <div className="w-1/2 flex flex-col items-center justify-center">
                 <div className="text-center">
                     <h2 className="text-4xl font-bold text-muted-foreground">{t('place_order_cashier')}</h2>
@@ -185,7 +192,6 @@ const CFDView: React.FC = () => {
                 {settings?.ai.enableAIFeatures && settings?.ai.enableCFDSuggestions && (
                      <div className="mt-12 bg-card p-6 rounded-2xl w-full max-w-md shadow-lg border border-border">
                         <h3 className="text-2xl font-bold text-primary flex items-center gap-2 mb-4"><SparklesIcon className="w-6 h-6"/> {t('you_might_like')}</h3>
-                        {/* Placeholder for AI suggestions. A real implementation would fetch these. */}
                         <p className="text-muted-foreground">AI suggestions are coming soon!</p>
                     </div>
                 )}

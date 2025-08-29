@@ -1,5 +1,7 @@
+
+
 import React from 'react';
-import { Order, Location, AppSettings } from '../../types';
+import { Order, Location, AppSettings, Employee } from '../../types';
 import ModernA4Invoice from './ModernA4Invoice';
 import ClassicA4Invoice from './ClassicA4Invoice';
 import ZatcaA4Invoice from './ZatcaA4Invoice';
@@ -8,6 +10,7 @@ interface InvoiceTemplateRendererProps {
     order: Order;
     location: Location;
     settings: AppSettings;
+    employees: Employee[];
 }
 
 const InvoiceTemplateRenderer: React.FC<InvoiceTemplateRendererProps> = (props) => {

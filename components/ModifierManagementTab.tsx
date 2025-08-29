@@ -1,6 +1,7 @@
 
+
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
-import { useDataContext, useModalContext } from '../contexts/AppContext';
+import { useDataContext, useModalContext, useToastContext } from '../contexts/AppContext';
 import { ModifierGroup, MenuItem } from '../types';
 import PlusIcon from './icons/PlusIcon';
 import PencilSquareIcon from './icons/PencilSquareIcon';
@@ -10,10 +11,12 @@ import { cn } from '../lib/utils';
 import ArrowsPointingOutIcon from './icons/ArrowsPointingOutIcon';
 import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
 import ExportButtons from './ExportButtons';
+import { exportToCsv } from '../lib/utils';
 
 const ModifierManagementTab: React.FC = () => {
     const { modifierGroups, menuItems, handleDeleteModifierGroup } = useDataContext();
     const { openModal } = useModalContext();
+    const { addToast } = useToastContext();
     const [searchTerm, setSearchTerm] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [columnWidths, setColumnWidths] = useState([250, 150, 150, 150, 120]);
@@ -42,16 +45,11 @@ const ModifierManagementTab: React.FC = () => {
         return (menuItems || []).filter((item: MenuItem) => item.modifierGroupIds?.includes(groupId)).length;
     };
 
-    const handleCsvExport = () => {
+    const handleCsvExport = (filename: string = 'modifier_groups.csv') => {
         const headers = ["ID", "Name", "Options Count", "Allow Multiple", "Is Required"];
-        const rows = filteredModifierGroups.map((g: ModifierGroup) => [g.id, `"${g.name}"`, g.options.length, g.allowMultiple, !!g.isRequired].join(','));
-        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
-        const link = document.createElement("a");
-        link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", "modifier_groups.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const rows = (filteredModifierGroups || []).map((g: ModifierGroup) => [g.id, g.name, g.options.length, g.allowMultiple, !!g.isRequired]);
+        exportToCsv(headers, rows, filename);
+        addToast({ type: 'success', title: 'Export Successful', message: `Exported ${rows.length} modifier groups.` });
     };
 
     const handlePrint = () => window.print();

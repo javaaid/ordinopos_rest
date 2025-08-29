@@ -11,6 +11,8 @@ import AccountingIcon from './icons/AccountingIcon';
 import ComputerDesktopIcon from './icons/ComputerDesktopIcon';
 import QrCodeIcon from './icons/QrCodeIcon';
 import QueueListIcon from './icons/QueueListIcon';
+import MoonIcon from './icons/MoonIcon';
+import SunIcon from './icons/SunIcon';
 
 interface FeatureCardProps {
   icon: React.FC<React.SVGProps<SVGSVGElement>>;
@@ -35,9 +37,8 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon: Icon, title, descriptio
 
 
 const LandingPage: React.FC = () => {
-    const { setView } = useAppContext();
-    const largeLogoDataUri = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAACgCAMAAACowS0TAAAAjVBMVEUAAAD/AP//AP//AP8A/wD/AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP//AP+hVxiDAAAALnRSTlMAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywxMzZDS1k/AAAPmElEQVR42u1d6VoiTRCGgIqKCiiIDygoKogLKIj4/b/lG5ACgQqEc1K7frVqnqmzuydXl5WqgKj/12C3w26H3Q67HXY77HZYb7vR/3r83e+eHn0tYw9f5+O5e5/s/Z+3571Vb94N+3vPq1z+Wf5vB3Y2w3Yx/8P9b9Pft9c/vj+G9B7c/3U19bA4X3X8Fv1x+4n/l/+e35p+a0X9/2eX//c2/f6+7P/160rW13/D4H83sC8P/0sW+L81sH83sDcIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgiAIgi-3_33Gz8oAAAAASUVORK5CYII=";
-
+    const { setView, settings, theme, onToggleTheme } = useAppContext();
+    
     const features = [
         {
             icon: BuildingStorefrontIcon,
@@ -90,10 +91,15 @@ const LandingPage: React.FC = () => {
     ];
 
     return (
-        <div className="bg-background w-full h-full overflow-y-auto text-foreground">
+        <div className="bg-background w-full h-full overflow-y-auto text-foreground relative">
+             <div className="absolute top-8 right-8 z-10">
+                <Button onClick={onToggleTheme} variant="outline" size="icon" className="rounded-full w-12 h-12 shadow-md" title="Toggle Theme">
+                    {theme === 'light' ? <MoonIcon className="w-6 h-6" /> : <SunIcon className="w-6 h-6" />}
+                </Button>
+            </div>
             <div className="container mx-auto px-4 py-16">
                 <header className="text-center mb-16">
-                    <img src={largeLogoDataUri} alt="ordino Pos" className="h-20 w-auto mx-auto mb-4" />
+                    <img src={settings.receipt.logoUrl} alt="ordino Pos" className="h-20 w-auto mx-auto mb-4" />
                     <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-foreground">The All-in-One Solution for Your Business</h1>
                     <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
                         Streamline operations with our intuitive Point of Sale, Kitchen Display, Delivery Management, and more.

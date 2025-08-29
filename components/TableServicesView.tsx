@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Reservation, Customer, ReservationStatus, WaitlistEntry, WaitlistStatus, Table, ReservationSystem } from '../types';
 import TableCard from './TableCard';
 import ReservationsView from './ReservationsView';
@@ -10,7 +10,7 @@ import { useAppContext, useDataContext, usePOSContext } from '../contexts/AppCon
 type TableViewTab = 'floor' | 'reservations' | 'waitlist';
 
 const TableServicesView: React.FC = () => {
-    const { settings, isReservationPluginActive, isWaitlistPluginActive, isQRCodePluginActive, setView } = useAppContext();
+    const { settings, isReservationPluginActive, isWaitlistPluginActive, isQRCodePluginActive, setView, handleTransferTable } = useAppContext();
     const { 
         tables, floors, reservations, customers, waitlist, 
         onEditTable, onAddFloor, onRenameFloor, onDeleteFloor, 
@@ -21,9 +21,13 @@ const TableServicesView: React.FC = () => {
     const { setCurrentTable: onSelectTableContext } = usePOSContext();
 
 
-    const [activeTab, setActiveTab] = useState<TableViewTab>('floor');
+    const [activeTab, setActiveTab] = useState<TableViewTab>('waitlist');
     const [activeFloor, setActiveFloor] = useState((floors && floors.length > 0) ? floors[0] : 'Main Floor');
     const [isEditMode, setIsEditMode] = useState(false);
+    
+    const [draggedTableId, setDraggedTableId] = useState<string | null>(null);
+    const [dragOverTableId, setDragOverTableId] = useState<string | null>(null);
+
 
     useEffect(() => {
         if (floors && floors.length > 0) {
@@ -48,6 +52,43 @@ const TableServicesView: React.FC = () => {
             setView('pos');
         }
     };
+
+    // Drag and Drop Handlers
+    const handleDragStart = useCallback((e: React.DragEvent, table: Table) => {
+        setDraggedTableId(table.id);
+        e.dataTransfer.setData('text/plain', table.id);
+        e.dataTransfer.effectAllowed = 'move';
+    }, []);
+
+    const handleDragOver = useCallback((e: React.DragEvent, table: Table) => {
+        e.preventDefault();
+        if (table.status === 'available' && table.id !== draggedTableId) {
+            setDragOverTableId(table.id);
+            e.dataTransfer.dropEffect = 'move';
+        } else {
+             e.dataTransfer.dropEffect = 'none';
+        }
+    }, [draggedTableId]);
+
+    const handleDragLeave = useCallback(() => {
+        setDragOverTableId(null);
+    }, []);
+
+    const handleDrop = useCallback((e: React.DragEvent, targetTable: Table) => {
+        e.preventDefault();
+        const sourceTableId = e.dataTransfer.getData('text/plain');
+        if (sourceTableId && sourceTableId !== targetTable.id && targetTable.status === 'available') {
+            handleTransferTable(sourceTableId, targetTable.id);
+        }
+        setDraggedTableId(null);
+        setDragOverTableId(null);
+    }, [handleTransferTable]);
+
+    const handleDragEnd = useCallback(() => {
+        setDraggedTableId(null);
+        setDragOverTableId(null);
+    }, []);
+
 
     const renderFloorPlan = () => (
         <div className="p-6 h-full flex flex-col">
@@ -82,6 +123,13 @@ const TableServicesView: React.FC = () => {
                         isEditMode={isEditMode}
                         isQRCodePluginActive={isQRCodePluginActive}
                         onGenerateQRCode={onGenerateQRCode}
+                        isDragging={draggedTableId === table.id}
+                        isDragOver={dragOverTableId === table.id}
+                        onDragStart={(e) => handleDragStart(e, table)}
+                        onDragOver={(e) => handleDragOver(e, table)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, table)}
+                        onDragEnd={handleDragEnd}
                     />
                 ))}
             </div>

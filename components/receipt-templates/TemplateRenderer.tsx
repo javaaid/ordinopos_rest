@@ -1,9 +1,8 @@
 
 
 import React from 'react';
-import { Order, Location, AppSettings, CartItem } from '../../types';
+import { Order, Location, AppSettings, CartItem, Employee } from '../../types';
 import { getPriceForItem, generateZatcaQRCode } from '../../utils/calculations';
-import { useDataContext } from '../../contexts/AppContext';
 import QRCode from 'react-qr-code';
 
 interface TemplateProps {
@@ -11,6 +10,7 @@ interface TemplateProps {
     order: Order;
     location: Location;
     settings: AppSettings;
+    employees: Employee[];
 }
 
 const BilingualText: React.FC<{ en: string; ar: string; className?: string }> = ({ en, ar, className }) => (
@@ -27,9 +27,8 @@ const seededRandom = (seed: number) => {
 };
 
 // --- Standard Template ---
-const StandardTemplate: React.FC<TemplateProps> = ({ format, order, location, settings }) => {
-    const { employees } = useDataContext();
-    const employeeName = employees.find((e: any) => e.id === order.employeeId)?.name?.split(' ')[0] || 'Admin';
+const StandardTemplate: React.FC<TemplateProps> = ({ format, order, location, settings, employees }) => {
+    const employeeName = (employees || []).find((e: any) => e.id === order.employeeId)?.name?.split(' ')[0] || 'Admin';
     const { currency } = location;
     const line = '-'.repeat(42);
     
@@ -71,7 +70,7 @@ const StandardTemplate: React.FC<TemplateProps> = ({ format, order, location, se
             <p className="whitespace-pre">{line}</p>
             <div className="text-xs space-y-0.5">
                 <div className="flex justify-between"><span>Subtotal:</span><span>{currency}{order.subtotal.toFixed(2)}</span></div>
-                {settings.advancedPOS.showTaxOnReceipt && order.taxDetails ? (
+                {settings.advancedPOS?.showTaxOnReceipt && order.taxDetails ? (
                     Object.entries(order.taxDetails).map(([name, value]) => (
                         <div key={name} className="flex justify-between">
                             <span>{name}</span>

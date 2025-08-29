@@ -3,30 +3,27 @@ import { Employee, Role, Location } from '../types';
 import UserPlusIcon from './icons/UserPlusIcon';
 import PencilSquareIcon from './icons/PencilSquareIcon';
 import TrashIcon from './icons/TrashIcon';
-import { useDataContext, useModalContext } from '../contexts/AppContext';
+import { useDataContext, useModalContext, useToastContext } from '../contexts/AppContext';
 import ExportButtons from './ExportButtons';
+import { exportToCsv } from '../lib/utils';
 
 const UserManagementView: React.FC = () => {
     const { employees, roles, locations, handleDeleteUser, handleSaveUser, onSuggestRole } = useDataContext();
     const { openModal } = useModalContext();
+    const { addToast } = useToastContext();
 
     const onAddNewUser = () => openModal('userEdit', { onSave: handleSaveUser, onSuggestRole });
     const onEditUser = (user: Employee) => openModal('userEdit', { user, onSave: handleSaveUser, onSuggestRole });
 
-    const handleCsvExport = () => {
+    const handleCsvExport = (filename: string = 'users.csv') => {
         const headers = ["ID", "Name", "Role", "Location"];
-        const rows = employees.map((user: Employee) => {
-            const role = roles.find((r: Role) => r.id === user.roleId)?.name || 'N/A';
-            const location = locations.find((l: Location) => l.id === user.locationId)?.name || 'N/A';
-            return [user.id, `"${user.name}"`, role, location].join(',');
+        const rows = (employees || []).map((user: Employee) => {
+            const role = (roles || []).find((r: Role) => r.id === user.roleId)?.name || 'N/A';
+            const location = (locations || []).find((l: Location) => l.id === user.locationId)?.name || 'N/A';
+            return [user.id, user.name, role, location];
         });
-        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
-        const link = document.createElement("a");
-        link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", "users.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        exportToCsv(headers, rows, filename);
+        addToast({ type: 'success', title: 'Export Successful', message: `Exported ${rows.length} users.` });
     };
 
     const handlePrint = () => window.print();

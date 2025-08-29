@@ -1,26 +1,23 @@
-
-
 import React, { useState, useEffect, useMemo } from 'react';
-import { SignageContentItem, MenuItem } from '../types';
+import { SignageContentItem, MenuItem, AppSettings } from '../types';
 import VideoCameraIcon from './icons/VideoCameraIcon';
 
 interface CFDAttractScreenProps {
     contentItems: (SignageContentItem | undefined)[];
     menuItems: MenuItem[];
+    settings: AppSettings | null;
 }
 
-const CFDAttractScreen: React.FC<CFDAttractScreenProps> = ({ contentItems, menuItems }) => {
+const CFDAttractScreen: React.FC<CFDAttractScreenProps> = ({ contentItems, menuItems, settings }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const validContentItems = useMemo(() => (contentItems || []).filter(Boolean) as SignageContentItem[], [contentItems]);
     const itemsSignature = useMemo(() => JSON.stringify(validContentItems.map(i => i.id)), [validContentItems]);
 
-    // Reset index if the content list itself changes
     useEffect(() => {
         setCurrentIndex(0);
     }, [itemsSignature]);
 
-    // Manages the timer to cycle to the next item
     useEffect(() => {
         if (validContentItems.length === 0) {
             return;
@@ -41,7 +38,13 @@ const CFDAttractScreen: React.FC<CFDAttractScreenProps> = ({ contentItems, menuI
 
 
     if (validContentItems.length === 0) {
-        return <div className="w-full h-full flex items-center justify-center bg-background text-foreground text-4xl">Welcome!</div>
+        return (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-background text-foreground">
+                {settings?.receipt.logoUrl && <img src={settings.receipt.logoUrl} alt="Logo" className="h-48 w-auto mb-8" />}
+                <h1 className="text-7xl font-bold">Welcome!</h1>
+                <p className="text-3xl text-muted-foreground mt-6">Fast • Reliable • Smart POS</p>
+            </div>
+        );
     }
 
     const currentItem = validContentItems[currentIndex % validContentItems.length];

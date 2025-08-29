@@ -1,3 +1,5 @@
+
+
 import { CartItem, Location, AppliedDiscount, Promotion, MenuItem, OrderType, AppSettings, RecipeItem, Ingredient, Customer, Surcharge } from '../types';
 
 export const getPriceForItem = (item: MenuItem, orderType: OrderType, customer?: Customer | null): number => {
@@ -31,35 +33,51 @@ export const calculateOrderTotals = (
     const safeCart = cart || [];
     let subtotal = 0;
     const taxDetails: Record<string, number> = {};
+    let totalIndividualDiscountAmount = 0;
 
+    // First pass: Calculate subtotal and individual item discounts
     safeCart.forEach(item => {
         const modifiersTotal = item.selectedModifiers.reduce((acc, mod) => acc + mod.price, 0);
         const itemBasePrice = item.priceOverride ?? getPriceForItem(item.menuItem, orderType, customer);
         const singleItemPrice = itemBasePrice + modifiersTotal;
         const lineItemTotal = singleItemPrice * item.quantity;
+        
         subtotal += lineItemTotal;
+
+        if (item.appliedManualDiscount) {
+            totalIndividualDiscountAmount += lineItemTotal * item.appliedManualDiscount.percentage;
+        }
     });
-    
-    let promoDiscountAmount = 0;
+
+    // Second pass: Calculate order-level discount on eligible items
+    let orderLevelDiscountAmount = 0;
     let finalAppliedDiscount: AppliedDiscount | null = null;
+    
+    const itemsEligibleForOrderDiscount = safeCart.filter(item => !item.appliedManualDiscount && item.menuItem.isDiscountable !== false);
+    
+    const subtotalForOrderDiscount = itemsEligibleForOrderDiscount.reduce((sum, item) => {
+        const modifiersTotal = item.selectedModifiers.reduce((acc, mod) => acc + mod.price, 0);
+        const itemBasePrice = item.priceOverride ?? getPriceForItem(item.menuItem, orderType, customer);
+        return sum + (itemBasePrice + modifiersTotal) * item.quantity;
+    }, 0);
 
     if (appliedDiscount) {
-        promoDiscountAmount = appliedDiscount.amount;
+        orderLevelDiscountAmount = appliedDiscount.amount;
         finalAppliedDiscount = { ...appliedDiscount };
     } else if (promotion) {
         let promotionDiscount = 0;
-        const applicableItems = safeCart.filter(item => 
-            item.menuItem.isDiscountable !== false &&
+        const applicableItems = itemsEligibleForOrderDiscount.filter(item => 
             (promotion.applicableCategoryIds.length === 0 || promotion.applicableCategoryIds.includes(item.menuItem.category)) &&
             (promotion.applicableProductIds.length === 0 || promotion.applicableProductIds.includes(item.menuItem.id))
         );
         
+        const applicableSubtotal = applicableItems.reduce((sum, item) => {
+            const modifiersTotal = item.selectedModifiers.reduce((acc, mod) => acc + mod.price, 0);
+            const itemBasePrice = item.priceOverride ?? getPriceForItem(item.menuItem, orderType, customer);
+            return sum + (itemBasePrice + modifiersTotal) * item.quantity;
+        }, 0);
+
         if (promotion.type === 'percentage') {
-             const applicableSubtotal = applicableItems.reduce((sum, item) => {
-                const itemBasePrice = item.priceOverride ?? getPriceForItem(item.menuItem, orderType, customer);
-                const modifiersTotal = item.selectedModifiers.reduce((acc, mod) => acc + mod.price, 0);
-                return sum + (itemBasePrice + modifiersTotal) * item.quantity;
-            }, 0);
             promotionDiscount = applicableSubtotal * promotion.value;
         } else if (promotion.type === 'fixed') {
             promotionDiscount = promotion.value;
@@ -67,54 +85,52 @@ export const calculateOrderTotals = (
             const sortedApplicableItems = applicableItems
                 .flatMap(item => Array(item.quantity).fill(item.menuItem))
                 .sort((a, b) => getPriceForItem(a, orderType, customer) - getPriceForItem(b, orderType, customer));
-
             const pairs = Math.floor(sortedApplicableItems.length / 2);
             for (let i = 0; i < pairs; i++) {
                 promotionDiscount += getPriceForItem(sortedApplicableItems[i], orderType, customer);
             }
         }
         
-        promoDiscountAmount = promotionDiscount;
+        orderLevelDiscountAmount = promotionDiscount;
         finalAppliedDiscount = { name: promotion.name, amount: promotionDiscount };
     }
     
-    const discountableSubtotal = safeCart.reduce((sum, item) => {
-        if (item.menuItem.isDiscountable === false) {
-            return sum;
-        }
-        const modifiersTotal = item.selectedModifiers.reduce((acc, mod) => acc + mod.price, 0);
-        const itemBasePrice = item.priceOverride ?? getPriceForItem(item.menuItem, orderType, customer);
-        const singleItemPrice = itemBasePrice + modifiersTotal;
-        return sum + (singleItemPrice * item.quantity);
-    }, 0);
-    
-    promoDiscountAmount = Math.max(0, Math.min(discountableSubtotal, promoDiscountAmount));
+    orderLevelDiscountAmount = Math.max(0, Math.min(subtotalForOrderDiscount, orderLevelDiscountAmount));
     if (finalAppliedDiscount) {
-        finalAppliedDiscount.amount = promoDiscountAmount;
+        finalAppliedDiscount.amount = orderLevelDiscountAmount;
     }
+
+    const totalDiscountAmount = totalIndividualDiscountAmount + orderLevelDiscountAmount;
 
     let loyaltyDiscountAmount = 0;
     if (settings && settings.loyalty.enabled && appliedLoyaltyPoints > 0) {
         const potentialDiscount = appliedLoyaltyPoints / settings.loyalty.redemptionRate;
-        loyaltyDiscountAmount = Math.min(subtotal - promoDiscountAmount, potentialDiscount);
+        loyaltyDiscountAmount = Math.min(subtotal - totalDiscountAmount, potentialDiscount);
     }
     
-    const totalDiscountAmount = promoDiscountAmount + loyaltyDiscountAmount;
-    const discountedSubtotal = subtotal - totalDiscountAmount;
+    const finalTotalDiscount = totalDiscountAmount + loyaltyDiscountAmount;
 
+    // Third pass: Calculate taxes based on the final price of each item
     safeCart.forEach(item => {
         const modifiersTotal = item.selectedModifiers.reduce((acc, mod) => acc + mod.price, 0);
         const itemBasePrice = item.priceOverride ?? getPriceForItem(item.menuItem, orderType, customer);
-        const singleItemPrice = itemBasePrice + modifiersTotal;
-        const lineItemTotal = singleItemPrice * item.quantity;
+        const lineItemTotal = (itemBasePrice + modifiersTotal) * item.quantity;
         
-        const itemIsDiscountable = item.menuItem.isDiscountable !== false;
-        const itemDiscount = (itemIsDiscountable && subtotal > 0) ? (lineItemTotal / subtotal) * totalDiscountAmount : 0;
-        const taxableAmount = lineItemTotal - itemDiscount;
+        let itemDiscountProportion = 0;
+        if (item.appliedManualDiscount) {
+            itemDiscountProportion = lineItemTotal * item.appliedManualDiscount.percentage;
+        } else if (item.menuItem.isDiscountable !== false && subtotalForOrderDiscount > 0) {
+            itemDiscountProportion = (lineItemTotal / subtotalForOrderDiscount) * orderLevelDiscountAmount;
+        }
+
+        if (subtotal > 0) {
+           itemDiscountProportion += (lineItemTotal / subtotal) * loyaltyDiscountAmount;
+        }
+
+        const taxableAmount = lineItemTotal - itemDiscountProportion;
         
         const taxCategory = item.menuItem.taxCategory || 'Standard';
         const taxRate = location.taxRates[taxCategory] || 0;
-
         if (taxRate > 0) {
             const taxName = `${taxCategory} Tax (${(taxRate * 100).toFixed(0)}%)`;
             const itemTax = taxableAmount * taxRate;
@@ -122,9 +138,10 @@ export const calculateOrderTotals = (
         }
     });
 
+    const discountedSubtotal = subtotal - finalTotalDiscount;
+    
     let surchargeAmount = 0;
     let surchargeDetails: { name: string, amount: number } | null = null;
-
     if (settings) {
         if (orderType === 'dine-in' && settings.dineIn.surcharge.enabled) {
             const { name, type, value } = settings.dineIn.surcharge;
@@ -133,7 +150,7 @@ export const calculateOrderTotals = (
         } else if (orderType === 'delivery' && settings.delivery.surcharge.enabled && settings.delivery.surcharge.surchargeId) {
             const surcharge = surcharges.find(s => s.id === settings.delivery.surcharge.surchargeId);
             if (surcharge) {
-                surchargeAmount = surcharge.type === 'percentage' ? discountedSubtotal * surcharge.value : surcharge.value;
+                surchargeAmount = surcharge.type === 'percentage' ? discountedSubtotal * (surcharge.value / 100) : surcharge.value;
                 surchargeDetails = { name: surcharge.name, amount: surchargeAmount };
             }
         }
@@ -148,7 +165,7 @@ export const calculateOrderTotals = (
 
     return {
         subtotal,
-        discountAmount: promoDiscountAmount,
+        discountAmount: totalDiscountAmount,
         loyaltyDiscountAmount,
         tax: totalTax,
         taxDetails,

@@ -1,5 +1,7 @@
+
+
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
-import { useDataContext, useModalContext } from '../contexts/AppContext';
+import { useDataContext, useModalContext, useToastContext } from '../contexts/AppContext';
 import { KitchenNote } from '../types';
 import PlusIcon from './icons/PlusIcon';
 import PencilSquareIcon from './icons/PencilSquareIcon';
@@ -9,10 +11,12 @@ import { cn } from '../lib/utils';
 import ArrowsPointingOutIcon from './icons/ArrowsPointingOutIcon';
 import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
 import ExportButtons from './ExportButtons';
+import { exportToCsv } from '../lib/utils';
 
 const KitchenNoteManagementTab: React.FC = () => {
     const { kitchenNotes, handleSaveKitchenNote, handleDeleteKitchenNote } = useDataContext();
     const { openModal, closeModal } = useModalContext();
+    const { addToast } = useToastContext();
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [columnWidths, setColumnWidths] = useState([600, 120]);
     const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -47,16 +51,11 @@ const KitchenNoteManagementTab: React.FC = () => {
         handleSaveKitchenNote({ ...note, id: `kn_${Date.now()}`, note: `${note.note} (Copy)` });
     };
 
-     const handleCsvExport = () => {
+     const handleCsvExport = (filename: string = 'kitchen_notes.csv') => {
         const headers = ["ID", "Note"];
-        const rows = (kitchenNotes || []).map((n: KitchenNote) => [n.id, `"${n.note}"`].join(','));
-        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
-        const link = document.createElement("a");
-        link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", "kitchen_notes.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const rows = (kitchenNotes || []).map((n: KitchenNote) => [n.id, n.note]);
+        exportToCsv(headers, rows, filename);
+        addToast({ type: 'success', title: 'Export Successful', message: `Exported ${rows.length} kitchen notes.` });
     };
 
     const handlePrint = () => window.print();

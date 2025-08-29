@@ -45,3 +45,56 @@ export function hexToHsl(hex: string): string {
     
     return `${h} ${s}% ${l}%`;
 }
+
+function escapeCsvCell(cell: any): string {
+  if (cell === undefined || cell === null) {
+    return '';
+  }
+  const str = String(cell);
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+function arrayToCsv(headers: string[], rows: (string|number|boolean|undefined|null)[][]): string {
+  const headerRow = headers.map(escapeCsvCell).join(',');
+  const contentRows = rows.map(row => row.map(escapeCsvCell).join(','));
+  return [headerRow, ...contentRows].join('\n');
+}
+
+function downloadFile(content: string, filename: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+export function exportToCsv(headers: string[], rows: (string|number|boolean|undefined|null)[][], filename: string) {
+  const csvContent = arrayToCsv(headers, rows);
+  downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
+}
+
+export function getErrorMessage(error: any): string {
+    if (error && typeof error.message === 'string' && error.message) {
+        return error.message;
+    }
+    if (typeof error === 'string' && error) {
+        return error;
+    }
+    if (error && typeof error.error === 'string' && error.error) {
+        return error.error;
+    }
+    try {
+        const stringified = JSON.stringify(error);
+        if (stringified !== '{}') {
+            return stringified;
+        }
+    } catch (e) {
+        // Can't stringify, maybe circular
+    }
+    return 'An unexpected error occurred. Check the browser developer console for details.';
+};

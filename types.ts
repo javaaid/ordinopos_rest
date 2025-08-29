@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 
 export interface HeldOrder {
@@ -243,6 +241,7 @@ export interface CartItem {
   kitchenNote?: string;
   pizzaConfiguration?: PizzaConfiguration;
   burgerConfiguration?: BurgerConfiguration;
+  appliedManualDiscount?: ManualDiscount | null;
 }
 
 export interface Customer {
@@ -254,6 +253,7 @@ export interface Customer {
   locationId: string;
   loyaltyPoints?: number;
   membershipTier?: 1 | 2 | 3;
+  membershipId?: string;
   zipCode?: string;
   country?: string;
   allergies?: string;
@@ -535,6 +535,7 @@ export interface Notification {
   message: string;
   timestamp: number;
   read: boolean;
+  type: 'success' | 'error' | 'info';
 }
 export interface ToastNotification {
   id: number;
@@ -734,6 +735,7 @@ export interface Order {
   refundedAmount?: number;
   preparedCartItemIds?: string[];
   estimatedWaitTime?: string;
+  estimatedPrepTimeMinutes?: number;
   originalOrderIds?: string[]; // For merged table bills
   lateFee?: number;
 }
@@ -954,6 +956,9 @@ export interface AdvancedPOSSettings {
     dateFormat: string;
     lockTillToLocation: boolean;
     enableTimeClock: boolean;
+    defaultPrepTimeMinutes: number;
+    sendLowStockEmails: boolean;
+    lowStockEmailRecipients: string;
 }
 export interface POSPreferences {
     actionAfterSendOrder: 'order' | 'tables' | 'login';

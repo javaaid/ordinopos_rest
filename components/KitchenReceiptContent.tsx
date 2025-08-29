@@ -1,20 +1,21 @@
+
+
 import React, { useMemo } from 'react';
-import { Order, KitchenPrintSettings, Table } from '../types';
-import { useDataContext } from '../contexts/AppContext';
+import { Order, KitchenPrintSettings, Table, Employee } from '../types';
 
-// Seedable random number generator for consistent barcodes
-const seededRandom = (seed: number) => {
-    let x = Math.sin(seed) * 10000;
-    return x - Math.floor(x);
-};
-
-export const KitchenReceiptContent: React.FC<{ order: Partial<Order>; isPrintable: boolean; settings: KitchenPrintSettings; profileName: string; }> = ({ order, isPrintable, settings, profileName }) => {
-    const { tables, employees } = useDataContext();
-    const table = order.tableId ? tables.find((t: Table) => t.id === order.tableId) : null;
+export const KitchenReceiptContent: React.FC<{
+    order: Partial<Order>;
+    isPrintable: boolean;
+    settings: KitchenPrintSettings;
+    profileName: string;
+    tables: Table[];
+    employees: Employee[];
+}> = ({ order, isPrintable, settings, profileName, tables, employees }) => {
+    const table = order.tableId ? (tables || []).find((t: Table) => t.id === order.tableId) : null;
     
     const employeeName = useMemo(() => {
         if (!order.employeeId) return 'SYSTEM';
-        const employee = employees.find((e: any) => e.id === order.employeeId);
+        const employee = (employees || []).find((e: any) => e.id === order.employeeId);
         return employee?.name?.split(' ')[0] || 'N/A';
     }, [order.employeeId, employees]);
 
@@ -22,6 +23,11 @@ export const KitchenReceiptContent: React.FC<{ order: Partial<Order>; isPrintabl
         if (!order.invoiceNumber) return 0;
         return order.invoiceNumber.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     }, [order.invoiceNumber]);
+
+    const seededRandom = (seed: number) => {
+        let x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
+    };
 
     return (
         <div className={`font-mono text-sm ${isPrintable ? 'bg-white text-black p-2' : 'bg-white p-4 rounded-md overflow-y-auto max-h-64 text-black text-xs'}`}>

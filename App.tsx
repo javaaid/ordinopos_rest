@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import MenuGrid from './components/MenuGrid';
 import OrderSummary from './components/OrderSummary';
@@ -10,6 +9,7 @@ import PermissionDenied from './components/PermissionDenied';
 import CFDView from './components/CFDView';
 import KIOSKView from './components/KIOSKView';
 import { LoginPage } from './components/LoginPage';
+import LandingPage from './components/LandingPage';
 import OrderHistoryView from './components/OrderHistoryView';
 import ToastContainer from './components/ToastContainer';
 import PurchaseOrdersView from './components/PurchaseOrdersView';
@@ -66,7 +66,6 @@ import ProductsView from './components/ProductsView';
 import OrderNumberDisplayView from './components/OrderNumberDisplayView';
 import PizzaBuilderSettingsView from './components/PizzaBuilderSettingsView';
 import BurgerBuilderSettingsView from './components/BurgerBuilderSettingsView';
-import LandingPage from './components/LandingPage';
 import CallLogView from './components/CallLogView';
 import ChatBubbleOvalLeftEllipsisIcon from './components/icons/ChatBubbleOvalLeftEllipsisIcon';
 import PrintQueueMonitor from './components/PrintQueueMonitor';
@@ -80,11 +79,10 @@ import FontSettingsView from './components/FontSettingsView';
 const App: React.FC = () => {
   const { 
     activeView, setView, managementSubView, setManagementSubView, settingsSubView, setSettingsSubView,
-    currentEmployee, settings,
+    currentEmployee, settings, theme,
     isMultiStorePluginActive, isKsaPluginActive,
     isReservationPluginActive, isWaitlistPluginActive, isOrderNumberDisplayPluginActive,
-    isSidebarHidden, onToggleSidebar,
-    roles, orders, locations, categories, handleSaveCategory, handleDeleteCategory, onRequestRefund, onApproveRefund, onDenyRefund,
+    roles, orders, locations, categories, categoriesWithCounts, handleSaveCategory, handleDeleteCategory, onRequestRefund, onApproveRefund, onDenyRefund,
     toasts, dismissToast,
     openModal, closeModal,
     setCurrentTable, onLoadOrder, onPrintA4
@@ -149,6 +147,14 @@ const App: React.FC = () => {
         window.removeEventListener('mouseup', handleAiFabMouseUp);
     };
   }, [handleAiFabMouseMove, handleAiFabMouseUp]);
+  
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
   
   if (!settings) {
     return null; // or a loading spinner
@@ -259,16 +265,21 @@ const App: React.FC = () => {
     });
   };
   
-  const publicViews: View[] = ['kds', 'cfd', 'kiosk', 'qr_ordering', 'order_number_display', 'landing'];
+  const publicViews: View[] = ['kds', 'cfd', 'kiosk', 'qr_ordering', 'order_number_display'];
 
-  if (!currentEmployee && !publicViews.includes(activeView)) {
+  // FIX: Differentiate between the initial landing page and the login page for protected views.
+  if (!currentEmployee) {
+    if (activeView === 'landing') {
+      return <LandingPage />;
+    }
+    if (!publicViews.includes(activeView)) {
       return <LoginPage settings={settings} />;
+    }
   }
 
   const renderActiveView = () => {
     if (publicViews.includes(activeView)) {
         switch(activeView) {
-            case 'landing': return <LandingPage />;
             case 'kds': return <KDSView />;
             case 'cfd': return <CFDView />;
             case 'kiosk': return <KIOSKView />;
@@ -302,7 +313,7 @@ const App: React.FC = () => {
           case 'take_away_settings': return permissions.canPerformManagerFunctions ? <TakeAwaySettingsView /> : <PermissionDenied />;
           case 'tab_settings': return permissions.canPerformManagerFunctions ? <TabSettingsView /> : <PermissionDenied />;
           case 'menu_products': return canManageMenu ? <ProductsView /> : <PermissionDenied />;
-          case 'menu_categories': return canManageMenu ? <div className="p-6 h-full"><CategoryManagementTab categories={categories} onAddNew={handleAddNewCategory} onEdit={handleEditCategory} onDelete={handleDeleteCategory} /></div> : <PermissionDenied />;
+          case 'menu_categories': return canManageMenu ? <div className="p-6 h-full"><CategoryManagementTab categories={categoriesWithCounts} onAddNew={handleAddNewCategory} onEdit={handleEditCategory} onDelete={handleDeleteCategory} /></div> : <PermissionDenied />;
           case 'menu_modifiers': return canManageMenu ? <div className="h-full"><ModifierManagementTab /></div> : <PermissionDenied />;
           case 'menu_promotions': return canManageMenu ? <PromotionsView /> : <PermissionDenied />;
           case 'menu_pizza_builder': return canManageMenu ? <PizzaBuilderSettingsView /> : <PermissionDenied />;
@@ -401,22 +412,12 @@ const App: React.FC = () => {
 
   return (
       <div className="flex bg-background text-foreground">
-          {showSidebar && !isSidebarHidden && (
+          {showSidebar && (
             <aside className="sticky top-0 h-screen">
               <MainSidebar />
             </aside>
           )}
           <div className="flex-grow w-full min-w-0">
-              {showSidebar && isSidebarHidden && (
-                <button 
-                  onClick={onToggleSidebar} 
-                  className="fixed top-4 left-4 z-40 bg-card p-2 rounded-full border border-border shadow-md hover:bg-secondary transition-all focus:outline-none focus:ring-2 focus:ring-ring"
-                  title="Show sidebar"
-                  aria-label="Show sidebar"
-                >
-                  <ChevronDoubleRightIcon className="w-5 h-5 text-foreground" />
-                </button>
-              )}
               {renderActiveView()}
           </div>
           

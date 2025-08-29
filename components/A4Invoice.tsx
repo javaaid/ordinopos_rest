@@ -1,11 +1,14 @@
+
+
 import React from 'react';
-import { Order, Location, AppSettings } from '../types';
+import { Order, Location, AppSettings, Employee } from '../types';
 import InvoiceTemplateRenderer from './invoice-templates/InvoiceTemplateRenderer';
 
 interface A4InvoiceProps {
     order: Order;
     location: Location;
     settings: AppSettings;
+    employees: Employee[];
 }
 
 const A4Invoice: React.FC<A4InvoiceProps> = (props) => {

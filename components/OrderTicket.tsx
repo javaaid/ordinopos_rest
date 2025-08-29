@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Order, OrderType } from '../types';
 import CheckCircleIcon from './icons/CheckCircleIcon';
+import { cn } from '../lib/utils';
 
 interface OrderTicketProps {
   order: Order;
@@ -11,6 +12,7 @@ interface OrderTicketProps {
 
 const OrderTicket: React.FC<OrderTicketProps> = ({ order, onCompleteOrder, tableName, onTogglePrepared }) => {
   const [elapsedTime, setElapsedTime] = useState('');
+  const [isLate, setIsLate] = useState(false);
 
   useEffect(() => {
     const updateTimer = () => {
@@ -19,13 +21,18 @@ const OrderTicket: React.FC<OrderTicketProps> = ({ order, onCompleteOrder, table
       const minutes = Math.floor(diff / 60000);
       const seconds = Math.floor((diff % 60000) / 1000);
       setElapsedTime(`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+
+      if (order.estimatedPrepTimeMinutes) {
+          const elapsedMinutes = diff / 60000;
+          setIsLate(elapsedMinutes > order.estimatedPrepTimeMinutes);
+      }
     };
     
     updateTimer();
     const timerId = setInterval(updateTimer, 1000);
 
     return () => clearInterval(timerId);
-  }, [order.createdAt]);
+  }, [order.createdAt, order.estimatedPrepTimeMinutes]);
 
 
   const togglePrepared = (cartId: string) => {
@@ -63,7 +70,13 @@ const OrderTicket: React.FC<OrderTicketProps> = ({ order, onCompleteOrder, table
   const sourceColor = sourceTextColors[order.source];
 
   return (
-    <div className={`bg-card rounded-xl shadow-md p-4 flex flex-col h-full border-t-4 ${styles.border} ${order.isTraining ? 'border-dashed border-yellow-500' : ''}`}>
+    <div className={cn(
+        'bg-card rounded-xl shadow-md p-4 flex flex-col h-full transition-all',
+        isLate 
+            ? 'border-4 border-destructive animate-pulse' 
+            : `border-t-4 ${styles.border}`,
+        order.isTraining ? 'border-dashed !border-yellow-500 !border-4' : ''
+    )}>
       <header className="flex justify-between items-start pb-2 mb-2 border-b border-border">
         <div>
           <h2 className="text-xl font-bold text-foreground capitalize">
@@ -73,7 +86,12 @@ const OrderTicket: React.FC<OrderTicketProps> = ({ order, onCompleteOrder, table
         </div>
         <div className="text-right">
             <p className="text-2xl font-mono font-bold text-foreground">{order.orderNumber}</p>
-            <p className="text-lg font-mono text-muted-foreground">{elapsedTime}</p>
+            <p className={cn("text-lg font-mono", isLate ? 'text-destructive font-bold' : 'text-muted-foreground')}>{elapsedTime}</p>
+            {order.estimatedPrepTimeMinutes && (
+                <p className="text-xs text-muted-foreground mt-1">
+                    Est: {order.estimatedPrepTimeMinutes} min
+                </p>
+            )}
         </div>
       </header>
       <div className="flex-grow overflow-y-auto space-y-3 pr-2 -mr-2">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext, useToastContext } from '../contexts/AppContext';
 import { AppSettings, TabSettings } from '../types';
@@ -35,12 +36,18 @@ const TabSettingsView: React.FC = () => {
         </Card>
     );
     
-    const ToggleRow: React.FC<{ label: string; enabled: boolean; onToggle: () => void; }> = ({ label, enabled, onToggle }) => (
+    const ToggleRow: React.FC<{ label: string; enabled: boolean; onToggle?: () => void; }> = ({ label, enabled, onToggle }) => (
         <label className="flex items-center justify-between p-3 rounded-lg bg-background cursor-pointer border border-border">
             <span className="font-medium text-foreground">{label}</span>
             <button
                 type="button"
-                onClick={onToggle}
+                onClick={() => {
+                    if (typeof onToggle === 'function') {
+                        onToggle();
+                    } else {
+                        console.error(`onToggle prop is not a function for ToggleRow with label: "${label}"`);
+                    }
+                }}
                 className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${enabled ? 'bg-primary' : 'bg-muted'}`}
             >
                 <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`}/>

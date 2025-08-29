@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 import { Button } from './ui/Button';
 import ArrowDownTrayIcon from './icons/ArrowDownTrayIcon';
@@ -14,8 +16,6 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({ onCsvExport, onPrint }) =
 
   const handleExcelExport = () => {
     if (onCsvExport) {
-        // This is a common trick: export as CSV but with an .xls extension.
-        // Excel will open it and usually handle the formatting automatically.
         onCsvExport('export.xls');
     } else {
         addToast({
@@ -27,7 +27,7 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({ onCsvExport, onPrint }) =
   };
   
   const handlePdfExport = () => {
-      if(onPrint) {
+      if (onPrint) {
           addToast({type: 'info', title: 'Printing to PDF', message: 'Use your browser\'s print dialog to "Save as PDF".'});
           onPrint();
       } else {
@@ -38,11 +38,17 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({ onCsvExport, onPrint }) =
         });
       }
   };
+  
+  const handleCsvClick = () => {
+    if (onCsvExport) {
+      onCsvExport();
+    }
+  };
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {onCsvExport && (
-        <Button type="button" onClick={() => onCsvExport()} variant="outline" size="sm" className="flex items-center gap-1.5">
+        <Button type="button" onClick={handleCsvClick} variant="outline" size="sm" className="flex items-center gap-1.5">
           <ArrowDownTrayIcon className="w-4 h-4" /> CSV
         </Button>
       )}
