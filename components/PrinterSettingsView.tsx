@@ -378,8 +378,9 @@ const PrinterSettingsView: React.FC<PrinterSettingsViewProps> = ({ printer, onBa
                  <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">Content Options</label>
                     <div className="grid grid-cols-2 gap-2">
-                        {Object.keys(currentSettings).filter(k => k.startsWith('show')).map(key => (
-                           <Toggle key={key} label={key.replace('show', '').replace(/([A-Z])/g, ' $1').trim()} enabled={!!currentSettings[key as keyof typeof currentSettings]} onToggle={() => handleToggle(key as keyof typeof currentSettings)} />
+                        {/* FIX: Cast Object.keys result to an array of valid keys to satisfy TypeScript. */}
+                        {(Object.keys(currentSettings) as Array<keyof typeof currentSettings>).filter(k => k.startsWith('show')).map(key => (
+                           <Toggle key={key} label={key.replace('show', '').replace(/([A-Z])/g, ' $1').trim()} enabled={!!currentSettings[key]} onToggle={() => handleToggle(key)} />
                         ))}
                     </div>
                 </div>

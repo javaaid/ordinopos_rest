@@ -1,18 +1,23 @@
 
 
+
 import React from 'react';
 import { Button } from './ui/Button';
 import ArrowDownTrayIcon from './icons/ArrowDownTrayIcon';
 import PrinterIcon from './icons/PrinterIcon';
-import { useToastContext } from '../contexts/AppContext';
+import { useToastContext, useAppContext } from '../contexts/AppContext';
+import { useTranslations } from '../hooks/useTranslations';
 
 interface ExportButtonsProps {
   onCsvExport?: (filename?: string) => void;
   onPrint?: () => void;
 }
 
-const ExportButtons: React.FC<ExportButtonsProps> = ({ onCsvExport, onPrint }) => {
+// FIX: Changed to a named export to resolve module resolution errors.
+export const ExportButtons: React.FC<ExportButtonsProps> = ({ onCsvExport, onPrint }) => {
   const { addToast } = useToastContext();
+  const { settings } = useAppContext();
+  const t = useTranslations(settings.language.staff);
 
   const handleExcelExport = () => {
     if (onCsvExport) {
@@ -49,22 +54,20 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({ onCsvExport, onPrint }) =
     <div className="flex items-center gap-2 flex-wrap">
       {onCsvExport && (
         <Button type="button" onClick={handleCsvClick} variant="outline" size="sm" className="flex items-center gap-1.5">
-          <ArrowDownTrayIcon className="w-4 h-4" /> CSV
+          <ArrowDownTrayIcon className="w-4 h-4" /> {t('csv')}
         </Button>
       )}
       <Button type="button" onClick={handleExcelExport} variant="outline" size="sm" className="flex items-center gap-1.5">
-        <ArrowDownTrayIcon className="w-4 h-4" /> Excel
+        <ArrowDownTrayIcon className="w-4 h-4" /> {t('excel')}
       </Button>
       <Button type="button" onClick={handlePdfExport} variant="outline" size="sm" className="flex items-center gap-1.5">
-        <ArrowDownTrayIcon className="w-4 h-4" /> PDF
+        <ArrowDownTrayIcon className="w-4 h-4" /> {t('pdf')}
       </Button>
       {onPrint && (
-         <Button type="button" onClick={onPrint} variant="outline" size="sm" className="flex items-center gap-1.5">
-          <PrinterIcon className="w-4 h-4" /> Print
+        <Button type="button" onClick={onPrint} variant="outline" size="sm" className="flex items-center gap-1.5">
+          <PrinterIcon className="w-4 h-4" /> {t('print')}
         </Button>
       )}
     </div>
   );
 };
-
-export default ExportButtons;

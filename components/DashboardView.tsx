@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo, useCallback } from 'react';
 import { Order, Ingredient, View, ManagementSubView, SalesDashboardWidgetId, AppSettings } from '../types';
 import CurrencyDollarIcon from './icons/CurrencyDollarIcon';
@@ -13,6 +11,7 @@ import BuildingStorefrontIcon from './icons/BuildingStorefrontIcon';
 import { useAppContext, useDataContext, useModalContext } from '../contexts/AppContext';
 import { Button } from './ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card';
+import { useTranslations } from '../hooks/useTranslations';
 
 // #region Widget Components
 const StatCard: React.FC<{ icon: React.ReactNode, title: string, value: string, subtext?: string, color: string }> = ({ icon, title, value, subtext, color }) => (
@@ -29,6 +28,8 @@ const StatCard: React.FC<{ icon: React.ReactNode, title: string, value: string, 
 );
 
 const SalesChartWidget: React.FC<{ orders: Order[], currency: string }> = ({ orders, currency }) => {
+    const { settings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const chartData = useMemo(() => {
         const hours = Array.from({ length: 17 }, (_, i) => ({ label: `${i + 6}`, sales: 0 })); // 6am to 10pm
         orders.forEach(o => {
@@ -44,8 +45,8 @@ const SalesChartWidget: React.FC<{ orders: Order[], currency: string }> = ({ ord
     return (
         <Card className="h-full flex flex-col">
             <CardHeader>
-                <CardTitle>Today's Sales</CardTitle>
-                <CardDescription>Revenue by hour</CardDescription>
+                <CardTitle>{t('todaysSales')}</CardTitle>
+                <CardDescription>{t('revenueByHour')}</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow flex items-end justify-between gap-2">
                 {chartData.map((d, i) => (
@@ -64,6 +65,8 @@ const SalesChartWidget: React.FC<{ orders: Order[], currency: string }> = ({ ord
 };
 
 const TopProductsWidget: React.FC<{ orders: Order[], currency: string }> = ({ orders, currency }) => {
+     const { settings } = useAppContext();
+     const t = useTranslations(settings.language.staff);
      const topItems = useMemo(() => {
         const itemMap = new Map<string, { name: string, revenue: number }>();
         orders.forEach(order => {
@@ -79,7 +82,7 @@ const TopProductsWidget: React.FC<{ orders: Order[], currency: string }> = ({ or
     return (
         <Card className="h-full">
              <CardHeader>
-                <CardTitle>Top Selling Products</CardTitle>
+                <CardTitle>{t('topSellingProducts')}</CardTitle>
              </CardHeader>
              <CardContent>
                  {topItems.map(item => (
@@ -94,25 +97,28 @@ const TopProductsWidget: React.FC<{ orders: Order[], currency: string }> = ({ or
 };
 
 const QuickActionsWidget: React.FC = () => {
-    const { setView, setManagementSubView } = useAppContext();
+    const { setView, setManagementSubView, settings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     return (
         <Card className="h-full">
-            <CardHeader><CardTitle>Quick Actions</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{t('quickActions')}</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-                <Button onClick={() => setView('pos')} className="w-full justify-start text-base" variant="ghost"><BuildingStorefrontIcon className="w-5 h-5 mr-3 text-primary" /> New Sale</Button>
-                <Button onClick={() => setView('history')} className="w-full justify-start text-base" variant="ghost"><RectangleStackIcon className="w-5 h-5 mr-3 text-purple-500"/> Order History</Button>
-                <Button onClick={() => { setView('management'); setManagementSubView('reports') }} className="w-full justify-start text-base" variant="ghost"><ChartBarIcon className="w-5 h-5 mr-3 text-green-500"/> View Reports</Button>
+                <Button onClick={() => setView('pos')} className="w-full justify-start text-base" variant="ghost"><BuildingStorefrontIcon className="w-5 h-5 me-3 text-primary" /> {t('new_sale')}</Button>
+                <Button onClick={() => setView('history')} className="w-full justify-start text-base" variant="ghost"><RectangleStackIcon className="w-5 h-5 me-3 text-purple-500"/> {t('order_history')}</Button>
+                <Button onClick={() => { setView('management'); setManagementSubView('reports') }} className="w-full justify-start text-base" variant="ghost"><ChartBarIcon className="w-5 h-5 me-3 text-green-500"/> {t('view_reports')}</Button>
             </CardContent>
         </Card>
     )
 };
 
 const LowStockAlertsWidget: React.FC<{ ingredients: Ingredient[] }> = ({ ingredients }) => {
+    const { settings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const lowStockItems = useMemo(() => ingredients.filter(i => i.stock <= i.reorderThreshold).slice(0, 5), [ingredients]);
     return (
         <Card className="h-full">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2"><ExclamationTriangleIcon className="w-5 h-5 text-yellow-500" /> Low Stock Alerts</CardTitle>
+                <CardTitle className="flex items-center gap-2"><ExclamationTriangleIcon className="w-5 h-5 text-yellow-500" /> {t('lowStockAlerts')}</CardTitle>
             </CardHeader>
             <CardContent>
             {lowStockItems.length > 0 ? (
@@ -124,16 +130,18 @@ const LowStockAlertsWidget: React.FC<{ ingredients: Ingredient[] }> = ({ ingredi
                         </div>
                     ))}
                 </div>
-            ) : <p className="text-sm text-muted-foreground">All stock levels are healthy.</p>}
+            ) : <p className="text-sm text-muted-foreground">{t('allStockHealthy')}</p>}
             </CardContent>
         </Card>
     )
 };
 
 const RecentTransactionsWidget: React.FC<{ orders: Order[], currency: string }> = ({ orders, currency }) => {
+     const { settings } = useAppContext();
+     const t = useTranslations(settings.language.staff);
      return (
         <Card className="h-full">
-            <CardHeader><CardTitle>Recent Transactions</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{t('recentTransactions')}</CardTitle></CardHeader>
             <CardContent>
                  {orders.slice(0, 5).map(o => (
                     <div key={o.id} className="flex justify-between items-center text-sm py-2 border-b border-border last:border-b-0">
@@ -154,6 +162,7 @@ const DashboardView: React.FC = () => {
     const { settings, setSettings, setView, setManagementSubView } = useAppContext();
     const { openModal, closeModal } = useModalContext();
     const { orders: allOrders, ingredients } = useDataContext();
+    const t = useTranslations(settings.language.staff);
 
     const lowStockItemsCount = useMemo(() =>
         (ingredients || []).filter((i: Ingredient) => i.stock <= i.reorderThreshold).length
@@ -183,9 +192,9 @@ const DashboardView: React.FC = () => {
     const widgetComponents: Record<SalesDashboardWidgetId, React.ReactNode> = {
         stats: (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                 <StatCard icon={<CurrencyDollarIcon className="w-7 h-7"/>} title="Today's Revenue" value={`${currency}${todaysRevenue.toFixed(2)}`} color="#2563eb" />
-                <StatCard icon={<RectangleStackIcon className="w-7 h-7"/>} title="Today's Orders" value={todaysOrders.length.toString()} color="#16a34a"/>
-                <StatCard icon={<ChartBarIcon className="w-7 h-7"/>} title="Avg. Order Value" value={`${currency}${avgOrderValue.toFixed(2)}`} color="#9333ea"/>
+                 <StatCard icon={<CurrencyDollarIcon className="w-7 h-7"/>} title={t('todaysRevenue')} value={`${currency}${todaysRevenue.toFixed(2)}`} color="#2563eb" />
+                <StatCard icon={<RectangleStackIcon className="w-7 h-7"/>} title={t('todaysOrders')} value={todaysOrders.length.toString()} color="#16a34a"/>
+                <StatCard icon={<ChartBarIcon className="w-7 h-7"/>} title={t('avgOrderValue')} value={`${currency}${avgOrderValue.toFixed(2)}`} color="#9333ea"/>
             </div>
         ),
         chart: <SalesChartWidget orders={todaysOrders} currency={currency} />,
@@ -224,9 +233,9 @@ const DashboardView: React.FC = () => {
     return (
         <div className="bg-background text-foreground h-full flex flex-col">
             <header className="bg-card p-4 flex justify-between items-center border-b border-border shrink-0">
-                <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+                <h1 className="text-2xl font-bold text-foreground">{t('dashboard')}</h1>
                 <Button onClick={handleCustomize} variant="outline" size="sm" className="flex items-center gap-2">
-                    <Cog6ToothIcon className="w-5 h-5"/> Customize
+                    <Cog6ToothIcon className="w-5 h-5"/> {t('customize')}
                 </Button>
             </header>
             
@@ -235,17 +244,17 @@ const DashboardView: React.FC = () => {
                     <div className="bg-yellow-100 dark:bg-yellow-900/30 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-200 p-4 rounded-md mb-6 shadow-md" role="alert">
                         <div className="flex">
                             <div className="py-1">
-                                <ExclamationTriangleIcon className="h-6 w-6 text-yellow-500 mr-4" />
+                                <ExclamationTriangleIcon className="h-6 w-6 text-yellow-500 me-4" />
                             </div>
                             <div>
-                                <p className="font-bold">Low Stock Alert</p>
+                                <p className="font-bold">{t('lowStockAlerts')}</p>
                                 <p className="text-sm">
                                     {lowStockItemsCount} ingredient(s) are below their reorder threshold.
                                     <button 
                                         onClick={() => { setView('management'); setManagementSubView('reports'); }} 
-                                        className="ml-2 font-semibold underline hover:text-yellow-900 dark:hover:text-yellow-100"
+                                        className="ms-2 font-semibold underline hover:text-yellow-900 dark:hover:text-yellow-100"
                                     >
-                                        View Reports
+                                        {t('view_reports')}
                                     </button>
                                 </p>
                             </div>

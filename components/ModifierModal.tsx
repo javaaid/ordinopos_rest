@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { MenuItem, ModifierGroup, ModifierOption, Language } from '../types';
 import { useTranslations } from '../hooks/useTranslations';
@@ -72,11 +73,19 @@ const ModifierModal: React.FC<ModifierModalProps> = ({ isOpen, onClose, item, on
     });
   };
   
+  // FIX: Refactored to be more explicit for TypeScript, resolving potential overload resolution issues with `reduce` and `concat` on union types.
   const getFlatModifiers = (): ModifierOption[] => {
-    return Object.values(selectedModifiers).reduce<ModifierOption[]>((acc, val) => {
-        if (val) return acc.concat(val);
-        return acc;
-    }, []);
+    const modifiers: ModifierOption[] = [];
+    for (const val of Object.values(selectedModifiers)) {
+        if (val) {
+            if (Array.isArray(val)) {
+                modifiers.push(...val);
+            } else {
+                modifiers.push(val);
+            }
+        }
+    }
+    return modifiers;
   };
 
   const handleConfirm = () => {
@@ -93,7 +102,7 @@ const ModifierModal: React.FC<ModifierModalProps> = ({ isOpen, onClose, item, on
   const GroupTitle: React.FC<{group: ModifierGroup}> = ({group}) => (
     <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2 mb-3 flex items-center">
         {group.name}
-        {group.isRequired && <span className="ml-2 text-destructive text-xs font-bold">* REQUIRED</span>}
+        {group.isRequired && <span className="ms-2 text-destructive text-xs font-bold">* REQUIRED</span>}
     </h3>
   );
 
@@ -120,7 +129,7 @@ const ModifierModal: React.FC<ModifierModalProps> = ({ isOpen, onClose, item, on
                           : (selectedModifiers[group.name] as ModifierOption | null)?.name === option.name
                       }
                       onChange={() => group.allowMultiple ? handleMultiSelection(group.name, option) : handleSingleSelection(group.name, option)}
-                      className="h-5 w-5 mr-3 bg-background border-border text-primary focus:ring-primary"
+                      className="h-5 w-5 me-3 bg-background border-border text-primary focus:ring-primary"
                     />
                     <span className="text-foreground">{option.name}</span>
                   </div>

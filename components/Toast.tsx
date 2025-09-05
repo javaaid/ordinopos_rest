@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { ToastNotification } from '../types';
 import CheckCircleIcon from './icons/CheckCircleIcon';
@@ -39,7 +40,9 @@ const Toast: React.FC<ToastProps> = ({ notification, onDismiss, duration, theme 
     ? 'animate-toast-exit' 
     : 'animate-toast-enter';
 
-  const themeClasses = 'bg-popover/80 backdrop-blur-sm border border-border';
+  const themeClasses = theme === 'dark'
+    ? 'bg-card border border-border'
+    : 'bg-popover/80 backdrop-blur-sm border border-border';
 
   return (
     <div

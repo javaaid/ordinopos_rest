@@ -1,27 +1,51 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext, useModalContext, useDataContext } from '../contexts/AppContext';
-import { BurgerBuilderSettings, BurgerBun, BurgerPatty, BurgerCheese, BurgerToppingItem, BurgerSauce, BurgerExtras } from '../types';
+import { BurgerBuilderSettings, BurgerBun, BurgerPatty, BurgerCheese, BurgerToppingItem, BurgerSauce, BurgerExtras, TranslationKey } from '../types';
 import { Button } from './ui/Button';
 import PlusIcon from './icons/PlusIcon';
 import PencilSquareIcon from './icons/PencilSquareIcon';
 import TrashIcon from './icons/TrashIcon';
+import { useTranslations } from '../hooks/useTranslations';
+import { BURGER_OPTIONS } from '../constants';
 
 type BurgerOption = BurgerBun | BurgerPatty | BurgerCheese | BurgerToppingItem | BurgerSauce | BurgerExtras;
 type OptionType = 'buns' | 'patties' | 'cheeses' | 'toppings' | 'sauces' | 'extras';
 
 const BurgerBuilderSettingsView: React.FC = () => {
-    const { currentLocation } = useAppContext();
+    const { currentLocation, settings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const { handleSaveLocation } = useDataContext();
-    const { openModal, closeModal } = useModalContext();
-    const [localSettings, setLocalSettings] = useState<BurgerBuilderSettings>(currentLocation.burgerBuilder);
+    const { openModal, closeModal, addToast } = useModalContext();
+    const [localSettings, setLocalSettings] = useState<BurgerBuilderSettings>(() => {
+        const defaultOpts = BURGER_OPTIONS;
+        const savedOpts = currentLocation.burgerBuilder || {};
+        return {
+            buns: savedOpts.buns?.length ? savedOpts.buns : defaultOpts.buns,
+            patties: savedOpts.patties?.length ? savedOpts.patties : defaultOpts.patties,
+            cheeses: savedOpts.cheeses?.length ? savedOpts.cheeses : defaultOpts.cheeses,
+            toppings: savedOpts.toppings?.length ? savedOpts.toppings : defaultOpts.toppings,
+            sauces: savedOpts.sauces?.length ? savedOpts.sauces : defaultOpts.sauces,
+            extras: savedOpts.extras?.length ? savedOpts.extras : defaultOpts.extras,
+        };
+    });
 
     useEffect(() => {
-        setLocalSettings(currentLocation.burgerBuilder);
+        const defaultOpts = BURGER_OPTIONS;
+        const savedOpts = currentLocation.burgerBuilder || {};
+        setLocalSettings({
+            buns: savedOpts.buns?.length ? savedOpts.buns : defaultOpts.buns,
+            patties: savedOpts.patties?.length ? savedOpts.patties : defaultOpts.patties,
+            cheeses: savedOpts.cheeses?.length ? savedOpts.cheeses : defaultOpts.cheeses,
+            toppings: savedOpts.toppings?.length ? savedOpts.toppings : defaultOpts.toppings,
+            sauces: savedOpts.sauces?.length ? savedOpts.sauces : defaultOpts.sauces,
+            extras: savedOpts.extras?.length ? savedOpts.extras : defaultOpts.extras,
+        });
     }, [currentLocation]);
 
     const handleSave = () => {
         handleSaveLocation({ ...currentLocation, burgerBuilder: localSettings }, false);
-        alert('Burger Builder settings saved!');
+        addToast({ type: 'success', title: 'Settings Saved', message: 'Burger Builder settings have been updated.' });
     };
     
     // A generic handler for all option types
@@ -67,20 +91,20 @@ const BurgerBuilderSettingsView: React.FC = () => {
         }
     };
 
-    const renderSection = (title: string, type: OptionType, options: BurgerOption[]) => (
+    const renderSection = (titleKey: TranslationKey, type: OptionType, options: BurgerOption[]) => (
         <div className="bg-secondary p-4 rounded-lg">
             <div className="flex justify-between items-center mb-3">
-                <h4 className="font-bold text-foreground">{title}</h4>
+                <h4 className="font-bold text-foreground text-start rtl:text-end">{t(titleKey)}</h4>
                 <Button size="sm" onClick={() => handleAddOption(type)} className="flex items-center gap-1">
-                    <PlusIcon className="w-4 h-4" /> Add
+                    <PlusIcon className="w-4 h-4" /> {t('add')}
                 </Button>
             </div>
             <div className="space-y-2">
-                {options.map(option => (
-                    <div key={option.id} className="bg-background p-2 rounded-md flex justify-between items-center border border-border">
+                {(options || []).map(option => (
+                    <div key={option.id} className="bg-background p-2 rounded-md flex justify-between items-center border border-border text-start rtl:text-end">
                         <div>
                             <span className="font-medium text-foreground">{option.name}</span>
-                            <span className="text-sm text-muted-foreground ml-2">+${option.price.toFixed(2)}</span>
+                            <span className="text-sm text-muted-foreground ms-2">+${option.price.toFixed(2)}</span>
                         </div>
                         <div className="flex gap-2">
                             <button onClick={() => handleEditOption(type, option)} className="p-1 text-primary hover:opacity-80"><PencilSquareIcon className="w-4 h-4" /></button>
@@ -93,24 +117,26 @@ const BurgerBuilderSettingsView: React.FC = () => {
     );
 
     return (
-        <div className="p-6 h-full flex flex-col">
-            <h3 className="text-xl font-bold text-foreground">Burger Builder Settings</h3>
-            <p className="text-sm text-muted-foreground mb-6">Customize all available options for the "Build Your Own Burger" item for <span className="font-bold">{currentLocation.name}</span>.</p>
+        <div className="p-6 h-full flex flex-col text-start">
+            <h3 className="text-xl font-bold text-foreground rtl:text-end">{t('burgerBuilderSettings')}</h3>
+            <p className="text-sm text-muted-foreground mb-6 rtl:text-end">
+                {t('burgerBuilderSettingsDescription').replace('{locationName}', currentLocation.name)}
+            </p>
 
             <div className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto pr-2">
-                {renderSection('Buns', 'buns', localSettings.buns)}
-                {renderSection('Patties', 'patties', localSettings.patties)}
-                {renderSection('Cheeses', 'cheeses', localSettings.cheeses)}
-                {renderSection('Sauces', 'sauces', localSettings.sauces)}
-                {renderSection('Extras', 'extras', localSettings.extras)}
+                {renderSection('buns', 'buns', localSettings.buns)}
+                {renderSection('patties', 'patties', localSettings.patties)}
+                {renderSection('cheeses', 'cheeses', localSettings.cheeses)}
+                {renderSection('sauces', 'sauces', localSettings.sauces)}
+                {renderSection('extras', 'extras', localSettings.extras)}
                 <div className="lg:col-span-1">
-                    {renderSection('Toppings', 'toppings', localSettings.toppings)}
+                    {renderSection('toppings', 'toppings', localSettings.toppings)}
                 </div>
             </div>
             
-            <div className="mt-auto pt-6 text-right">
+            <div className="mt-auto pt-6 text-end">
                 <Button onClick={handleSave} size="lg">
-                    Save Burger Settings
+                    {t('saveBurgerSettings')}
                 </Button>
             </div>
         </div>

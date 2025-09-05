@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect } from 'react';
 import { ModifierGroup, ModifierOption } from '../types';
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/Modal';
@@ -26,7 +23,7 @@ const ModifierGroupEditModal: React.FC<ModifierGroupEditModalProps> = ({ isOpen,
     useEffect(() => {
         if (modifierGroup) {
             setName(modifierGroup.name);
-            setOptions(modifierGroup.options);
+            setOptions(modifierGroup.options.length > 0 ? modifierGroup.options : [{ name: '', price: 0 }]);
             setAllowMultiple(modifierGroup.allowMultiple);
             setIsRequired(modifierGroup.isRequired || false);
         } else {
@@ -58,7 +55,7 @@ const ModifierGroupEditModal: React.FC<ModifierGroupEditModalProps> = ({ isOpen,
         const newGroup: ModifierGroup = {
             id: modifierGroup?.id || `mg_${Date.now()}`,
             name,
-            options,
+            options: options.filter(opt => opt.name.trim() !== ''), // Filter out empty options on save
             allowMultiple,
             isRequired,
         };
@@ -81,7 +78,7 @@ const ModifierGroupEditModal: React.FC<ModifierGroupEditModalProps> = ({ isOpen,
                         
                         <div>
                             <label className="block text-sm font-medium text-muted-foreground mb-2">Options</label>
-                            <div className="space-y-2">
+                            <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
                                 {options.map((option, index) => (
                                     <div key={index} className="flex items-center gap-2">
                                         <Input
@@ -89,7 +86,7 @@ const ModifierGroupEditModal: React.FC<ModifierGroupEditModalProps> = ({ isOpen,
                                             onChange={e => handleOptionChange(index, 'name', e.target.value)}
                                             placeholder="Option Name (e.g., Bacon)"
                                             className="flex-grow"
-                                            required
+                                            required={index === 0} // Only first option is required to have a name
                                         />
                                         <Input
                                             type="number"

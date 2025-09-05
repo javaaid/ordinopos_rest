@@ -84,7 +84,7 @@ const OrderTicket: React.FC<OrderTicketProps> = ({ order, onCompleteOrder, table
           </h2>
           <p className={`text-sm font-semibold ${sourceColor}`}>{sourceText[order.source] || ''}</p>
         </div>
-        <div className="text-right">
+        <div className="text-end">
             <p className="text-2xl font-mono font-bold text-foreground">{order.orderNumber}</p>
             <p className={cn("text-lg font-mono", isLate ? 'text-destructive font-bold' : 'text-muted-foreground')}>{elapsedTime}</p>
             {order.estimatedPrepTimeMinutes && (
@@ -94,7 +94,7 @@ const OrderTicket: React.FC<OrderTicketProps> = ({ order, onCompleteOrder, table
             )}
         </div>
       </header>
-      <div className="flex-grow overflow-y-auto space-y-3 pr-2 -mr-2">
+      <div className="flex-grow overflow-y-auto space-y-3 pe-2 -me-2">
         {(order.cart || []).map(item => {
           const isPrepared = (order.preparedCartItemIds || []).includes(item.cartId);
           return (
@@ -107,7 +107,7 @@ const OrderTicket: React.FC<OrderTicketProps> = ({ order, onCompleteOrder, table
                 {item.quantity}x {item.menuItem.name}
               </p>
               {item.selectedModifiers.length > 0 && (
-                <ul className={`pl-4 text-sm text-muted-foreground ${isPrepared ? 'line-through' : ''}`}>
+                <ul className={`ps-4 text-sm text-muted-foreground ${isPrepared ? 'line-through' : ''}`}>
                   {item.selectedModifiers.map(mod => <li key={mod.name}>+ {mod.name}</li>)}
                 </ul>
               )}

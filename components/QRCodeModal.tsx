@@ -7,12 +7,15 @@ interface QRCodeModalProps {
     isOpen: boolean;
     onClose: () => void;
     table: Table;
+    baseUrl?: string;
 }
 
-const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onClose, table }) => {
+const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onClose, table, baseUrl }) => {
     if (!isOpen) return null;
 
-    const qrValue = `${window.location.origin}/#/qr_ordering?table=${table.id}&location=${table.locationId}`;
+    const qrValue = baseUrl 
+        ? `${baseUrl}?table=${table.id}&location=${table.locationId}`
+        : `${window.location.origin}/#/qr_ordering?table=${table.id}&location=${table.locationId}`;
 
     const handlePrint = () => {
         const printWindow = window.open('', '_blank');

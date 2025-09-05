@@ -1,19 +1,23 @@
+
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { Customer, Subscription, Order } from '../types';
 import MegaphoneIcon from './icons/MegaphoneIcon';
 import TrashIcon from './icons/TrashIcon';
 import UserPlusIcon from './icons/UserPlusIcon';
 import PencilSquareIcon from './icons/PencilSquareIcon';
-import { useModalContext, useDataContext, useToastContext } from '../contexts/AppContext';
+import { useModalContext, useDataContext, useToastContext, useAppContext } from '../contexts/AppContext';
 import { cn } from '../lib/utils';
 import ArrowsPointingOutIcon from './icons/ArrowsPointingOutIcon';
 import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
-import ExportButtons from './ExportButtons';
+// FIX: Changed to a named import to resolve "Module has no default export" error.
+import { ExportButtons } from './ExportButtons';
 import { exportToCsv } from '../lib/utils';
+import { useTranslations } from '../hooks/useTranslations';
 
 const CustomersView: React.FC = () => {
     const { openModal, closeModal } = useModalContext();
-    const { customers, subscriptions, orders, menuItems, handleSaveCustomer, handleDeleteCustomer, handleSaveSubscription } = useDataContext();
+    const { customers, subscriptions, orders, menuItems, handleSaveCustomer, handleDeleteCustomer, handleSaveSubscription, settings } = useDataContext();
+    const t = useTranslations(settings.language.staff);
     const { addToast } = useToastContext();
     const [selectedCustomers, setSelectedCustomers] = useState<Set<string>>(new Set());
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -109,16 +113,16 @@ const CustomersView: React.FC = () => {
         };
     }, [onMouseMove, onMouseUp]);
 
-    const thClass = "p-3 text-left text-xs font-semibold text-muted-foreground uppercase";
+    const thClass = "p-3 text-start rtl:text-end text-xs font-semibold text-muted-foreground uppercase";
     
     return (
         <div className={cn("p-6 h-full flex flex-col", isFullScreen && "fixed inset-0 z-50 bg-card")}>
             <div className="flex justify-between items-center mb-6 no-print">
-                <h1 className="text-3xl font-bold text-foreground">Customers</h1>
+                <h1 className="text-3xl font-bold text-foreground rtl:text-right">{t('customers')}</h1>
                 <div className="flex items-center gap-2">
                     <button onClick={onAddCustomer} className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2 px-4 rounded-lg transition-colors">
                         <UserPlusIcon className="w-5 h-5"/>
-                        Add Customer
+                        {t('addCustomer')}
                     </button>
                     <button onClick={() => setIsFullScreen(fs => !fs)} title={isFullScreen ? "Exit Full Screen" : "Enter Full Screen"} className="p-2 bg-secondary rounded-lg text-muted-foreground hover:text-foreground">
                         {isFullScreen ? <ArrowsPointingInIcon className="w-5 h-5" /> : <ArrowsPointingOutIcon className="w-5 h-5" />}
@@ -134,7 +138,7 @@ const CustomersView: React.FC = () => {
                     <div>
                         <button disabled={selectedCustomers.size === 0} onClick={handlePromotionClick} className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2 px-3 rounded-lg text-sm disabled:bg-muted disabled:cursor-not-allowed">
                             <MegaphoneIcon className="w-5 h-5" />
-                            Send Promo ({selectedCustomers.size})
+                            {t('sendPromo')} ({selectedCustomers.size})
                         </button>
                     </div>
                 </div>
@@ -151,13 +155,13 @@ const CustomersView: React.FC = () => {
                                 <th className="p-3 w-10">
                                     <input type="checkbox" onChange={handleSelectAll} className="h-4 w-4 rounded border-border text-primary focus:ring-primary" />
                                 </th>
-                                <th className={`${thClass} relative`}>Name <div onMouseDown={e => onMouseDown(0, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                                <th className={`${thClass} relative`}>Phone <div onMouseDown={e => onMouseDown(1, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                                <th className={`${thClass} relative`}>Membership ID <div onMouseDown={e => onMouseDown(2, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                                <th className={`${thClass} relative`}>Email <div onMouseDown={e => onMouseDown(3, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                                <th className={`${thClass} relative`}>Total Spent <div onMouseDown={e => onMouseDown(4, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                                <th className={`${thClass} relative`}>Loyalty Points <div onMouseDown={e => onMouseDown(5, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                                <th className={`${thClass} text-right`}>Actions</th>
+                                <th className={`${thClass} relative`}>{t('name')} <div onMouseDown={e => onMouseDown(0, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                                <th className={`${thClass} relative`}>{t('phone')} <div onMouseDown={e => onMouseDown(1, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                                <th className={`${thClass} relative`}>{t('membershipId')} <div onMouseDown={e => onMouseDown(2, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                                <th className={`${thClass} relative`}>{t('email')} <div onMouseDown={e => onMouseDown(3, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                                <th className={`${thClass} relative`}>{t('totalSpent')} <div onMouseDown={e => onMouseDown(4, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                                <th className={`${thClass} relative`}>{t('loyaltyPoints')} <div onMouseDown={e => onMouseDown(5, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                                <th className={`${thClass} text-end`}>{t('actions')}</th>
                             </tr>
                         </thead>
                         <tbody className="bg-card divide-y divide-border">
@@ -175,9 +179,9 @@ const CustomersView: React.FC = () => {
                                         <td className="p-3 text-muted-foreground truncate">{customer.email}</td>
                                         <td className="p-3 text-green-500 font-semibold truncate">${totalSpent.toFixed(2)}</td>
                                         <td className="p-3 text-blue-500 font-semibold truncate">{customer.loyaltyPoints || 0}</td>
-                                        <td className="p-3 text-right no-print">
+                                        <td className="p-3 text-end no-print">
                                             <div className="flex justify-end items-center gap-2">
-                                                <button onClick={() => onAddSubscription(customer)} className="text-sm font-semibold text-primary hover:underline">Subscribe</button>
+                                                <button onClick={() => onAddSubscription(customer)} className="text-sm font-semibold text-primary hover:underline">{t('subscribe')}</button>
                                                 <button onClick={() => onEditCustomer(customer)} className="p-1 text-primary hover:opacity-80"><PencilSquareIcon className="w-5 h-5"/></button>
                                                 <button onClick={() => handleDeleteCustomer(customer.id)} className="p-1 text-destructive hover:opacity-80"><TrashIcon className="w-5 h-5"/></button>
                                             </div>

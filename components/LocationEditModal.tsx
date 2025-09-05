@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Location } from '../types';
 import { COUNTRIES, PIZZA_OPTIONS, BURGER_OPTIONS } from '../constants';
 import TrashIcon from './icons/TrashIcon';
+import { useAppContext } from '../contexts/AppContext';
+import { useTranslations } from '../hooks/useTranslations';
 
 interface LocationEditModalProps {
     isOpen: boolean;
@@ -12,6 +14,8 @@ interface LocationEditModalProps {
 }
 
 const LocationEditModal: React.FC<LocationEditModalProps> = ({ isOpen, onClose, onSave, location }) => {
+    const { settings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const [name, setName] = useState('');
     const [taxRates, setTaxRates] = useState<Array<{ id: number; name: string; rate: number }>>([]);
     const [invoiceFooterText, setInvoiceFooterText] = useState('');
@@ -33,15 +37,15 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({ isOpen, onClose, 
             setPhone(location.phone || '');
         } else {
             setName('');
-            setTaxRates([{ id: 0, name: 'Standard', rate: 0.10 }]);
-            setInvoiceFooterText('Thank you for your business!');
+            setTaxRates([{ id: 0, name: t('standard'), rate: 0.10 }]);
+            setInvoiceFooterText(t('thankYouBusiness'));
             setCountryCode('US');
             setVatNumber('');
             setCurrency('$');
             setAddress('');
             setPhone('');
         }
-    }, [location, isOpen]);
+    }, [location, isOpen, t]);
 
     if (!isOpen) return null;
 
@@ -104,32 +108,32 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({ isOpen, onClose, 
             <div className="bg-card rounded-lg shadow-xl w-full max-w-lg border border-border">
                 <form onSubmit={handleSave}>
                     <div className="p-6 border-b border-border">
-                        <h2 className="text-2xl font-bold text-foreground">{location ? 'Edit Location' : 'Add New Location'}</h2>
+                        <h2 className="text-2xl font-bold text-foreground text-start rtl:text-end">{location ? t('edit') : t('addNewLocation')}</h2>
                     </div>
-                    <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                    <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto text-start rtl:text-end">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">Location Name</label>
+                                <label className="block text-sm font-medium text-muted-foreground mb-1">{t('locationName')}</label>
                                 <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-input p-2 rounded-md border border-border text-foreground" required />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">Phone Number</label>
+                                <label className="block text-sm font-medium text-muted-foreground mb-1">{t('phoneNumber')}</label>
                                 <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-input p-2 rounded-md border border-border text-foreground" />
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">Address</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">{t('address')}</label>
                             <input type="text" value={address} onChange={e => setAddress(e.target.value)} className="w-full bg-input p-2 rounded-md border border-border text-foreground" />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">Country of Operation</label>
+                                <label className="block text-sm font-medium text-muted-foreground mb-1">{t('countryOfOperation')}</label>
                                 <select value={countryCode} onChange={e => setCountryCode(e.target.value)} className="w-full bg-input p-2 rounded-md border border-border text-foreground">
                                     {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
                                 </select>
                             </div>
                              <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">Currency Symbol</label>
+                                <label className="block text-sm font-medium text-muted-foreground mb-1">{t('currencySymbol')}</label>
                                 <input type="text" value={currency} onChange={e => setCurrency(e.target.value)} className="w-full bg-input p-2 rounded-md border border-border text-foreground" maxLength={5} required />
                             </div>
                         </div>
@@ -142,7 +146,7 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({ isOpen, onClose, 
                         )}
 
                         <div>
-                             <label className="block text-sm font-medium text-muted-foreground mb-1">Tax Rates</label>
+                             <label className="block text-sm font-medium text-muted-foreground mb-1">{t('taxRates')}</label>
                              <div className="space-y-2">
                                  {taxRates.map(({ id, name, rate }) => (
                                     <div key={id} className="flex items-center gap-2">
@@ -153,16 +157,16 @@ const LocationEditModal: React.FC<LocationEditModalProps> = ({ isOpen, onClose, 
                                     </div>
                                  ))}
                             </div>
-                             <button type="button" onClick={handleAddNewTaxRate} className="mt-2 text-sm text-primary hover:underline">Add new tax rate</button>
+                             <button type="button" onClick={handleAddNewTaxRate} className="mt-2 text-sm text-primary hover:underline">{t('addNewTaxRateSmall')}</button>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">Receipt Footer Text</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">{t('receiptFooterText')}</label>
                             <textarea value={invoiceFooterText} onChange={e => setInvoiceFooterText(e.target.value)} className="w-full bg-input p-2 rounded-md h-24 border border-border text-foreground"></textarea>
                         </div>
                     </div>
                     <div className="p-6 border-t border-border flex justify-end items-center space-x-4 bg-muted/50 rounded-b-lg">
-                        <button type="button" onClick={onClose} className="px-6 py-2 rounded-md bg-secondary text-secondary-foreground font-semibold">Cancel</button>
-                        <button type="submit" className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90">Save</button>
+                        <button type="button" onClick={onClose} className="px-6 py-2 rounded-md bg-secondary text-secondary-foreground font-semibold">{t('cancel')}</button>
+                        <button type="submit" className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90">{t('save')}</button>
                     </div>
                 </form>
             </div>

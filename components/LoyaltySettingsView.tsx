@@ -6,9 +6,11 @@ import StarIcon from './icons/StarIcon';
 import { Card, CardContent } from './ui/Card';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
+import { useTranslations } from '../hooks/useTranslations';
 
 const LoyaltySettingsView: React.FC = () => {
     const { settings, setSettings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const { addToast } = useToastContext();
     const [localSettings, setLocalSettings] = useState<LoyaltySettings>(settings.loyalty);
 
@@ -41,8 +43,6 @@ const LoyaltySettingsView: React.FC = () => {
                 onClick={() => {
                     if (typeof onToggle === 'function') {
                         onToggle();
-                    } else {
-                        console.error(`onToggle prop is not a function for ToggleRow with label: "${label}"`);
                     }
                 }}
                 className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${enabled ? 'bg-primary' : 'bg-muted'}`}
@@ -54,28 +54,28 @@ const LoyaltySettingsView: React.FC = () => {
 
     return (
         <div className="p-6 h-full flex flex-col">
-            <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2">
-                <StarIcon className="w-6 h-6" /> Loyalty Program
+            <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2 rtl:text-right">
+                <StarIcon className="w-6 h-6" /> {t('loyaltyProgram')}
             </h3>
-            <p className="text-sm text-muted-foreground mb-6">Reward your returning customers and encourage repeat business.</p>
+            <p className="text-sm text-muted-foreground mb-6 rtl:text-right">{t('loyaltyDescription')}</p>
             
             <div className="space-y-6 max-w-2xl">
                 <Card>
                     <CardContent className="p-6">
                         <div className="space-y-4">
-                            <ToggleRow label="Enable Loyalty Program" enabled={localSettings.enabled} onToggle={handleToggle} />
+                            <ToggleRow label={t('enableLoyaltyProgram')} enabled={localSettings.enabled} onToggle={handleToggle} />
                             
                             {localSettings.enabled && (
                                 <div className="space-y-4 pt-4 border-t border-border">
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-1">Points Earned Per Dollar</label>
+                                        <label className="block text-sm font-medium text-muted-foreground mb-1 rtl:text-right">{t('pointsEarnedPerDollar')}</label>
                                         <Input type="number" name="pointsPerDollar" value={localSettings.pointsPerDollar} onChange={handleChange} min="0" step="0.1" />
-                                        <p className="text-xs text-muted-foreground mt-1">How many points a customer earns for each dollar spent.</p>
+                                        <p className="text-xs text-muted-foreground mt-1 rtl:text-right">{t('pointsEarnedDescription')}</p>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-muted-foreground mb-1">Redemption Rate (Points per $1)</label>
+                                        <label className="block text-sm font-medium text-muted-foreground mb-1 rtl:text-right">{t('redemptionRate')}</label>
                                         <Input type="number" name="redemptionRate" value={localSettings.redemptionRate} onChange={handleChange} min="1" step="1" />
-                                        <p className="text-xs text-muted-foreground mt-1">How many points are required to equal a $1 discount.</p>
+                                        <p className="text-xs text-muted-foreground mt-1 rtl:text-right">{t('redemptionDescription')}</p>
                                     </div>
                                 </div>
                             )}
@@ -84,8 +84,8 @@ const LoyaltySettingsView: React.FC = () => {
                 </Card>
             </div>
 
-            <div className="mt-auto pt-6 text-right">
-                <Button onClick={handleSave}>Save Loyalty Settings</Button>
+            <div className="mt-auto pt-6 text-end rtl:text-left">
+                <Button onClick={handleSave}>{t('saveLoyaltySettings')}</Button>
             </div>
         </div>
     );

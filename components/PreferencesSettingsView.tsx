@@ -1,11 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAppContext, useToastContext, useDataContext } from '../contexts/AppContext';
-import { AppSettings, POSPreferences, OrderType, PaymentType } from '../types';
+import { AppSettings, POSPreferences, OrderType, PaymentType, TranslationKey } from '../types';
 import Cog6ToothIcon from './icons/Cog6ToothIcon';
+import { useTranslations } from '../hooks/useTranslations';
 
 const PreferencesSettingsView: React.FC = () => {
     const { settings, setSettings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const { paymentTypes } = useDataContext();
     const { addToast } = useToastContext();
     const [localSettings, setLocalSettings] = useState<POSPreferences>(settings.preferences);
@@ -37,18 +38,28 @@ const PreferencesSettingsView: React.FC = () => {
         }));
     };
 
-    const actionOptions = [
-        { value: 'order', label: 'Keep on Ordering Screen' },
-        { value: 'tables', label: 'Go to Tables / Floor Plan' },
-        { value: 'login', label: 'Go to Login Screen' },
+    const actionOptions: {value: 'order' | 'tables' | 'login', labelKey: TranslationKey}[] = [
+        { value: 'order', labelKey: 'prefs_action_option_order' },
+        { value: 'tables', labelKey: 'prefs_action_option_tables' },
+        { value: 'login', labelKey: 'prefs_action_option_login' },
     ];
 
-    const ToggleRow: React.FC<{ label: string; enabled: boolean; onToggle: () => void; }> = ({ label, enabled, onToggle }) => (
+    const orderTypeOptions: {value: OrderType, labelKey: TranslationKey}[] = [
+        { value: 'dine-in', labelKey: 'dine_in' },
+        { value: 'takeaway', labelKey: 'take_away' },
+        { value: 'delivery', labelKey: 'delivery' },
+    ]
+
+    const ToggleRow: React.FC<{ labelKey: TranslationKey; enabled: boolean; onToggle?: () => void; }> = ({ labelKey, enabled, onToggle }) => (
         <label className="flex items-center justify-between p-3 rounded-lg bg-secondary cursor-pointer border border-border">
-            <span className="font-medium text-foreground">{label}</span>
+            <span className="font-medium text-foreground">{t(labelKey)}</span>
             <button
                 type="button"
-                onClick={onToggle}
+                onClick={() => {
+                    if (typeof onToggle === 'function') {
+                        onToggle();
+                    }
+                }}
                 className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${enabled ? 'bg-primary' : 'bg-muted'}`}
             >
                 <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`}/>
@@ -57,16 +68,19 @@ const PreferencesSettingsView: React.FC = () => {
     );
 
     return (
-        <div className="h-full flex flex-col">
-            <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2">
-                <Cog6ToothIcon className="w-6 h-6" /> POS Preferences
-            </h3>
-            <p className="text-sm text-muted-foreground mb-6">Customize the POS workflow to match your operational needs.</p>
+        <div className="h-full flex flex-col p-6">
+            <div className="text-start rtl:text-end">
+                <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2 rtl:flex-row-reverse">
+                    <Cog6ToothIcon className="w-6 h-6" /> {t('prefs_title')}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-6">{t('prefs_description')}</p>
+            </div>
+
 
             <div className="space-y-6 max-w-2xl overflow-y-auto pr-4">
-                <div className="bg-card p-6 rounded-lg space-y-4 border border-border">
+                <div className="bg-card p-6 rounded-lg space-y-4 border border-border text-start rtl:text-end">
                     <div>
-                        <label htmlFor="actionAfterSendOrder" className="block text-sm font-medium text-muted-foreground mb-1">Action After Sending an Order</label>
+                        <label htmlFor="actionAfterSendOrder" className="block text-sm font-medium text-muted-foreground mb-1">{t('prefs_actionAfterSend_label')}</label>
                         <select
                             id="actionAfterSendOrder"
                             name="actionAfterSendOrder"
@@ -74,12 +88,12 @@ const PreferencesSettingsView: React.FC = () => {
                             onChange={handleChange}
                             className="w-full bg-input p-2 rounded-md border border-border"
                         >
-                            {actionOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                            {actionOptions.map(opt => <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>)}
                         </select>
-                        <p className="text-xs text-muted-foreground mt-1">Choose what screen the POS shows after sending an order to the kitchen.</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t('prefs_actionAfterSend_desc')}</p>
                     </div>
                     <div>
-                        <label htmlFor="actionAfterPayment" className="block text-sm font-medium text-muted-foreground mb-1">Action After Taking a Payment</label>
+                        <label htmlFor="actionAfterPayment" className="block text-sm font-medium text-muted-foreground mb-1">{t('prefs_actionAfterPayment_label')}</label>
                         <select
                             id="actionAfterPayment"
                             name="actionAfterPayment"
@@ -87,12 +101,12 @@ const PreferencesSettingsView: React.FC = () => {
                             onChange={handleChange}
                             className="w-full bg-input p-2 rounded-md border border-border"
                         >
-                            {actionOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                            {actionOptions.map(opt => <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>)}
                         </select>
-                         <p className="text-xs text-muted-foreground mt-1">Choose what screen the POS shows after successfully completing a transaction.</p>
+                         <p className="text-xs text-muted-foreground mt-1">{t('prefs_actionAfterPayment_desc')}</p>
                     </div>
                      <div>
-                        <label htmlFor="defaultPaymentMethod" className="block text-sm font-medium text-muted-foreground mb-1">Default Payment Method</label>
+                        <label htmlFor="defaultPaymentMethod" className="block text-sm font-medium text-muted-foreground mb-1">{t('prefs_defaultPayment_label')}</label>
                         <select
                             id="defaultPaymentMethod"
                             name="defaultPaymentMethod"
@@ -104,7 +118,7 @@ const PreferencesSettingsView: React.FC = () => {
                         </select>
                     </div>
                     <div>
-                        <label htmlFor="defaultOrderType" className="block text-sm font-medium text-muted-foreground mb-1">Default Order Type</label>
+                        <label htmlFor="defaultOrderType" className="block text-sm font-medium text-muted-foreground mb-1">{t('prefs_defaultOrderType_label')}</label>
                         <select
                             id="defaultOrderType"
                             name="defaultOrderType"
@@ -112,24 +126,22 @@ const PreferencesSettingsView: React.FC = () => {
                             onChange={handleChange}
                             className="w-full bg-input p-2 rounded-md border border-border"
                         >
-                            <option value="dine-in">Dine In</option>
-                            <option value="takeaway">Take Away</option>
-                            <option value="delivery">Delivery</option>
+                            {orderTypeOptions.map(opt => <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>)}
                         </select>
                     </div>
-                    <ToggleRow label="Enable Order Notes" enabled={localSettings.enableOrderNotes} onToggle={() => handleToggle('enableOrderNotes')} />
-                    <ToggleRow label="Enable Kitchen Print on Send" enabled={localSettings.enableKitchenPrint} onToggle={() => handleToggle('enableKitchenPrint')} />
-                    <ToggleRow label="Enable Order Hold Button" enabled={localSettings.enableOrderHold} onToggle={() => handleToggle('enableOrderHold')} />
-                    <ToggleRow label="Reset Order Number Daily" enabled={localSettings.resetOrderNumberDaily} onToggle={() => handleToggle('resetOrderNumberDaily')} />
+                    <ToggleRow labelKey="prefs_enableOrderNotes_label" enabled={localSettings.enableOrderNotes} onToggle={() => handleToggle('enableOrderNotes')} />
+                    <ToggleRow labelKey="prefs_enableKitchenPrint_label" enabled={localSettings.enableKitchenPrint} onToggle={() => handleToggle('enableKitchenPrint')} />
+                    <ToggleRow labelKey="prefs_enableOrderHold_label" enabled={localSettings.enableOrderHold} onToggle={() => handleToggle('enableOrderHold')} />
+                    <ToggleRow labelKey="prefs_resetOrderNumberDaily_label" enabled={localSettings.resetOrderNumberDaily} onToggle={() => handleToggle('resetOrderNumberDaily')} />
                 </div>
             </div>
 
-            <div className="mt-auto pt-6 text-right">
+            <div className="mt-auto pt-6 text-end rtl:text-left">
                 <button
                     onClick={handleSave}
                     className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors shadow-lg"
                 >
-                    Save Preferences
+                    {t('saveSettings')}
                 </button>
             </div>
         </div>

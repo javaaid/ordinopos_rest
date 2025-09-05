@@ -5,15 +5,12 @@ import MenuItemCard from './MenuItemCard';
 import OrderItem from './OrderItem';
 import ModifierModal from './ModifierModal';
 import CheckCircleIcon from './icons/CheckCircleIcon';
-import SparklesIcon from './icons/SparklesIcon';
-import { GoogleGenAI, Type } from "@google/genai";
 import AISuggestions from './AISuggestions';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useTranslations } from '../hooks/useTranslations';
-import { hexToHsl } from '../lib/utils';
-
-interface KIOSKViewProps {
-}
+import { ordinoLogoBase64 } from '../assets/logo';
+import { Modal } from './ui/Modal';
+import { useAppContext } from '../contexts/AppContext';
 
 type KioskStep = 'welcome' | 'ordering' | 'payment' | 'confirmation';
 
@@ -24,91 +21,21 @@ const PAYMENT_STEPS = [
     'Finalizing...',
 ];
 
-const KIOSKView: React.FC<KIOSKViewProps> = () => {
+export const KioskModal: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, onClose }) => {
+    const { menuItems, categoriesWithCounts, settings, handleKioskOrderPlaced } = useAppContext();
     const [step, setStep] = useState<KioskStep>('welcome');
     const [cart, setCart] = useState<CartItem[]>([]);
-    const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [settings, setSettings] = useState<AppSettings | null>(null);
-    const [currentLocationId, setCurrentLocationId] = useState<string | null>(null);
-
     const [activeCategory, setActiveCategory] = useState<string>('all');
     const [isModifierModalOpen, setIsModifierModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-    const [lastOrderNumber, setLastOrderNumber] = useState<string | null>(null);
-    const [language, setLanguage] = useState<Language>('en');
+    const [lastOrder, setLastOrder] = useState<Order | null>(null);
+    const [language, setLanguage] = useState<Language>(settings.language.customer);
     
     const [isAISuggesting, setIsAISuggesting] = useState<boolean>(false);
     const [aiSuggestions, setAISuggestions] = useState<AIResponse | null>(null);
-    const suggestionTimeoutRef = useRef<number | null>(null);
     const t = useTranslations(language);
-    const channelRef = useRef<BroadcastChannel | null>(null);
     
     const [paymentStep, setPaymentStep] = useState(0);
-
-    useEffect(() => {
-        if (settings?.theme) {
-            const root = document.documentElement;
-            root.style.setProperty('--primary', hexToHsl(settings.theme.primary));
-            root.style.setProperty('--background', hexToHsl(settings.theme.background));
-            root.style.setProperty('--card', hexToHsl(settings.theme.surface));
-            root.style.setProperty('--foreground', hexToHsl(settings.theme.textBase));
-            root.style.setProperty('--muted-foreground', hexToHsl(settings.theme.textMuted));
-        }
-        document.documentElement.setAttribute('data-theme', 'dark');
-    }, [settings?.theme]);
-
-    useEffect(() => {
-        const channel = new BroadcastChannel('ordino_pos_sync');
-        channelRef.current = channel;
-        
-        const handleMessage = (event: MessageEvent) => {
-            try {
-                const { type, payload } = event.data;
-                if (type === 'STATE_SYNC') {
-                    const locId = payload.currentLocationId;
-                    const allItems = payload.allMenuItems || [];
-
-                    if (locId) {
-                        setCurrentLocationId(locId);
-                        const locationSpecificItems = allItems.filter((item: MenuItem) => 
-                            item.locationIds.includes(locId) && item.isActive !== false
-                        );
-                        setMenuItems(locationSpecificItems);
-
-                        const derivedCategories = [...new Set(locationSpecificItems.map((item: MenuItem) => item.category))]
-                            .map((catName: string) => ({ 
-                                id: catName, 
-                                name: catName, 
-                                itemCount: locationSpecificItems.filter(i => i.category === catName).length 
-                            })); 
-                        setCategories(derivedCategories);
-                    } else {
-                        setMenuItems(allItems);
-                         const derivedCategories = [...new Set(allItems.map((item: MenuItem) => item.category))]
-                            .map((catName: string) => ({ id: catName, name: catName, itemCount: 0 })); 
-                        setCategories(derivedCategories);
-                    }
-
-                    setSettings(payload.allSettings || null);
-                    if (payload.allSettings?.language?.customer) {
-                        setLanguage(payload.allSettings.language.customer);
-                    }
-                } else if (type === 'KIOSK_ORDER_CONFIRMED') {
-                    setLastOrderNumber(payload.orderNumber);
-                }
-            } catch (e) {
-                console.error("Kiosk failed to handle message", e);
-            }
-        };
-        channel.addEventListener('message', handleMessage);
-        channel.postMessage({ type: 'REQUEST_STATE' });
-        
-        return () => {
-            channel.removeEventListener('message', handleMessage);
-            channel.close();
-        };
-    }, []);
 
     const TAX_RATE = 0.08;
 
@@ -122,14 +49,9 @@ const KIOSKView: React.FC<KIOSKViewProps> = () => {
     const tax = useMemo(() => subtotal * TAX_RATE, [subtotal]);
     const total = useMemo(() => subtotal + tax, [subtotal, tax]);
 
-    const allCategoriesWithAll = useMemo(() => [
-        { id: 'all', name: t('all') || 'All', itemCount: menuItems.length },
-        ...categories,
-    ], [categories, menuItems, t]);
-
     const filteredMenuItems = useMemo(() => {
         if (activeCategory === 'all') return menuItems;
-        return menuItems.filter(item => item.category === activeCategory);
+        return menuItems.filter((item: MenuItem) => item.category === activeCategory);
     }, [menuItems, activeCategory]);
     
     const isOutOfStockMap = useMemo(() => new Map<number, boolean>(), []);
@@ -183,7 +105,7 @@ const KIOSKView: React.FC<KIOSKViewProps> = () => {
     };
 
     const handleSelectAISuggestion = (itemName: string) => {
-        const item = menuItems.find(m => m.name === itemName);
+        const item = menuItems.find((m: MenuItem) => m.name === itemName);
         if (item) {
             handleSelectItem(item);
         }
@@ -195,9 +117,6 @@ const KIOSKView: React.FC<KIOSKViewProps> = () => {
     }
     
     const handleStartOrder = () => {
-        document.documentElement.requestFullscreen().catch(err => {
-            console.warn(`Could not enter fullscreen mode: ${err.message}`);
-        });
         setStep('ordering');
     };
 
@@ -206,7 +125,8 @@ const KIOSKView: React.FC<KIOSKViewProps> = () => {
     };
 
     const handlePaymentComplete = () => {
-        channelRef.current?.postMessage({ type: 'KIOSK_ORDER_PLACED', payload: cart });
+        const order = handleKioskOrderPlaced(cart);
+        setLastOrder(order);
         setStep('confirmation');
     };
     
@@ -230,7 +150,7 @@ const KIOSKView: React.FC<KIOSKViewProps> = () => {
         if (step === 'confirmation') {
             const timer = setTimeout(() => {
                 setCart([]);
-                setLastOrderNumber(null);
+                setLastOrder(null);
                 setStep('ordering');
             }, 10000); 
             return () => clearTimeout(timer);
@@ -250,7 +170,7 @@ const KIOSKView: React.FC<KIOSKViewProps> = () => {
             <div className="absolute top-8 right-8 z-10">
                 <LanguageSwitcher currentLanguage={language} onLanguageChange={setLanguage} />
             </div>
-            {settings?.receipt.logoUrl && <img src={settings.receipt.logoUrl} alt="Logo" className="h-48 w-auto mb-8" />}
+            <img src={ordinoLogoBase64} alt="Logo" className="h-48 w-auto mb-8" />
             <h1 className="text-8xl font-bold text-foreground mb-4">{t('welcome')}</h1>
             <p className="text-3xl text-muted-foreground mb-12">{t('tap_to_start')}</p>
             <button onClick={handleStartOrder} className="w-full h-full absolute inset-0 z-0" aria-label={t('start_order')}></button>
@@ -266,26 +186,24 @@ const KIOSKView: React.FC<KIOSKViewProps> = () => {
     const renderOrderingScreen = () => (
         <div className="w-full h-full flex gap-8 p-8">
             <div className="flex-grow w-3/5 flex flex-col">
-                <CategoryTabs categories={allCategoriesWithAll} activeCategory={activeCategory} onSelectCategory={setActiveCategory} />
-                <div className="overflow-y-auto flex-grow">
-                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                        {filteredMenuItems.map((item) => {
-                            const cartItemsWithThisId = cart.filter(ci => ci.menuItem.id === item.id);
-                            const cartQuantity = cartItemsWithThisId.reduce((sum, i) => sum + i.quantity, 0);
-                            return (
-                                <MenuItemCard 
-                                    key={item.id} 
-                                    item={item} 
-                                    cartQuantity={cartQuantity}
-                                    onSelectItem={handleSelectItem}
-                                    isOutOfStock={isOutOfStockMap.get(item.id) || false} 
-                                    onContextMenu={(e) => e.preventDefault()}
-                                    onOpenPizzaBuilder={handleOpenPizzaBuilder}
-                                    onOpenBurgerBuilder={handleOpenBurgerBuilder}
-                                />
-                            )
-                        })}
-                    </div>
+                <CategoryTabs categories={categoriesWithCounts} activeCategory={activeCategory} onSelectCategory={setActiveCategory} />
+                <div className="overflow-y-auto flex-grow grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                    {filteredMenuItems.map((item: MenuItem) => {
+                        const cartItemsWithThisId = cart.filter(ci => ci.menuItem.id === item.id);
+                        const cartQuantity = cartItemsWithThisId.reduce((sum, i) => sum + i.quantity, 0);
+                        return (
+                            <MenuItemCard 
+                                key={item.id} 
+                                item={item} 
+                                cartQuantity={cartQuantity}
+                                onSelectItem={handleSelectItem}
+                                isOutOfStock={isOutOfStockMap.get(item.id) || false} 
+                                onContextMenu={(e) => e.preventDefault()}
+                                onOpenPizzaBuilder={handleOpenPizzaBuilder}
+                                onOpenBurgerBuilder={handleOpenBurgerBuilder}
+                            />
+                        )
+                    })}
                 </div>
             </div>
             <aside className="w-2/5 bg-card rounded-2xl flex flex-col p-6 shadow-2xl border border-border">
@@ -324,7 +242,7 @@ const KIOSKView: React.FC<KIOSKViewProps> = () => {
                         </button>
                     </div>
                     <footer className="text-center pt-4 mt-2">
-                        {settings?.receipt.logoUrl && <img src={settings.receipt.logoUrl} alt="Logo" className="h-10 w-auto mx-auto mb-1 opacity-80" />}
+                        <img src={ordinoLogoBase64} alt="Logo" className="h-10 w-auto mx-auto mb-1 opacity-80" />
                         <p className="text-lg text-muted-foreground">Fast • Reliable • Smart POS</p>
                     </footer>
                  </div>
@@ -350,7 +268,7 @@ const KIOSKView: React.FC<KIOSKViewProps> = () => {
                 </div>
             </div>
             <footer className="text-center pt-8 mt-8 border-t border-border">
-                {settings?.receipt.logoUrl && <img src={settings.receipt.logoUrl} alt="Logo" className="h-8 w-auto mx-auto mb-2 opacity-70" />}
+                <img src={ordinoLogoBase64} alt="Logo" className="h-8 w-auto mx-auto mb-2 opacity-70" />
                 <p className="text-sm text-muted-foreground">Fast • Reliable • Smart POS</p>
             </footer>
         </div>
@@ -362,16 +280,16 @@ const KIOSKView: React.FC<KIOSKViewProps> = () => {
                 <CheckCircleIcon className="w-48 h-48 text-green-500 mx-auto mb-8"/>
                 <h1 className="text-8xl font-bold text-foreground mb-4">{t('thank_you')}</h1>
                 <p className="text-4xl text-muted-foreground mb-2">{t('order_placed')}</p>
-                {lastOrderNumber && (
+                {lastOrder && (
                     <>
                         <p className="text-4xl text-muted-foreground mb-2">{t('your_order_number_is')}</p>
-                        <p className="text-9xl font-bold text-primary font-mono mb-12">#{lastOrderNumber}</p>
+                        <p className="text-9xl font-bold text-primary font-mono mb-12">#{lastOrder.orderNumber}</p>
                     </>
                 )}
                 <p className="text-4xl text-muted-foreground mb-12">{t('pickup_at_counter')}</p>
             </div>
             <footer className="text-center pt-8 mt-auto w-full">
-                {settings?.receipt.logoUrl && <img src={settings.receipt.logoUrl} alt="Logo" className="h-10 w-auto mx-auto mb-2 opacity-80" />}
+                <img src={ordinoLogoBase64} alt="Logo" className="h-10 w-auto mx-auto mb-2 opacity-80" />
                 <p className="text-lg text-muted-foreground">Fast • Reliable • Smart POS</p>
             </footer>
         </div>
@@ -388,7 +306,7 @@ const KIOSKView: React.FC<KIOSKViewProps> = () => {
     }
 
     return (
-        <div className="bg-background w-full h-full flex items-center justify-center">
+        <Modal isOpen={isOpen} onClose={onClose} className="max-w-full h-full !rounded-none">
             {renderStep()}
              <ModifierModal 
                 isOpen={isModifierModalOpen}
@@ -397,8 +315,6 @@ const KIOSKView: React.FC<KIOSKViewProps> = () => {
                 onAddItem={addToCart}
                 language={language}
               />
-        </div>
+        </Modal>
     );
 };
-
-export default KIOSKView;

@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, Fragment } from 'react';
 import { Order, Employee, Role, OrderStatus, Table, OrderType } from '../types';
 import SearchIcon from './icons/SearchIcon';
@@ -7,22 +6,9 @@ import DocumentArrowDownIcon from './icons/DocumentArrowDownIcon';
 import ReceiptRefundIcon from './icons/ReceiptRefundIcon';
 import PrinterIcon from './icons/PrinterIcon';
 import MapPinIcon from './icons/MapPinIcon';
-import { useAppContext, useDataContext, usePOSContext } from '../contexts/AppContext';
-import { useTranslations } from '../hooks/useTranslations';
+import { useAppContext } from './contexts/AppContext';
+import { useTranslations } from './hooks/useTranslations';
 import ChevronDownIcon from './icons/ChevronDownIcon';
-
-interface OrderHistoryViewProps {
-    orders: Order[];
-    onRequestRefund: (orderId: string) => void;
-    onApproveRefund: (orderId: string) => void;
-    onDenyRefund: (orderId: string) => void;
-    currentEmployee: Employee | null;
-    currentRole: Role | null;
-    onLoadOrder: (order: Order) => void;
-    onPrintA4: (order: Order) => void;
-    onInitiateRefund: (order: Order) => void;
-    onViewReceipt: (order: Order) => void;
-}
 
 const statusStyles: Record<OrderStatus, { text: string, bg: string, text_color: string }> = {
     'pending': { text: 'Pending Payment', bg: 'bg-yellow-500/20', text_color: 'text-yellow-400' },
@@ -45,10 +31,12 @@ const typeColors: Record<OrderType, string> = {
     'tab': 'border-teal-500',
 };
 
-const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ orders, onApproveRefund, onDenyRefund, currentRole, onLoadOrder, onPrintA4, onInitiateRefund, onViewReceipt }) => {
-    const { settings, setView } = useAppContext();
-    const { tables } = useDataContext();
-    const { setCurrentTable } = usePOSContext();
+const OrderHistoryView: React.FC = () => {
+    const { 
+        settings, setView, tables, orders, roles, currentEmployee,
+        onLoadOrder, onPrintA4, onInitiateRefund, onViewReceipt, onApproveRefund, onDenyRefund
+    } = useAppContext();
+
     const t = useTranslations(settings.language.staff);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterDate, setFilterDate] = useState(new Date());
@@ -81,11 +69,15 @@ const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ orders, onApproveRe
     const handleViewOnFloor = (tableId: string) => {
         const table = tables.find((t: Table) => t.id === tableId);
         if (table) {
-            setCurrentTable(table);
             setView('tables');
         }
     };
 
+    const currentRole = useMemo(() => {
+        if (!currentEmployee) return null;
+        return roles.find((r: Role) => r.id === currentEmployee.roleId);
+    }, [currentEmployee, roles]);
+    
     const renderActions = (order: Order) => {
         if (!currentRole) return null;
 

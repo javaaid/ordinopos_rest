@@ -50,7 +50,8 @@ function escapeCsvCell(cell: any): string {
   if (cell === undefined || cell === null) {
     return '';
   }
-  const str = String(cell);
+  // FIX: Changed String(cell) to cell.toString() to avoid potential "not callable" errors if String is shadowed.
+  const str = cell.toString();
   if (str.includes(',') || str.includes('"') || str.includes('\n')) {
     return `"${str.replace(/"/g, '""')}"`;
   }
@@ -79,22 +80,33 @@ export function exportToCsv(headers: string[], rows: (string|number|boolean|unde
 }
 
 export function getErrorMessage(error: any): string {
-    if (error && typeof error.message === 'string' && error.message) {
+    if (error instanceof Error) {
         return error.message;
+    }
+    if (error && typeof error === 'object' && error.message) {
+        const message = error.message;
+        if (typeof message === 'string') {
+            return message;
+        }
+        try {
+            return JSON.stringify(message);
+        } catch (e) {
+            return 'Could not stringify error message object.';
+        }
     }
     if (typeof error === 'string' && error) {
         return error;
     }
-    if (error && typeof error.error === 'string' && error.error) {
+    if (error && typeof error === 'object' && error.error && typeof error.error === 'string') {
         return error.error;
     }
     try {
         const stringified = JSON.stringify(error);
-        if (stringified !== '{}') {
+        if (stringified !== '{}' && stringified !== '[]') {
             return stringified;
         }
     } catch (e) {
-        // Can't stringify, maybe circular
+        // Can't stringify
     }
     return 'An unexpected error occurred. Check the browser developer console for details.';
 };

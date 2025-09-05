@@ -123,7 +123,7 @@ const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => {
               <div
                 className={cn(
                   'max-w-md p-3 rounded-2xl',
-                  msg.role === 'user' ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-secondary text-secondary-foreground rounded-bl-none'
+                  msg.role === 'user' ? 'bg-primary text-primary-foreground rounded-be-none' : 'bg-secondary text-secondary-foreground rounded-bs-none'
                 )}
               >
                 {msg.text ? <p className="whitespace-pre-wrap">{msg.text}</p> : (isLoading && index === history.length -1) && <div className="dot-flashing" />}

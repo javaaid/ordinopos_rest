@@ -1,6 +1,3 @@
-
-
-
 import React from 'react';
 import { AppPlugin, ManagementSubView, NavItem, SettingsSubView, Category } from '../types';
 
@@ -71,10 +68,10 @@ export const CORE_MODULE_DEFINITIONS: PluginModule[] = [
         getManagementNavItem: (t) => ({
             id: 'services', label: t('services'), icon: Cog6ToothIcon,
             children: [
-                { id: 'dine_in_settings', label: 'Dine-In', icon: UsersIcon },
-                { id: 'delivery_settings', label: 'Delivery', icon: TruckIcon },
-                { id: 'take_away_settings', label: 'Take Away', icon: ShoppingBagIcon },
-                { id: 'tab_settings', label: 'Tabs', icon: CreditCardIcon },
+                { id: 'dine_in_settings', label: t('dine_in'), icon: UsersIcon },
+                { id: 'delivery_settings', label: t('delivery'), icon: TruckIcon },
+                { id: 'take_away_settings', label: t('take_away'), icon: ShoppingBagIcon },
+                { id: 'tab_settings', label: t('tab'), icon: CreditCardIcon },
             ]
         })
     },
@@ -113,7 +110,7 @@ export const CORE_MODULE_DEFINITIONS: PluginModule[] = [
     {
         manifest: { id: 'group-system-management', name: 'System Management', description: 'System Management group', isFree: true, version: '1.0.0', sortOrder: 50 },
         getManagementNavItem: (t) => ({
-            id: 'system_management', label: 'System', icon: Cog6ToothIcon,
+            id: 'system_management', label: t('system_and_data'), icon: Cog6ToothIcon,
             children: [
                 { id: 'locations', label: t('locations'), icon: BuildingOfficeIcon },
                 { id: 'tax_rates', label: t('tax_rates'), icon: ReceiptPercentIcon },
@@ -127,9 +124,9 @@ export const CORE_MODULE_DEFINITIONS: PluginModule[] = [
     {
         manifest: { id: 'group-settings-general', name: 'Branding & Localization', description: 'Branding & Localization settings group', isFree: true, version: '1.0.0', sortOrder: 10 },
         getSettingsNavItem: (t) => ({ 
-            id: 'branding_localization', label: t('branding_localization'), icon: SwatchIcon,
+            id: 'branding_localization', label: t('brandingLocalization'), icon: SwatchIcon,
             children: [
-                { id: 'customization', label: t('customization'), icon: SwatchIcon },
+                { id: 'customization', label: t('appearance'), icon: SwatchIcon },
                 { id: 'fonts', label: t('fonts'), icon: SwatchIcon },
                 { id: 'numbering', label: t('numbering'), icon: DocumentDuplicateIcon },
             ]
@@ -138,19 +135,19 @@ export const CORE_MODULE_DEFINITIONS: PluginModule[] = [
     {
         manifest: { id: 'group-settings-pos', name: 'POS Configuration', description: 'POS Configuration settings group', isFree: true, version: '1.0.0', sortOrder: 20 },
         getSettingsNavItem: (t) => ({
-            id: 'pos_configuration', label: t('pos_configuration'), icon: WrenchScrewdriverIcon,
+            id: 'pos_configuration', label: t('posConfiguration'), icon: WrenchScrewdriverIcon,
             children: [
-                { id: 'preferences_settings', label: t('preferences'), icon: Cog6ToothIcon },
-                { id: 'advanced_pos_settings', label: t('advanced_pos'), icon: WrenchScrewdriverIcon },
+                { id: 'preferences_settings', label: t('generalSettings'), icon: Cog6ToothIcon },
+                { id: 'advanced_pos_settings', label: t('advancedPOS'), icon: WrenchScrewdriverIcon },
             ]
         }),
     },
     {
         manifest: { id: 'group-settings-hardware', name: 'Hardware', description: 'Hardware settings group', isFree: true, version: '1.0.0', sortOrder: 30 },
         getSettingsNavItem: (t) => ({
-            id: 'hardware', label: t('devices'), icon: ServerStackIcon,
+            id: 'hardware', label: t('hardwareDevices'), icon: ServerStackIcon,
             children: [
-                { id: 'device_settings', label: t('devices'), icon: ServerStackIcon },
+                { id: 'device_settings', label: t('deviceSettings'), icon: ServerStackIcon },
                 { id: 'printers', label: t('printers'), icon: PrinterIcon },
             ]
         }),
@@ -158,20 +155,20 @@ export const CORE_MODULE_DEFINITIONS: PluginModule[] = [
     {
         manifest: { id: 'group-settings-integrations', name: 'Integrations', description: 'Integrations settings group', isFree: true, version: '1.0.0', sortOrder: 40 },
         getSettingsNavItem: (t) => ({
-            id: 'integrations_group', label: t('integrations'), icon: LinkIcon,
+            id: 'integrations_group', label: t('integrationsGroup'), icon: LinkIcon,
             children: [
                 { id: 'integrations', label: t('integrations'), icon: LinkIcon },
-                { id: 'ai', label: t('ai_settings'), icon: CpuChipIcon },
+                { id: 'ai', label: t('aiSettings'), icon: CpuChipIcon },
             ]
         }),
     },
     {
         manifest: { id: 'group-settings-system', name: 'System & Data', description: 'System & Data settings group', isFree: true, version: '1.0.0', sortOrder: 50 },
         getSettingsNavItem: (t) => ({
-            id: 'system_and_data', label: t('system_and_data'), icon: ShieldCheckIcon,
+            id: 'system_and_data', label: t('systemAndData'), icon: ShieldCheckIcon,
             children: [
-                { id: 'activity', label: t('activity_log'), icon: ClipboardDocumentCheckIcon },
-                { id: 'advanced', label: t('backup_restore'), icon: ExclamationTriangleIcon },
+                { id: 'activity', label: t('activityLog'), icon: ClipboardDocumentCheckIcon },
+                { id: 'advanced', label: t('backupRestore'), icon: ExclamationTriangleIcon },
             ]
         }),
     },
@@ -188,6 +185,12 @@ export const OPTIONAL_PLUGIN_DEFINITIONS: PluginModule[] = [
     },
     {
         manifest: { id: 'qr-ordering', name: 'QR Code Ordering', description: 'Allow customers to order and pay via QR codes at their table.', isFree: true, version: '1.0.0', sortOrder: 210 },
+        getManagementNavItem: (t) => ({
+            id: 'qr_ordering_settings',
+            label: t('qr_ordering'),
+            icon: QrCodeIcon,
+            parentId: 'services'
+        }),
     },
     {
         manifest: { id: 'digital-signage', name: 'Digital Signage', description: 'Manage content on customer-facing screens and displays.', isFree: true, version: '1.1.0', sortOrder: 305 },
@@ -195,7 +198,7 @@ export const OPTIONAL_PLUGIN_DEFINITIONS: PluginModule[] = [
     },
     {
         manifest: { id: 'e-invoice-ksa', name: 'E-invoicing (ZATCA)', description: 'Compliance with ZATCA regulations for e-invoicing in Saudi Arabia.', isFree: true, version: '1.0.0', sortOrder: 310 },
-        getSettingsNavItem: (t) => ({ id: 'zatca', label: t('zatca_ksa'), icon: QrCodeIcon, parentId: 'integrations_group' }),
+        getSettingsNavItem: (t) => ({ id: 'zatca', label: t('zatcaKsa'), icon: QrCodeIcon, parentId: 'integrations_group' }),
     },
     {
         manifest: { id: 'order_number_display', name: 'Order Number Display', description: 'A simple screen to show called order numbers for pickup.', isFree: true, version: '1.0.0', sortOrder: 400 },

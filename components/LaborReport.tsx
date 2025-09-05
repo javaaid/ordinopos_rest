@@ -43,7 +43,7 @@ const LaborReport: React.FC<LaborReportProps> = ({ employees }) => {
         return `${hours.toFixed(2)} hrs`;
     }
 
-    const thClass = "px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider";
+    const thClass = "px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wider";
 
     return (
         <div className="w-full">

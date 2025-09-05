@@ -1,11 +1,10 @@
-
-
 import React, { useState, useMemo } from 'react';
 import { ManagementSubView, SettingsSubView, PermissionSet, Role, NavItem, AppPlugin } from '../types';
 import { useDataContext, useAppContext } from '../contexts/AppContext';
 import { coreModules, optionalPlugins } from '../plugins';
 import { useTranslations } from '../hooks/useTranslations';
 import ChevronDownIcon from './icons/ChevronDownIcon';
+import { cn } from '../lib/utils';
 
 
 interface SidebarLayoutProps {
@@ -111,7 +110,7 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ title, activeItem, onNavI
     };
 
     const navItemClass = (id: string, isChild = false) =>
-        `w-full flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left ${isChild ? 'pl-11 pr-3' : 'px-3'} ${
+        `w-full flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-start ${isChild ? 'ps-11 pe-3' : 'px-3'} ${
             activeItem === id
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -136,17 +135,17 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ title, activeItem, onNavI
                                         }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <Icon className="w-5 h-5"/>
-                                            <span>{item.label}</span>
+                                            <Icon className="w-5 h-5 shrink-0"/>
+                                            <span className="flex-grow text-start">{item.label}</span>
                                         </div>
-                                        <ChevronDownIcon className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                        <ChevronDownIcon className={`w-4 h-4 transition-transform shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
                                     </button>
                                     {isOpen && (
                                         <div className="mt-1 space-y-1 animate-fade-in-down">
                                             {item.children.map(child => {
                                                 return (
                                                     <button key={child.id} onClick={() => onNavItemClick(child.id)} className={navItemClass(child.id, true)}>
-                                                        <span>{child.label}</span>
+                                                        <span className="flex-grow text-start">{child.label}</span>
                                                     </button>
                                                 )
                                             })}
@@ -159,8 +158,8 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ title, activeItem, onNavI
                         const Icon = item.icon;
                         return (
                              <button key={item.id} onClick={() => onNavItemClick(item.id)} className={navItemClass(item.id)}>
-                                <Icon className="w-5 h-5"/>
-                                <span>{item.label}</span>
+                                <Icon className="w-5 h-5 shrink-0"/>
+                                <span className="flex-grow text-start">{item.label}</span>
                             </button>
                         )
                     })}

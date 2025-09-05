@@ -1,5 +1,3 @@
-
-
 import React, { useMemo, useEffect, useState } from 'react';
 import { CartItem, MenuItem } from '../types';
 import MenuItemCard from './MenuItemCard';
@@ -13,18 +11,12 @@ const MenuGrid: React.FC = () => {
     ingredients, 
     recipes, 
     handleSaveProduct, 
-    printers, 
-    kitchenDisplays, 
-    handleSaveCategory,
     cart, 
     activeCategory, 
     searchQuery, 
     onSelectItem,
     isAdvancedInventoryPluginActive, 
-    justAddedCategoryId, 
-    onClearJustAddedCategoryId,
-    openModal, 
-    closeModal 
+    openModal,
   } = useAppContext();
 
   const [generatingImages, setGeneratingImages] = useState<Set<number>>(new Set());
@@ -33,12 +25,9 @@ const MenuGrid: React.FC = () => {
     const generateMissingImages = async () => {
       if (!process.env.API_KEY || !menuItems) return;
       
-      // Find items that need an image and are not already being processed
       const itemsToUpdate = menuItems.filter((item: MenuItem) => !item.imageUrl && !generatingImages.has(item.id));
-      
       if (itemsToUpdate.length === 0) return;
       
-      // Mark all these items as being processed
       setGeneratingImages(prev => new Set([...prev, ...itemsToUpdate.map(i => i.id)]));
       
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -47,6 +36,7 @@ const MenuGrid: React.FC = () => {
         try {
           const prompt = `A delicious, photorealistic image of ${item.name}, a popular dish in the ${item.category} category. The food is presented beautifully on a clean plate, ready to be served in a restaurant. High quality food photography.`;
           
+          // FIX: Updated Gemini API usage to generateImages for image generation tasks.
           const response = await ai.models.generateImages({
             model: 'imagen-4.0-generate-001',
             prompt: prompt,
@@ -60,12 +50,10 @@ const MenuGrid: React.FC = () => {
           if (response.generatedImages?.[0]?.image?.imageBytes) {
             const base64ImageBytes = response.generatedImages[0].image.imageBytes;
             const imageUrl = `data:image/jpeg;base64,${base64ImageBytes}`;
-            // This will trigger a re-render for each successful image generation.
             handleSaveProduct({ ...item, imageUrl }, false);
           }
         } catch (error) {
           console.error(`Failed to generate image for ${item.name}:`, error);
-          // If one fails, we remove it from the set so it can be retried on a subsequent render.
           setGeneratingImages(prev => {
             const newSet = new Set(prev);
             newSet.delete(item.id);
@@ -83,25 +71,14 @@ const MenuGrid: React.FC = () => {
   const filteredMenuItems = useMemo(() => {
     let items = menuItems || [];
     if (activeCategory !== 'all') {
-        items = items.filter(item => item.category === activeCategory);
+        items = items.filter((item: MenuItem) => item.category === activeCategory);
     }
     if (searchQuery) {
-        items = items.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
+        items = items.filter((item: MenuItem) => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
     }
     return items;
   }, [menuItems, activeCategory, searchQuery]);
   
-  const onEdit = (item: MenuItem) => {
-    openModal('productEdit', {
-      product: item,
-      onSave: (product: MenuItem, recipe: any) => handleSaveProduct(product, false, recipe),
-      onAddNewCategory: () => openModal('categoryEdit', { onSave: (cat: any) => handleSaveCategory(cat, true) }),
-      printers,
-      kitchenDisplays,
-      justAddedCategoryId,
-      onClearJustAddedCategoryId
-    });
-  };
 
   const handleContextMenu = (e: React.MouseEvent, item: MenuItem) => {
     e.preventDefault();
@@ -110,10 +87,8 @@ const MenuGrid: React.FC = () => {
       x: e.clientX,
       y: e.clientY,
       onEdit: () => {
-        closeModal();
-        onEdit(item);
+        openModal('productEdit', { product: item, onSave: handleSaveProduct });
       },
-      onClose: closeModal,
     });
   };
 
@@ -127,7 +102,7 @@ const MenuGrid: React.FC = () => {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-1.5">
-      {filteredMenuItems.map((item) => {
+      {filteredMenuItems.map((item: MenuItem) => {
         const cartItemsForThisProduct = (cart || []).filter((ci: CartItem) => ci.menuItem.id === item.id);
         const cartQuantity = cartItemsForThisProduct.reduce((sum: number, i: CartItem) => sum + i.quantity, 0);
         const isOutOfStock = isAdvancedInventoryPluginActive && isItemOutOfStock(item, cart, ingredients, recipes);

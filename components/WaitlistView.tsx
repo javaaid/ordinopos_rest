@@ -1,7 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { WaitlistEntry, WaitlistStatus } from '../types';
 import UserPlusIcon from './icons/UserPlusIcon';
+import { useTranslations } from '../hooks/useTranslations';
+import { useAppContext } from '../contexts/AppContext';
 
 interface WaitlistViewProps {
     waitlist: WaitlistEntry[];
@@ -47,6 +48,8 @@ const CountdownTimer: React.FC<{ notifiedAt: number }> = ({ notifiedAt }) => {
 };
 
 const WaitlistView: React.FC<WaitlistViewProps> = ({ waitlist, onAddToWaitlist, onUpdateStatus, onSeatParty }) => {
+    const { settings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
 
     const thClass = "px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider";
     const activeWaitlist = (waitlist || []).filter(w => w.status === 'Waiting' || w.status === 'Notified');
@@ -54,13 +57,13 @@ const WaitlistView: React.FC<WaitlistViewProps> = ({ waitlist, onAddToWaitlist, 
     return (
         <div className="p-6 h-full flex flex-col">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold text-foreground">Waitlist</h1>
+                <h1 className="text-3xl font-bold text-foreground">{t('waitingList')}</h1>
                 <button
                     onClick={onAddToWaitlist}
                     className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2 px-4 rounded-lg"
                 >
                     <UserPlusIcon className="w-5 h-5" />
-                    Add to Waitlist
+                    {t('addToWaitlist')}
                 </button>
             </div>
 
@@ -69,11 +72,11 @@ const WaitlistView: React.FC<WaitlistViewProps> = ({ waitlist, onAddToWaitlist, 
                     <table className="min-w-full divide-y divide-border">
                         <thead className="bg-muted/50 sticky top-0">
                             <tr>
-                                <th className={thClass}>Customer</th>
-                                <th className={thClass}>Party Size</th>
-                                <th className={thClass}>Quoted Wait</th>
-                                <th className={thClass}>Status</th>
-                                <th className={thClass}>Actions</th>
+                                <th className={thClass}>{t('customers')}</th>
+                                <th className={thClass}>{t('partySize')}</th>
+                                <th className={thClass}>{t('quotedWait')}</th>
+                                <th className={thClass}>{t('status')}</th>
+                                <th className={thClass}>{t('actions')}</th>
                             </tr>
                         </thead>
                         <tbody className="bg-card divide-y divide-border">
@@ -93,10 +96,10 @@ const WaitlistView: React.FC<WaitlistViewProps> = ({ waitlist, onAddToWaitlist, 
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-2">
                                                 {entry.status === 'Waiting' && (
-                                                    <button onClick={() => onUpdateStatus(entry.id, 'Notified')} className="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold text-xs py-1 px-3 rounded-md">Notify</button>
+                                                    <button onClick={() => onUpdateStatus(entry.id, 'Notified')} className="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold text-xs py-1 px-3 rounded-md">{t('notify')}</button>
                                                 )}
-                                                <button onClick={() => onSeatParty(entry.id)} className="bg-green-600 hover:bg-green-700 text-white font-semibold text-xs py-1 px-3 rounded-md">Seat Party</button>
-                                                <button onClick={() => onUpdateStatus(entry.id, 'Removed')} className="text-destructive hover:underline text-xs">Remove</button>
+                                                <button onClick={() => onSeatParty(entry.id)} className="bg-green-600 hover:bg-green-700 text-white font-semibold text-xs py-1 px-3 rounded-md">{t('seatParty')}</button>
+                                                <button onClick={() => onUpdateStatus(entry.id, 'Removed')} className="text-destructive hover:underline text-xs">{t('remove')}</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -106,7 +109,7 @@ const WaitlistView: React.FC<WaitlistViewProps> = ({ waitlist, onAddToWaitlist, 
                     </table>
                     {activeWaitlist.length === 0 && (
                         <div className="text-center text-muted-foreground py-20">
-                            <p>The waitlist is currently empty.</p>
+                            <p>{t('waitlistEmpty')}</p>
                         </div>
                     )}
                 </div>

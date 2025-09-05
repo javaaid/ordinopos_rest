@@ -1,18 +1,16 @@
-
 import React from 'react';
 import { HeldOrder } from '../types';
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/Modal';
 import { Button } from './ui/Button';
+import { useAppContext } from '../contexts/AppContext';
 
 interface HeldOrdersModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    heldOrders: HeldOrder[];
-    onReopenOrder: (id: string) => void;
-    onDeleteHeldOrder: (id: string) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClose, heldOrders, onReopenOrder, onDeleteHeldOrder }) => {
+const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClose }) => {
+    const { heldOrders, handleReopenOrder, handleDeleteHeldOrder } = useAppContext();
     return (
         <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl">
             <ModalHeader>
@@ -21,7 +19,7 @@ const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClose, held
             <ModalContent>
                 {heldOrders.length > 0 ? (
                     <div className="space-y-3">
-                        {heldOrders.map(order => (
+                        {heldOrders.map((order: HeldOrder) => (
                             <div key={order.id} className="bg-secondary p-3 rounded-lg flex justify-between items-center">
                                 <div>
                                     <p className="font-semibold text-foreground">
@@ -32,8 +30,8 @@ const HeldOrdersModal: React.FC<HeldOrdersModalProps> = ({ isOpen, onClose, held
                                     </p>
                                 </div>
                                 <div className="flex gap-2">
-                                    <Button size="sm" onClick={() => onReopenOrder(order.id)}>Re-open</Button>
-                                    <Button size="sm" variant="destructive" onClick={() => onDeleteHeldOrder(order.id)}>Delete</Button>
+                                    <Button size="sm" onClick={() => handleReopenOrder(order.id)}>Re-open</Button>
+                                    <Button size="sm" variant="destructive" onClick={() => handleDeleteHeldOrder(order.id)}>Delete</Button>
                                 </div>
                             </div>
                         ))}

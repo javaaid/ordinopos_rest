@@ -1,5 +1,8 @@
 
 
+
+
+
 import React, { useMemo } from 'react';
 import { CartItem, Customer, OrderType } from '../types';
 import TrashIcon from './icons/TrashIcon';
@@ -113,7 +116,7 @@ const OrderItem: React.FC<OrderItemProps> = ({ cartItem, onRemoveItem, onUpdateC
       </div>
       <div className="font-bold text-foreground text-end flex-shrink-0 text-sm">
          {originalPrice && (
-            <span className="text-muted-foreground line-through mr-1.5">${originalPrice.toFixed(2)}</span>
+            <span className="text-muted-foreground line-through me-1.5">${originalPrice.toFixed(2)}</span>
         )}
         <span>${calculateItemTotal(cartItem, orderType, customer).toFixed(2)}</span>
       </div>

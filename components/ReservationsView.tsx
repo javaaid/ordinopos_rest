@@ -1,9 +1,10 @@
-
 import React, { useState, useMemo } from 'react';
 import { Reservation, Customer, ReservationStatus, ReservationSystem } from '../types';
 import CalendarUserIcon from './icons/CalendarUserIcon';
 import UserPlusIcon from './icons/UserPlusIcon';
 import ArrowPathRoundedSquareIcon from './icons/ArrowPathRoundedSquareIcon';
+import { useTranslations } from '../hooks/useTranslations';
+import { useAppContext } from '../contexts/AppContext';
 
 interface ReservationsViewProps {
     reservations: Reservation[];
@@ -25,6 +26,8 @@ const statusStyles: Record<ReservationStatus, { text: string, bg: string, text_c
 };
 
 const ReservationsView: React.FC<ReservationsViewProps> = ({ reservations, customers, onAddReservation, onEditReservation, onUpdateStatus, onSeatParty, reservationSystem, onSync, lastSync }) => {
+    const { settings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [isSyncing, setIsSyncing] = useState(false);
 
@@ -45,20 +48,20 @@ const ReservationsView: React.FC<ReservationsViewProps> = ({ reservations, custo
             .sort((a, b) => a.reservationTime - b.reservationTime);
     }, [reservations, selectedDate]);
     
-    const thClass = "px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider";
+    const thClass = "px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wider";
 
     return (
         <div className="p-6 h-full flex flex-col">
             <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
                  <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
                     <CalendarUserIcon className="w-8 h-8"/>
-                    Reservations
+                    {t('reservations')}
                 </h1>
                 <div className="flex items-center gap-4">
                     {reservationSystem !== 'none' && (
                         <div className="flex items-center gap-2">
                              <p className="text-xs text-muted-foreground">
-                                {lastSync ? `Last synced: ${new Date(lastSync).toLocaleTimeString()}` : 'Not synced yet.'}
+                                {lastSync ? `${t('lastSynced')}: ${new Date(lastSync).toLocaleTimeString()}` : t('notSynced')}
                              </p>
                              <button
                                 onClick={handleSync}
@@ -66,7 +69,7 @@ const ReservationsView: React.FC<ReservationsViewProps> = ({ reservations, custo
                                 className="flex items-center gap-2 bg-secondary hover:bg-muted text-secondary-foreground font-bold py-2 px-3 rounded-lg text-sm disabled:cursor-wait"
                              >
                                 <ArrowPathRoundedSquareIcon className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                                {isSyncing ? 'Syncing...' : 'Sync Now'}
+                                {isSyncing ? 'Syncing...' : t('syncNow')}
                              </button>
                         </div>
                     )}
@@ -81,7 +84,7 @@ const ReservationsView: React.FC<ReservationsViewProps> = ({ reservations, custo
                         className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2 px-4 rounded-lg"
                     >
                         <UserPlusIcon className="w-5 h-5" />
-                        Add Reservation
+                        {t('newReservation')}
                     </button>
                 </div>
             </div>
@@ -97,12 +100,12 @@ const ReservationsView: React.FC<ReservationsViewProps> = ({ reservations, custo
                     <table className="min-w-full divide-y divide-border">
                         <thead className="bg-muted/50 sticky top-0">
                             <tr>
-                                <th className={thClass}>Time</th>
-                                <th className={thClass}>Customer</th>
-                                <th className={thClass}>Party Size</th>
-                                <th className={thClass}>Status</th>
-                                <th className={thClass}>Notes</th>
-                                <th className={thClass}>Actions</th>
+                                <th className={thClass}>{t('time')}</th>
+                                <th className={thClass}>{t('customers')}</th>
+                                <th className={thClass}>{t('partySize')}</th>
+                                <th className={thClass}>{t('status')}</th>
+                                <th className={thClass}>{t('notes')}</th>
+                                <th className={thClass}>{t('actions')}</th>
                             </tr>
                         </thead>
                          <tbody className="bg-card divide-y divide-border">
@@ -124,10 +127,10 @@ const ReservationsView: React.FC<ReservationsViewProps> = ({ reservations, custo
                                        <td className="px-4 py-3">
                                             {res.status === 'pending' && (
                                                 <div className="flex items-center gap-2">
-                                                    <button onClick={() => onSeatParty(res)} className="bg-green-600 hover:bg-green-700 text-white font-semibold text-xs py-1 px-3 rounded-md">Seat Party</button>
-                                                    <button onClick={() => onEditReservation(res)} className="text-primary hover:underline text-xs">Edit</button>
-                                                    <button onClick={() => onUpdateStatus(res.id, 'cancelled')} className="text-muted-foreground hover:underline text-xs">Cancel</button>
-                                                    <button onClick={() => onUpdateStatus(res.id, 'no-show')} className="text-destructive hover:underline text-xs">No-Show</button>
+                                                    <button onClick={() => onSeatParty(res)} className="bg-green-600 hover:bg-green-700 text-white font-semibold text-xs py-1 px-3 rounded-md">{t('seatParty')}</button>
+                                                    <button onClick={() => onEditReservation(res)} className="text-primary hover:underline text-xs">{t('edit')}</button>
+                                                    <button onClick={() => onUpdateStatus(res.id, 'cancelled')} className="text-muted-foreground hover:underline text-xs">{t('cancel')}</button>
+                                                    <button onClick={() => onUpdateStatus(res.id, 'no-show')} className="text-destructive hover:underline text-xs">{t('noShow')}</button>
                                                 </div>
                                             )}
                                        </td>
@@ -138,7 +141,7 @@ const ReservationsView: React.FC<ReservationsViewProps> = ({ reservations, custo
                     </table>
                     {filteredReservations.length === 0 && (
                         <div className="text-center text-muted-foreground py-20">
-                            <p>No reservations for {new Date(selectedDate).toLocaleDateString()}.</p>
+                            <p>{t('noReservationsForDate').replace('{date}', new Date(selectedDate).toLocaleDateString())}</p>
                         </div>
                     )}
                 </div>

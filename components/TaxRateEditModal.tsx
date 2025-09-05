@@ -1,8 +1,11 @@
 
-
 import React, { useState, useEffect } from 'react';
-import { useDataContext } from '../contexts/AppContext';
+import { useDataContext, useAppContext } from '../contexts/AppContext';
+import { useTranslations } from '../hooks/useTranslations';
 import { Location } from '../types';
+import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/Modal';
+import { Input } from './ui/Input';
+import { Button } from './ui/Button';
 
 interface TaxRateEditModalProps {
     isOpen: boolean;
@@ -14,7 +17,8 @@ interface TaxRateEditModalProps {
 }
 
 const TaxRateEditModal: React.FC<TaxRateEditModalProps> = ({ isOpen, onClose, onSave, taxRate, existingNames, selectedLocationId }) => {
-    const { locations } = useDataContext();
+    const { locations, settings } = useDataContext();
+    const t = useTranslations(settings.language.staff);
     const [name, setName] = useState('');
     const [rate, setRate] = useState(0);
     const [error, setError] = useState('');
@@ -97,24 +101,24 @@ const TaxRateEditModal: React.FC<TaxRateEditModalProps> = ({ isOpen, onClose, on
             <div className="bg-card rounded-lg shadow-xl w-full max-w-md border border-border">
                 <form onSubmit={handleSubmit}>
                     <div className="p-6 border-b border-border">
-                        <h2 className="text-2xl font-bold text-foreground">{taxRate ? 'Edit Tax Rate' : 'Add New Tax Rate'}</h2>
+                        <h2 className="text-2xl font-bold text-foreground text-start rtl:text-end">{taxRate ? t('edit') : t('addNewTaxRate')}</h2>
                     </div>
                     <div className="p-6 space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">Tax Name</label>
-                            <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-input p-2 rounded-md border border-border focus:ring-primary focus:border-primary text-foreground" required />
+                            <label className="block text-sm font-medium text-muted-foreground mb-1 text-start rtl:text-end">{t('taxName')}</label>
+                            <Input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-input p-2 rounded-md border border-border focus:ring-primary focus:border-primary text-foreground" required />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">Rate (%)</label>
-                            <input type="number" value={rate} onChange={e => setRate(parseFloat(e.target.value) || 0)} className="w-full bg-input p-2 rounded-md border border-border focus:ring-primary focus:border-primary text-foreground" step="0.01" min="0" required />
+                            <label className="block text-sm font-medium text-muted-foreground mb-1 text-start rtl:text-end">{t('ratePercent')}</label>
+                            <Input type="number" value={rate} onChange={e => setRate(parseFloat(e.target.value) || 0)} className="w-full bg-input p-2 rounded-md border border-border focus:ring-primary focus:border-primary text-foreground" step="0.01" min="0" required />
                         </div>
                         {!taxRate && locations.length > 1 && (
                             <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">Apply to Locations</label>
+                                <label className="block text-sm font-medium text-muted-foreground mb-1 text-start rtl:text-end">{t('applyToLocations')}</label>
                                 <div className="max-h-32 overflow-y-auto bg-secondary p-2 rounded-md space-y-1 border border-border">
-                                    <label className="flex items-center gap-2 p-1.5 rounded hover:bg-muted cursor-pointer">
+                                    <label className="flex items-center gap-2 p-1.5 rounded hover:bg-muted cursor-pointer text-start rtl:text-right">
                                         <input type="checkbox" checked={isAllSelected} onChange={e => handleSelectAllLocations(e.target.checked)} className="h-4 w-4 rounded border-border text-primary focus:ring-primary" />
-                                        All Locations
+                                        {t('allLocations')}
                                     </label>
                                     {locations.map((loc: Location) => (
                                         <label key={loc.id} className="flex items-center gap-2 p-1.5 rounded hover:bg-muted cursor-pointer">
@@ -128,8 +132,8 @@ const TaxRateEditModal: React.FC<TaxRateEditModalProps> = ({ isOpen, onClose, on
                         {error && <p className="text-destructive text-sm">{error}</p>}
                     </div>
                     <div className="p-6 border-t border-border flex justify-end items-center space-x-4">
-                        <button type="button" onClick={onClose} className="px-6 py-2 rounded-md bg-secondary text-secondary-foreground font-semibold hover:bg-muted">Cancel</button>
-                        <button type="submit" className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90">Save</button>
+                        <button type="button" onClick={onClose} className="px-6 py-2 rounded-md bg-secondary text-secondary-foreground font-semibold hover:bg-muted">{t('cancel')}</button>
+                        <button type="submit" className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90">{t('saveTaxRate')}</button>
                     </div>
                 </form>
             </div>

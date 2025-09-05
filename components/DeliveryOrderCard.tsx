@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Order, Driver } from '../types';
+import { useTranslations } from '../hooks/useTranslations';
+import { useAppContext } from '../contexts/AppContext';
 
 interface DeliveryOrderCardProps {
     order: Order;
@@ -10,6 +12,8 @@ interface DeliveryOrderCardProps {
 }
 
 const DeliveryOrderCard: React.FC<DeliveryOrderCardProps> = ({ order, drivers, availableDrivers, onAssignDriver, onCompleteDelivery }) => {
+    const { settings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const [selectedDriver, setSelectedDriver] = useState<string>('');
     
     const customer = order.customer;
@@ -29,7 +33,7 @@ const DeliveryOrderCard: React.FC<DeliveryOrderCardProps> = ({ order, drivers, a
                     <p className="text-sm text-muted-foreground">{customer?.name}</p>
                     <p className="text-xs text-muted-foreground">{customer?.address}</p>
                 </div>
-                <div className="text-right flex-shrink-0">
+                <div className="text-end flex-shrink-0">
                     <p className="font-bold text-lg text-foreground">${order.total.toFixed(2)}</p>
                     <p className="text-xs text-muted-foreground">{order.cart.length} item(s)</p>
                 </div>
@@ -45,7 +49,7 @@ const DeliveryOrderCard: React.FC<DeliveryOrderCardProps> = ({ order, drivers, a
 
             {order.status === 'kitchen' && (
                 <div className="text-center p-2 bg-orange-500/10 rounded-md">
-                    <p className="font-semibold text-sm text-orange-500">Preparing in kitchen...</p>
+                    <p className="font-semibold text-sm text-orange-500">{t('preparingInKitchen')}</p>
                 </div>
             )}
 
@@ -56,7 +60,7 @@ const DeliveryOrderCard: React.FC<DeliveryOrderCardProps> = ({ order, drivers, a
                         onChange={(e) => setSelectedDriver(e.target.value)}
                         className="w-full bg-background border border-border rounded-md px-3 py-2 text-foreground focus:ring-primary focus:border-primary"
                     >
-                        <option value="" disabled>Assign a driver...</option>
+                        <option value="" disabled>{t('assignDriverPlaceholder')}</option>
                         {availableDrivers.map(d => (
                             <option key={d.id} value={d.id}>{d.name}</option>
                         ))}
@@ -66,7 +70,7 @@ const DeliveryOrderCard: React.FC<DeliveryOrderCardProps> = ({ order, drivers, a
                         disabled={!selectedDriver}
                         className="bg-primary text-primary-foreground font-semibold py-2 px-4 rounded-md hover:bg-primary/90 disabled:bg-muted disabled:cursor-not-allowed transition-colors flex-shrink-0"
                     >
-                        Assign
+                        {t('assign')}
                     </button>
                 </div>
             )}
@@ -74,13 +78,13 @@ const DeliveryOrderCard: React.FC<DeliveryOrderCardProps> = ({ order, drivers, a
             {order.status === 'out-for-delivery' && (
                 <div className="flex flex-col gap-2">
                     <p className="text-sm text-muted-foreground">
-                        Assigned to: <span className="font-bold text-foreground">{driver?.name || '...'}</span>
+                        {t('assignedTo')}: <span className="font-bold text-foreground">{driver?.name || '...'}</span>
                     </p>
                     <button
                         onClick={() => onCompleteDelivery(order.id)}
                         className="w-full bg-green-600 text-white font-bold py-2 rounded-md hover:bg-green-700 transition-colors"
                     >
-                        Mark as Delivered
+                        {t('markAsDelivered')}
                     </button>
                 </div>
             )}

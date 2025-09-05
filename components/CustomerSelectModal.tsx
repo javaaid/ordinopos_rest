@@ -1,18 +1,16 @@
-
 import React, { useState, useMemo } from 'react';
 import { Customer } from '../types';
 import SearchIcon from './icons/SearchIcon';
 import UserPlusIcon from './icons/UserPlusIcon';
+import { useAppContext } from '../contexts/AppContext';
 
 interface CustomerSelectModalProps {
   isOpen: boolean;
   onClose: () => void;
-  customers: Customer[];
-  onSelectCustomer: (customer: Customer) => void;
-  onAddNewCustomer: () => void;
 }
 
-const CustomerSelectModal: React.FC<CustomerSelectModalProps> = ({ isOpen, onClose, customers, onSelectCustomer, onAddNewCustomer }) => {
+const CustomerSelectModal: React.FC<CustomerSelectModalProps> = ({ isOpen, onClose }) => {
+  const { customers, onSelectCustomer, openModal, closeModal } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredCustomers = useMemo(() => {
@@ -20,7 +18,7 @@ const CustomerSelectModal: React.FC<CustomerSelectModalProps> = ({ isOpen, onClo
       return customers;
     }
     const lowerQuery = searchQuery.toLowerCase();
-    return customers.filter(c => 
+    return (customers || []).filter((c: Customer) => 
         c.name.toLowerCase().includes(lowerQuery) ||
         c.phone.includes(lowerQuery)
     );
@@ -29,9 +27,14 @@ const CustomerSelectModal: React.FC<CustomerSelectModalProps> = ({ isOpen, onClo
   if (!isOpen) return null;
 
   const handleAddNew = () => {
-    onClose();
-    onAddNewCustomer();
+    onClose(); // Close this modal before opening the edit modal
+    openModal('customerEdit');
   };
+
+  const handleSelect = (customer: Customer) => {
+    onSelectCustomer(customer);
+    onClose();
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 p-4">
@@ -54,10 +57,10 @@ const CustomerSelectModal: React.FC<CustomerSelectModalProps> = ({ isOpen, onClo
             </div>
         </div>
         <div className="flex-grow overflow-y-auto p-4 space-y-2">
-            {filteredCustomers.map(customer => (
+            {(filteredCustomers || []).map((customer: Customer) => (
                 <div 
                     key={customer.id} 
-                    onClick={() => onSelectCustomer(customer)}
+                    onClick={() => handleSelect(customer)}
                     className="p-3 rounded-lg hover:bg-muted cursor-pointer"
                 >
                     <p className="font-semibold text-foreground">{customer.name}</p>

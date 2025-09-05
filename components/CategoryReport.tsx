@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo } from 'react';
 import { Order, Category, Ingredient, RecipeItem } from '../types';
 import { useAppContext } from '../contexts/AppContext';
@@ -105,7 +106,7 @@ const CategoryReport: React.FC<CategoryReportProps> = ({ orders, categories, ing
         return sortDirection === 'desc' ? '▼' : '▲';
     };
     
-    const thClass = "px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer";
+    const thClass = "px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer";
 
     return (
         <div className="w-full">

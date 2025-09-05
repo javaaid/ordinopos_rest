@@ -1,10 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAppContext, useToastContext } from '../contexts/AppContext';
-import { AppSettings, OrderSettings, OrderType } from '../types';
+import { AppSettings, OrderSettings } from '../types';
+import { useTranslations } from '../hooks/useTranslations';
 
 const NumberingSettingsView: React.FC = () => {
     const { settings, setSettings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const { addToast } = useToastContext();
     const [localSettings, setLocalSettings] = useState<Partial<OrderSettings>>({});
 
@@ -36,36 +37,36 @@ const NumberingSettingsView: React.FC = () => {
     if (!localSettings.nextDailyOrderNumber) return null; // Guard against old state shape
 
     return (
-        <div className="h-full flex flex-col">
-            <h3 className="text-xl font-bold text-foreground">Numbering Settings</h3>
+        <div className="h-full flex flex-col text-start rtl:text-end">
+            <h3 className="text-xl font-bold text-foreground">{t('numbering_title')}</h3>
             <p className="text-muted-foreground mt-2 mb-6">
-                Customize the numbering format for your invoices and daily orders for each service type.
+                {t('numbering_description')}
             </p>
             <div className="space-y-8 max-w-2xl flex-grow overflow-y-auto pr-2">
                 <div className="bg-secondary p-6 rounded-lg">
-                    <h4 className="font-bold text-foreground mb-4">Invoice Number Sequence</h4>
+                    <h4 className="font-bold text-foreground mb-4">{t('numbering_invoice_group')}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">Prefix</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">{t('numbering_invoicePrefix_label')}</label>
                             <input name="invoicePrefix" value={localSettings.invoicePrefix || ''} onChange={handleChange} className="w-full bg-input p-2 rounded-md border border-border" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">Next Number</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">{t('numbering_nextInvoiceNum_label')}</label>
                             <input type="number" name="nextInvoiceNumber" value={localSettings.nextInvoiceNumber || ''} onChange={handleChange} className="w-full bg-input p-2 rounded-md border border-border" min="1"/>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">Suffix</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">{t('numbering_invoiceSuffix_label')}</label>
                             <input name="invoiceSuffix" value={localSettings.invoiceSuffix || ''} onChange={handleChange} className="w-full bg-input p-2 rounded-md border border-border" />
                         </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">Example: <span className="font-mono bg-background px-1 py-0.5 rounded">{exampleInvoice}</span></p>
+                    <p className="text-xs text-muted-foreground mt-2">{t('numbering_invoiceExample_label')}: <span className="font-mono bg-background px-1 py-0.5 rounded">{exampleInvoice}</span></p>
                 </div>
 
                 <div className="bg-secondary p-6 rounded-lg">
-                    <h4 className="font-bold text-foreground mb-4">Daily Order Number Sequence</h4>
-                    <p className="text-muted-foreground text-sm mb-4">Set the *next* order number. This sequence is used for all order types and resets to 1 automatically each day.</p>
+                    <h4 className="font-bold text-foreground mb-4">{t('numbering_dailyOrder_group')}</h4>
+                    <p className="text-muted-foreground text-sm mb-4">{t('numbering_dailyOrder_desc')}</p>
                      <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">Next Order Number</label>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">{t('numbering_nextOrderNum_label')}</label>
                         <input 
                             type="number"
                             name="nextDailyOrderNumber"
@@ -78,12 +79,12 @@ const NumberingSettingsView: React.FC = () => {
                 </div>
                 
             </div>
-             <div className="pt-6 text-right mt-auto">
+             <div className="pt-6 text-end mt-auto rtl:text-left">
                 <button
                     onClick={handleSave}
                     className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
                 >
-                    Save Numbering Settings
+                    {t('saveSettings')}
                 </button>
             </div>
         </div>

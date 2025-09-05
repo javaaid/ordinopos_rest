@@ -1,9 +1,11 @@
 
+
 import React from 'react';
 import { AppPlugin, AppSettings } from '../types';
 import PlusIcon from './icons/PlusIcon';
 import CogIcon from './icons/CogIcon';
 import { useDataContext, useModalContext, useToastContext, useAppContext } from '../contexts/AppContext';
+import { useTranslations } from '../hooks/useTranslations';
 
 const TRIAL_DAYS = 30;
 
@@ -48,7 +50,7 @@ const PluginCard: React.FC<{ plugin: AppPlugin, onToggle: (id: string) => void, 
     const canConfigure = isEnabled && (plugin.isFree || plugin.id === 'payment-terminal');
 
     return (
-        <div className="bg-card border border-border rounded-lg p-4 flex flex-col justify-between">
+        <div className="bg-card border border-border rounded-lg p-4 flex flex-col justify-between text-start rtl:text-right">
             <div>
                 <div className="flex justify-between items-start">
                     <div>
@@ -98,6 +100,7 @@ const PluginsView: React.FC = () => {
     const { plugins, handleTogglePlugin, handleActivatePlugin, settings, setSettings } = useAppContext();
     const { addToast } = useToastContext();
     const { openModal } = useModalContext();
+    const t = useTranslations(settings.language.staff);
 
     const onConfigure = (pluginId: string) => {
         if (pluginId === 'payment-terminal') {
@@ -125,9 +128,9 @@ const PluginsView: React.FC = () => {
     return (
         <div className="p-6 h-full flex flex-col rounded-lg">
             <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h2 className="text-2xl font-bold text-foreground">Plugins</h2>
-                    <p className="text-muted-foreground">Extend your POS functionality.</p>
+                <div className="rtl:text-right">
+                    <h2 className="text-2xl font-bold text-foreground">{t('plugins')}</h2>
+                    <p className="text-muted-foreground">{t('pluginsDescription')}</p>
                 </div>
                  <button onClick={handleFabClick} className="bg-primary text-primary-foreground p-3 rounded-full shadow-lg hover:bg-primary/90">
                     <PlusIcon className="w-6 h-6"/>
@@ -136,13 +139,13 @@ const PluginsView: React.FC = () => {
             
             <div className="overflow-y-auto space-y-8">
                 <div>
-                    <h3 className="text-xl font-semibold text-foreground mb-4">Management</h3>
+                    <h3 className="text-xl font-semibold text-foreground mb-4 rtl:text-right">Management</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {freePlugins.map(plugin => <PluginCard key={plugin.id} plugin={plugin} onToggle={handleTogglePlugin} onActivate={onActivate} onConfigure={onConfigure} />)}
                     </div>
                 </div>
                 <div>
-                    <h3 className="text-xl font-semibold text-foreground mb-4">Paid Plugins</h3>
+                    <h3 className="text-xl font-semibold text-foreground mb-4 rtl:text-right">Paid Plugins</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {paidPlugins.map(plugin => <PluginCard key={plugin.id} plugin={plugin} onToggle={handleTogglePlugin} onActivate={onActivate} onConfigure={onConfigure} />)}
                     </div>

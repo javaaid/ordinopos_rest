@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { Order, Customer, Location } from '../types';
 
@@ -91,7 +92,7 @@ const CustomerReport: React.FC<CustomerReportProps> = ({ orders, customers, loca
         return sortDirection === 'desc' ? '▼' : '▲';
     };
     
-    const thClass = "px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer";
+    const thClass = "px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer";
     const isAllLocationsView = currentLocationId === 'all_locations';
 
     return (
@@ -112,10 +113,10 @@ const CustomerReport: React.FC<CustomerReportProps> = ({ orders, customers, loca
                             <th className={thClass} onClick={() => handleSort('totalSpent')}>
                                 Total Spent <SortIndicator for_key="totalSpent" />
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer" onClick={() => handleSort('avgSpend')}>
+                            <th className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer" onClick={() => handleSort('avgSpend')}>
                                 Avg. Spend <SortIndicator for_key="avgSpend" />
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer" onClick={() => handleSort('lastOrderDate')}>
+                            <th className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer" onClick={() => handleSort('lastOrderDate')}>
                                 Last Order <SortIndicator for_key="lastOrderDate" />
                             </th>
                         </tr>

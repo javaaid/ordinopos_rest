@@ -1,10 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { SignageContentItem, SignageContentType, MenuItem } from '../types';
-import { useDataContext } from '../contexts/AppContext';
+import { useDataContext, useAppContext } from '../contexts/AppContext';
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/Modal';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
 import { Select } from './ui/Select';
+import { useTranslations } from '../hooks/useTranslations';
 
 interface SignageContentEditModalProps {
   isOpen: boolean;
@@ -14,7 +16,8 @@ interface SignageContentEditModalProps {
 }
 
 const SignageContentEditModal: React.FC<SignageContentEditModalProps> = ({ isOpen, onClose, onSave, content }) => {
-    const { menuItems } = useDataContext();
+    const { menuItems, settings } = useDataContext();
+    const t = useTranslations(settings.language.staff);
     const [name, setName] = useState('');
     const [type, setType] = useState<SignageContentType>('image');
     const [sourceUrl, setSourceUrl] = useState('');
@@ -60,45 +63,45 @@ const SignageContentEditModal: React.FC<SignageContentEditModalProps> = ({ isOpe
         <Modal isOpen={isOpen} onClose={onClose}>
             <form onSubmit={handleSubmit}>
                 <ModalHeader>
-                    <ModalTitle>{content ? 'Edit Content' : 'Add New Content'}</ModalTitle>
+                    <ModalTitle>{content ? t('edit') : t('addNewContent')}</ModalTitle>
                 </ModalHeader>
                 <ModalContent className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">Content Name</label>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1 text-start rtl:text-end">{t('contentName')}</label>
                         <Input value={name} onChange={e => setName(e.target.value)} required />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">Type</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1 text-start rtl:text-end">{t('type')}</label>
                             <Select value={type} onChange={e => setType(e.target.value as SignageContentType)}>
-                                <option value="image">Image</option>
-                                <option value="video">Video (Simulated)</option>
-                                <option value="menu_promo">Menu Promotion</option>
+                                <option value="image">{t('image')}</option>
+                                <option value="video">{t('video')}</option>
+                                <option value="menu_promo">{t('menu_promo')}</option>
                             </Select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">Duration (seconds)</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1 text-start rtl:text-end">{t('durationSeconds')}</label>
                             <Input type="number" value={duration} onChange={e => setDuration(parseInt(e.target.value))} min="1" required />
                         </div>
                     </div>
                     {type === 'image' && (
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">Image URL</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1 text-start rtl:text-end">{t('imageUrl')}</label>
                             <Input value={sourceUrl} onChange={e => setSourceUrl(e.target.value)} placeholder="https://example.com/image.jpg" required />
                         </div>
                     )}
                     {type === 'video' && (
                          <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">Video URL (Not functional)</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1 text-start rtl:text-end">{t('video')}</label>
                             <Input value={sourceUrl} onChange={e => setSourceUrl(e.target.value)} placeholder="https://example.com/video.mp4" />
                         </div>
                     )}
                     {type === 'menu_promo' && (
                         <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">Select Menu Items</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1 text-start rtl:text-end">{t('menu_products')}</label>
                             <div className="max-h-40 overflow-y-auto bg-secondary p-2 rounded-md border border-border">
                                 {menuItems.map((item: MenuItem) => (
-                                    <label key={item.id} className="flex items-center gap-2 p-1.5 rounded hover:bg-muted">
+                                    <label key={item.id} className="flex items-center gap-2 p-1.5 rounded hover:bg-muted text-start rtl:text-end">
                                         <input
                                             type="checkbox"
                                             checked={selectedMenuItemIds.includes(item.id)}
@@ -112,8 +115,8 @@ const SignageContentEditModal: React.FC<SignageContentEditModalProps> = ({ isOpe
                     )}
                 </ModalContent>
                 <ModalFooter>
-                    <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-                    <Button type="submit">Save Content</Button>
+                    <Button type="button" variant="ghost" onClick={onClose}>{t('cancel')}</Button>
+                    <Button type="submit">{t('saveContent')}</Button>
                 </ModalFooter>
             </form>
         </Modal>

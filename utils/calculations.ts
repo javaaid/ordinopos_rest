@@ -1,5 +1,6 @@
 
 
+
 import { CartItem, Location, AppliedDiscount, Promotion, MenuItem, OrderType, AppSettings, RecipeItem, Ingredient, Customer, Surcharge } from '../types';
 
 export const getPriceForItem = (item: MenuItem, orderType: OrderType, customer?: Customer | null): number => {
@@ -19,6 +20,18 @@ export const getPriceForItem = (item: MenuItem, orderType: OrderType, customer?:
     return item.price; // Default to dine-in price
 };
 
+export interface OrderTotals {
+  subtotal: number;
+  discountAmount: number;
+  loyaltyDiscountAmount: number;
+  tax: number;
+  taxDetails: Record<string, number>;
+  total: number;
+  finalAppliedDiscount: AppliedDiscount | null;
+  surchargeAmount: number;
+  surchargeDetails: { name: string; amount: number } | null;
+}
+
 export const calculateOrderTotals = (
     cart: CartItem[],
     location: Location,
@@ -29,7 +42,7 @@ export const calculateOrderTotals = (
     customer: Customer | null | undefined,
     surcharges: Surcharge[] = [],
     appliedLoyaltyPoints: number = 0
-) => {
+): OrderTotals => {
     const safeCart = cart || [];
     let subtotal = 0;
     const taxDetails: Record<string, number> = {};

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Printer } from '../types';
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/Modal';
@@ -6,6 +5,8 @@ import { Input } from './ui/Input';
 import { Button } from './ui/Button';
 import { Select } from './ui/Select';
 import { DEFAULT_KITCHEN_PRINT_SETTINGS, DEFAULT_RECEIPT_SETTINGS } from '../constants';
+import { useAppContext } from '../contexts/AppContext';
+import { useTranslations } from '../hooks/useTranslations';
 
 interface PrinterEditModalProps {
     isOpen: boolean;
@@ -17,7 +18,9 @@ interface PrinterEditModalProps {
 type NewPrinterType = 'receipt' | 'kitchen' | 'profile_hub';
 
 const PrinterEditModal: React.FC<PrinterEditModalProps> = ({ isOpen, onClose, onSave }) => {
-    const [name, setName] = useState('New Printer');
+    const { settings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
+    const [name, setName] = useState(t('newPrinter'));
     const [printerType, setPrinterType] = useState<NewPrinterType>('receipt');
 
     if (!isOpen) return null;
@@ -49,34 +52,38 @@ const PrinterEditModal: React.FC<PrinterEditModalProps> = ({ isOpen, onClose, on
         onSave(newPrinter as Printer);
     };
 
+    const descriptions: Record<NewPrinterType, string> = {
+        receipt: t('printsReceipts'),
+        kitchen: t('kitchenStationPrinterDesc'),
+        profile_hub: t('kitchenProfileHubDesc'),
+    };
+
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
             <form onSubmit={handleSubmit}>
                 <ModalHeader>
-                    <ModalTitle>Add New Printer</ModalTitle>
+                    <ModalTitle>{t('addNewPrinter')}</ModalTitle>
                 </ModalHeader>
                 <ModalContent className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">Printer Name</label>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1 text-start rtl:text-end">{t('printerName')}</label>
                         <Input value={name} onChange={e => setName(e.target.value)} required />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">Printer Role</label>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1 text-start rtl:text-end">{t('printerRole')}</label>
                         <Select value={printerType} onChange={e => setPrinterType(e.target.value as NewPrinterType)}>
-                            <option value="receipt">Standard Receipt/Order Printer</option>
-                            <option value="kitchen">Single Kitchen Station Printer</option>
-                            <option value="profile_hub">Kitchen Profile Hub (for multiple stations)</option>
+                            <option value="receipt">{t('standardReceiptPrinter')}</option>
+                            <option value="kitchen">{t('kitchenStationPrinter')}</option>
+                            <option value="profile_hub">{t('kitchenProfileHub')}</option>
                         </Select>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            {printerType === 'receipt' && 'Prints customer receipts and simple order tickets.'}
-                            {printerType === 'kitchen' && 'A dedicated printer for a single station like "Kitchen" or "Bar".'}
-                            {printerType === 'profile_hub' && 'A single printer that can print tickets for multiple stations (e.g., Kitchen 1, Kitchen 2, Bar).'}
+                        <p className="text-xs text-muted-foreground mt-1 text-start rtl:text-end">
+                            {descriptions[printerType]}
                         </p>
                     </div>
                 </ModalContent>
                 <ModalFooter>
-                    <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-                    <Button type="submit">Create and Configure</Button>
+                    <Button type="button" variant="ghost" onClick={onClose}>{t('cancel')}</Button>
+                    <Button type="submit">{t('createAndConfigure')}</Button>
                 </ModalFooter>
             </form>
         </Modal>

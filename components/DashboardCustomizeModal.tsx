@@ -1,11 +1,11 @@
-
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { SalesDashboardWidgetId } from '../types';
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/Modal';
 import { Button } from './ui/Button';
 import ArrowUpIcon from './icons/ArrowUpIcon';
 import ArrowDownIcon from './icons/ArrowDownIcon';
+import { useAppContext } from '../contexts/AppContext';
+import { useTranslations } from '../hooks/useTranslations';
 
 interface DashboardCustomizeModalProps {
     isOpen: boolean;
@@ -14,19 +14,21 @@ interface DashboardCustomizeModalProps {
     widgetOrder: SalesDashboardWidgetId[];
 }
 
-const widgetLabels: Record<SalesDashboardWidgetId, string> = {
-    stats: "Key Stat Cards",
-    chart: "Sales Trend Chart",
-    payment: "Payment Breakdown",
-    topItems: "Top Selling Items",
-    locationPerformance: "Location Performance",
-    quickActions: "Quick Actions",
-    lowStock: "Low Stock Alerts",
-    recentTransactions: "Recent Transactions",
-};
-
 const DashboardCustomizeModal: React.FC<DashboardCustomizeModalProps> = ({ isOpen, onClose, onSave, widgetOrder }) => {
+    const { settings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const [orderedWidgets, setOrderedWidgets] = useState<SalesDashboardWidgetId[]>(widgetOrder);
+
+    const widgetLabels: Record<SalesDashboardWidgetId, string> = useMemo(() => ({
+        stats: t('keyStatCards'),
+        chart: t('salesTrendChart'),
+        payment: t('paymentBreakdown'),
+        topItems: t('topSellingItems'),
+        locationPerformance: t('locationPerformance'),
+        quickActions: t('quickActions'),
+        lowStock: t('lowStockAlerts'),
+        recentTransactions: t('recentTransactions'),
+    }), [t]);
 
     const moveWidget = (index: number, direction: 'up' | 'down') => {
         const newOrder = [...orderedWidgets];
@@ -39,10 +41,10 @@ const DashboardCustomizeModal: React.FC<DashboardCustomizeModalProps> = ({ isOpe
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
             <ModalHeader>
-                <ModalTitle>Customize Dashboard</ModalTitle>
+                <ModalTitle>{t('customizeDashboard')}</ModalTitle>
             </ModalHeader>
             <ModalContent>
-                <p className="text-sm text-muted-foreground mb-4">Click the arrows to reorder your dashboard widgets.</p>
+                <p className="text-sm text-muted-foreground mb-4">{t('reorderWidgets')}</p>
                 <div className="space-y-2">
                     {orderedWidgets.map((widgetId, index) => (
                         <div key={widgetId} className="flex items-center justify-between p-3 rounded-lg bg-accent">
@@ -60,8 +62,8 @@ const DashboardCustomizeModal: React.FC<DashboardCustomizeModalProps> = ({ isOpe
                 </div>
             </ModalContent>
             <ModalFooter>
-                <Button variant="ghost" onClick={onClose}>Cancel</Button>
-                <Button onClick={() => onSave(orderedWidgets)}>Save Layout</Button>
+                <Button variant="ghost" onClick={onClose}>{t('cancel')}</Button>
+                <Button onClick={() => onSave(orderedWidgets)}>{t('saveLayout')}</Button>
             </ModalFooter>
         </Modal>
     );

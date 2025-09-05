@@ -2,6 +2,7 @@ import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import App from './App';
 import { AppProvider } from './contexts/AppContext';
+import './assets/logo.ts';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

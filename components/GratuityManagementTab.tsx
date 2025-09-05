@@ -1,12 +1,12 @@
-
-
-
 import React, { useState, useEffect } from 'react';
 import { useAppContext, useToastContext } from '../contexts/AppContext';
+import { useTranslations } from '../hooks/useTranslations';
+import { TranslationKey } from '../types';
 
 const GratuityManagementTab: React.FC = () => {
     const { settings, setSettings } = useAppContext();
     const { addToast } = useToastContext();
+    const t = useTranslations(settings.language.staff);
     const [options, setOptions] = useState([0, 0, 0, 0]);
 
     useEffect(() => {
@@ -29,18 +29,20 @@ const GratuityManagementTab: React.FC = () => {
         }));
         addToast({ type: 'success', title: 'Settings Saved', message: 'Gratuity options have been updated.' });
     };
+    
+    const optionLabels: TranslationKey[] = ['option1', 'option2', 'option3', 'option4'];
 
     return (
-        <div>
-            <h3 className="text-xl font-bold text-foreground">Gratuity Settings</h3>
+        <div className="text-start rtl:text-end">
+            <h3 className="text-xl font-bold text-foreground">{t('gratuitySettings')}</h3>
             <p className="text-muted-foreground mt-2 mb-6">
-                Set up to four preset gratuity percentages for quick selection on the payment screen.
+                {t('gratuitySettingsDescription')}
             </p>
             <div className="bg-secondary p-6 rounded-lg max-w-md space-y-4 border border-border">
                 <div className="grid grid-cols-2 gap-4">
                     {[0, 1, 2, 3].map(index => (
                         <div key={index}>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">Option {index + 1} (%)</label>
+                            <label className="block text-sm font-medium text-muted-foreground mb-1">{t(optionLabels[index])}</label>
                             <input
                                 type="number"
                                 value={options[index]}
@@ -51,12 +53,12 @@ const GratuityManagementTab: React.FC = () => {
                         </div>
                     ))}
                 </div>
-                <div className="pt-4 text-right">
+                <div className="pt-4 text-end">
                     <button
                         onClick={handleSave}
                         className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
                     >
-                        Save Gratuity Settings
+                        {t('saveGratuitySettings')}
                     </button>
                 </div>
             </div>

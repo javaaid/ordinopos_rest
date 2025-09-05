@@ -4,9 +4,11 @@ import { useAppContext, useToastContext } from '../contexts/AppContext';
 import { AppSettings, TabSettings } from '../types';
 import CreditCardIcon from './icons/CreditCardIcon';
 import { Card, CardContent } from './ui/Card';
+import { useTranslations } from '../hooks/useTranslations';
 
 const TabSettingsView: React.FC = () => {
     const { settings, setSettings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const { addToast } = useToastContext();
     const [localSettings, setLocalSettings] = useState<TabSettings>(settings.tab);
 
@@ -30,7 +32,7 @@ const TabSettingsView: React.FC = () => {
     const SettingsSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
         <Card>
             <CardContent className="p-6">
-                <h4 className="font-bold text-foreground mb-4">{title}</h4>
+                <h4 className="font-bold text-foreground mb-4 text-start rtl:text-end">{title}</h4>
                 <div className="space-y-4">{children}</div>
             </CardContent>
         </Card>
@@ -44,8 +46,6 @@ const TabSettingsView: React.FC = () => {
                 onClick={() => {
                     if (typeof onToggle === 'function') {
                         onToggle();
-                    } else {
-                        console.error(`onToggle prop is not a function for ToggleRow with label: "${label}"`);
                     }
                 }}
                 className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${enabled ? 'bg-primary' : 'bg-muted'}`}
@@ -56,29 +56,30 @@ const TabSettingsView: React.FC = () => {
     );
 
     return (
-        <div className="h-full flex flex-col">
-            <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2">
-                <CreditCardIcon className="w-6 h-6" /> Tab Settings
+        <div className="h-full flex flex-col text-start">
+            <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2 rtl:flex-row-reverse">
+                <CreditCardIcon className="w-6 h-6" /> {t('tabSettings')}
             </h3>
-            <p className="text-sm text-muted-foreground mb-6">Allow customers to open a running tab.</p>
+            {/* FIX: Corrected translation key from 'tabDescription' to 'tabSettingsDescription' */}
+            <p className="text-sm text-muted-foreground mb-6 rtl:text-end">{t('tabSettingsDescription')}</p>
             
             <div className="space-y-6 max-w-2xl overflow-y-auto pr-4">
-                <SettingsSection title="General">
-                    <ToggleRow label="Enable Tabs" enabled={localSettings.enabled} onToggle={handleEnabledToggle} />
+                <SettingsSection title={t('general')}>
+                    <ToggleRow label={t('enableTabs')} enabled={localSettings.enabled} onToggle={handleEnabledToggle} />
                     <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">Custom Name</label>
-                        <input name="customName" value={localSettings.customName} onChange={handleChange} className="w-full bg-input p-2 rounded-md border border-border" placeholder="e.g., Bar Tab" />
-                        <p className="text-xs text-muted-foreground mt-1">This name will be used on the POS and receipts.</p>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">{t('customName')}</label>
+                        <input name="customName" value={localSettings.customName} onChange={handleChange} className="w-full bg-input p-2 rounded-md border border-border" placeholder={t('tab')} />
+                        <p className="text-xs text-muted-foreground mt-1">{t('tabCustomNameUsage')}</p>
                     </div>
                 </SettingsSection>
             </div>
 
-            <div className="mt-auto pt-6 text-right">
+            <div className="mt-auto pt-6 text-end">
                 <button
                     onClick={handleSave}
                     className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors shadow-lg"
                 >
-                    Save Tab Settings
+                    {t('saveTabSettings')}
                 </button>
             </div>
         </div>

@@ -1,4 +1,6 @@
 
+
+
 import React, { useMemo } from 'react';
 import { Order, OrderSource, OrderType } from '../types';
 import ChartPieIcon from './icons/ChartPieIcon';
@@ -11,9 +13,18 @@ interface DeliveryReportProps {
     orders: Order[];
 }
 
+interface DeliveryReportData {
+  totalSales: number;
+  salesByType: Record<OrderType, number>;
+  avgDeliveryTimeMins: number;
+  deliveryOrdersCount: number;
+  topDeliveryItems: { name: string; count: number }[];
+  salesBySource: Record<OrderSource, number>;
+}
+
 const DeliveryReport: React.FC<DeliveryReportProps> = ({ orders }) => {
 
-    const reportData = useMemo(() => {
+    const reportData = useMemo<DeliveryReportData>(() => {
         const safeOrders = orders || [];
         const salesByType: Record<OrderType, number> = { 'dine-in': 0, 'takeaway': 0, 'delivery': 0, 'kiosk': 0, 'tab': 0 };
         const totalSales = safeOrders.reduce((sum, o) => {
@@ -24,7 +35,7 @@ const DeliveryReport: React.FC<DeliveryReportProps> = ({ orders }) => {
         }, 0);
 
         const deliveryOrders = safeOrders.filter(o => o.orderType === 'delivery' && o.status === 'delivered' && o.deliveredAt && o.completedAt);
-        const totalDeliveryTime = deliveryOrders.reduce((sum, o) => sum + (o.deliveredAt! - o.completedAt!), 0);
+        const totalDeliveryTime = deliveryOrders.reduce((sum, o) => sum + (Number(o.deliveredAt) - Number(o.completedAt)), 0);
         const avgDeliveryTimeMins = deliveryOrders.length > 0 ? (totalDeliveryTime / deliveryOrders.length / 60000) : 0;
         
         const deliveryItems = new Map<string, {name: string, count: number}>();

@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Ingredient, Order, Supplier, WastageEntry, RecipeItem } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -63,7 +64,7 @@ const AIReorderSuggestions: React.FC<{ ingredients: Ingredient[], orders: Order[
     }, [dataSignature, suppliers, ingredients, orders]);
 
     return (
-        <div className="bg-primary/10 border-l-4 border-primary rounded-r-lg p-4 mb-6 no-print">
+        <div className="bg-primary/10 border-s-4 border-primary rounded-e-lg p-4 mb-6 no-print">
             <h3 className="font-bold text-lg text-primary flex items-center gap-2 mb-2">
                 <ShoppingCartIcon className="w-6 h-6" />
                 AI Reorder Suggestions
@@ -136,7 +137,7 @@ const InventoryReport: React.FC<{
         return { text: 'In Stock', variant: 'default' };
     };
 
-    const thClass = "px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer";
+    const thClass = "px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer";
     const SortIndicator = ({ for_key }: { for_key: typeof sortKey }) => {
         if (sortKey !== for_key) return <span className="text-muted-foreground/50">↕</span>;
         return sortDirection === 'desc' ? '▼' : '▲';
@@ -145,10 +146,10 @@ const InventoryReport: React.FC<{
     return (
         <div className="w-full space-y-8">
             {lowStockItemsCount > 0 && (
-                <div className="bg-red-100 dark:bg-red-900/40 border-l-4 border-red-500 text-red-800 dark:text-red-200 p-4 rounded-md" role="alert">
+                <div className="bg-red-100 dark:bg-red-900/40 border-s-4 border-red-500 text-red-800 dark:text-red-200 p-4 rounded-md" role="alert">
                     <div className="flex">
                         <div className="py-1">
-                            <ExclamationTriangleIcon className="h-6 w-6 text-red-500 mr-4" />
+                            <ExclamationTriangleIcon className="h-6 w-6 text-red-500 me-4" />
                         </div>
                         <div>
                             <p className="font-bold">Action Required</p>
@@ -197,7 +198,7 @@ const InventoryReport: React.FC<{
                         <thead className="bg-muted/50">
                             <tr>
                                 <th className={thClass} onClick={() => handleSort('name')}>Ingredient <SortIndicator for_key="name" /></th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                                <th className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
                                 <th className={thClass} onClick={() => handleSort('stock')}>Stock <SortIndicator for_key="stock" /></th>
                                 <th className={thClass} onClick={() => handleSort('costPerUnit')}>Unit Cost <SortIndicator for_key="costPerUnit" /></th>
                                 <th className={thClass} onClick={() => handleSort('onHandValue')}>On-Hand Value <SortIndicator for_key="onHandValue" /></th>

@@ -4,16 +4,15 @@ import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import SearchIcon from './icons/SearchIcon';
+import { useAppContext } from '../contexts/AppContext';
 
 interface ChooseStaffModalProps {
   isOpen: boolean;
   onClose: () => void;
-  employees: Employee[];
-  onSelectStaff: (employee: Employee) => void;
-  selectedStaffId?: string;
 }
 
-const ChooseStaffModal: React.FC<ChooseStaffModalProps> = ({ isOpen, onClose, employees, onSelectStaff, selectedStaffId }) => {
+const ChooseStaffModal: React.FC<ChooseStaffModalProps> = ({ isOpen, onClose }) => {
+  const { employees, setSelectedStaff, selectedStaff } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredEmployees = useMemo(() => {
@@ -21,11 +20,11 @@ const ChooseStaffModal: React.FC<ChooseStaffModalProps> = ({ isOpen, onClose, em
       return employees;
     }
     const lowerQuery = searchQuery.toLowerCase();
-    return employees.filter(e => e.name.toLowerCase().includes(lowerQuery));
+    return (employees || []).filter((e: Employee) => e.name.toLowerCase().includes(lowerQuery));
   }, [employees, searchQuery]);
 
   const handleSelect = (employee: Employee) => {
-    onSelectStaff(employee);
+    setSelectedStaff(employee);
     onClose();
   };
 
@@ -49,11 +48,11 @@ const ChooseStaffModal: React.FC<ChooseStaffModalProps> = ({ isOpen, onClose, em
         </div>
         <div className="p-6 max-h-[60vh] overflow-y-auto">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {filteredEmployees.map(employee => (
+                {(filteredEmployees || []).map((employee: Employee) => (
                     <button
                         key={employee.id}
                         onClick={() => handleSelect(employee)}
-                        className={`p-3 rounded-lg text-center transition-colors border-2 ${selectedStaffId === employee.id ? 'border-primary bg-primary/10' : 'border-border bg-secondary hover:border-muted-foreground'}`}
+                        className={`p-3 rounded-lg text-center transition-colors border-2 ${selectedStaff?.id === employee.id ? 'border-primary bg-primary/10' : 'border-border bg-secondary hover:border-muted-foreground'}`}
                     >
                         <img src={employee.avatar} alt={employee.name} className="w-20 h-20 rounded-full mx-auto mb-2 border-4 border-card" />
                         <p className="font-semibold text-foreground text-sm">{employee.name}</p>

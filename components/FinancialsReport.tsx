@@ -123,7 +123,7 @@ const FinancialsReport: React.FC<FinancialsReportProps> = ({ orders, settings, l
                                     title={accountingSoftware === 'none' ? 'Go to Settings > Integrations to connect.' : ''}
                                     size="sm"
                                 >
-                                    <ArrowPathRoundedSquareIcon className={`w-5 h-5 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+                                    <ArrowPathRoundedSquareIcon className={`w-5 h-5 me-2 ${isSyncing ? 'animate-spin' : ''}`} />
                                     {isSyncing ? 'Syncing...' : syncButtonText}
                                 </Button>
                             </div>
@@ -161,7 +161,7 @@ const FinancialsReport: React.FC<FinancialsReportProps> = ({ orders, settings, l
                             <label className="text-sm font-medium text-muted-foreground">Opening Float</label>
                             <div className="relative mt-1">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><span className="text-muted-foreground sm:text-sm">$</span></div>
-                                <Input type="text" value={openingFloat} onChange={handleNumericInputChange(setOpeningFloat)} className="pl-7"/>
+                                <Input type="text" value={openingFloat} onChange={handleNumericInputChange(setOpeningFloat)} className="ps-7"/>
                             </div>
                         </div>
                         <div className={summaryItemClass}><span className={summaryLabelClass}>+ Cash Payments</span><span className={summaryValueClass}>${(reportSummary.paymentBreakdown.get('Cash')?.total || 0).toFixed(2)}</span></div>
@@ -172,7 +172,7 @@ const FinancialsReport: React.FC<FinancialsReportProps> = ({ orders, settings, l
                             <label className="text-sm font-medium text-muted-foreground">Actual Cash Counted</label>
                              <div className="relative mt-1">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><span className="text-muted-foreground sm:text-sm">$</span></div>
-                                <Input type="text" value={endingCash} onChange={handleNumericInputChange(setEndingCash)} className="pl-7"/>
+                                <Input type="text" value={endingCash} onChange={handleNumericInputChange(setEndingCash)} className="ps-7"/>
                             </div>
                         </div>
                         <hr className="border-border"/>

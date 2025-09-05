@@ -1,6 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Table } from '../types';
+import { useTranslations } from '../hooks/useTranslations';
+import { useAppContext } from '../contexts/AppContext';
 
 interface TableEditModalProps {
     isOpen: boolean;
@@ -14,6 +15,8 @@ interface TableEditModalProps {
 }
 
 const TableEditModal: React.FC<TableEditModalProps> = ({ isOpen, onClose, onSave, onDelete, table, floors, isOccupied, onAddFloor }) => {
+    const { settings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const [name, setName] = useState('');
     const [capacity, setCapacity] = useState(4);
     const [shape, setShape] = useState<Table['shape']>('square');
@@ -79,20 +82,20 @@ const TableEditModal: React.FC<TableEditModalProps> = ({ isOpen, onClose, onSave
             <div className="bg-card rounded-lg shadow-xl w-full max-w-md border border-border">
                 <form onSubmit={handleSubmit}>
                     <div className="p-6 border-b border-border">
-                        <h2 className="text-2xl font-bold text-foreground">{table ? 'Edit Table' : 'Add New Table'}</h2>
+                        <h2 className="text-2xl font-bold text-foreground">{table ? t('editTable') : t('addNewTable')}</h2>
                     </div>
                     <div className="p-6 space-y-4">
                         <div>
-                            <label className="block text-sm text-muted-foreground mb-1">Table Name</label>
+                            <label className="block text-sm text-muted-foreground mb-1">{t('tableName')}</label>
                             <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-input p-2 rounded-md border border-border text-foreground" required />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm text-muted-foreground mb-1">Capacity</label>
+                                <label className="block text-sm text-muted-foreground mb-1">{t('capacity')}</label>
                                 <input type="number" value={capacity} onChange={e => setCapacity(parseInt(e.target.value))} className="w-full bg-input p-2 rounded-md border border-border text-foreground" min="1" required />
                             </div>
                             <div>
-                                <label className="block text-sm text-muted-foreground mb-1">Shape</label>
+                                <label className="block text-sm text-muted-foreground mb-1">{t('shape')}</label>
                                 <select value={shape} onChange={e => setShape(e.target.value as Table['shape'])} className="w-full bg-input p-2 rounded-md border border-border text-foreground">
                                     <option value="square">Square</option>
                                     <option value="round">Round</option>
@@ -102,17 +105,17 @@ const TableEditModal: React.FC<TableEditModalProps> = ({ isOpen, onClose, onSave
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm text-muted-foreground mb-1">Floor</label>
+                            <label className="block text-sm text-muted-foreground mb-1">{t('floor')}</label>
                             <select value={floor} onChange={handleFloorChange} className="w-full bg-input p-2 rounded-md border border-border text-foreground">
                                 {floors.map(f => <option key={f} value={f}>{f}</option>)}
-                                <option value="__NEW__">-- Add New Floor --</option>
+                                <option value="__NEW__">{t('addNewFloor')}</option>
                             </select>
                             {floor === '__NEW__' && (
                                 <input
                                     type="text"
                                     value={newFloorName}
                                     onChange={e => setNewFloorName(e.target.value)}
-                                    placeholder="Enter new floor name"
+                                    placeholder={t('enterNewFloorName')}
                                     className="mt-2 w-full bg-input p-2 rounded-md border border-border text-foreground"
                                 />
                             )}
@@ -128,13 +131,13 @@ const TableEditModal: React.FC<TableEditModalProps> = ({ isOpen, onClose, onSave
                                     className="px-4 py-2 rounded-md bg-destructive text-destructive-foreground font-semibold hover:bg-destructive/90 disabled:bg-muted disabled:cursor-not-allowed"
                                     title={isOccupied ? "Cannot delete an occupied table" : ""}
                                 >
-                                    Delete
+                                    {t('delete')}
                                 </button>
                             )}
                         </div>
                         <div className="flex gap-4">
-                            <button type="button" onClick={onClose} className="px-6 py-2 rounded-md bg-secondary text-secondary-foreground font-semibold">Cancel</button>
-                            <button type="submit" className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-semibold">Save</button>
+                            <button type="button" onClick={onClose} className="px-6 py-2 rounded-md bg-secondary text-secondary-foreground font-semibold">{t('cancel')}</button>
+                            <button type="submit" className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-semibold">{t('save')}</button>
                         </div>
                     </div>
                 </form>

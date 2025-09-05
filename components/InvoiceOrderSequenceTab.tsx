@@ -75,22 +75,4 @@ const InvoiceOrderSequenceTab: React.FC = () => {
                             value={localSettings.nextDailyOrderNumber || ''}
                             onChange={handleChange}
                             className="w-full bg-input p-2 rounded-md max-w-xs border border-border" 
-                            min="1"
-                        />
-                    </div>
-                </div>
-                
-            </div>
-             <div className="pt-6 text-right mt-auto">
-                <button
-                    onClick={handleSave}
-                    className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
-                >
-                    Save Numbering Settings
-                </button>
-            </div>
-        </div>
-    );
-};
-
-export default InvoiceOrderSequenceTab;
+                            

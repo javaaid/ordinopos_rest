@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, Fragment } from 'react';
 import { Order, Employee, Role, OrderStatus, Table, OrderType } from '../types';
 import SearchIcon from './icons/SearchIcon';
 import CurrencyDollarIcon from './icons/CurrencyDollarIcon';
@@ -6,21 +6,9 @@ import DocumentArrowDownIcon from './icons/DocumentArrowDownIcon';
 import ReceiptRefundIcon from './icons/ReceiptRefundIcon';
 import PrinterIcon from './icons/PrinterIcon';
 import MapPinIcon from './icons/MapPinIcon';
-import { useAppContext, useDataContext, usePOSContext } from '../contexts/AppContext';
+import { useAppContext } from '../contexts/AppContext';
 import { useTranslations } from '../hooks/useTranslations';
-
-interface OrderHistoryViewProps {
-    orders: Order[];
-    onRequestRefund: (orderId: string) => void;
-    onApproveRefund: (orderId: string) => void;
-    onDenyRefund: (orderId: string) => void;
-    currentEmployee: Employee | null;
-    currentRole: Role | null;
-    onLoadOrder: (order: Order) => void;
-    onPrintA4: (order: Order) => void;
-    onInitiateRefund: (order: Order) => void;
-    onViewReceipt: (order: Order) => void;
-}
+import ChevronDownIcon from './icons/ChevronDownIcon';
 
 const statusStyles: Record<OrderStatus, { text: string, bg: string, text_color: string }> = {
     'pending': { text: 'Pending Payment', bg: 'bg-yellow-500/20', text_color: 'text-yellow-400' },
@@ -43,13 +31,16 @@ const typeColors: Record<OrderType, string> = {
     'tab': 'border-teal-500',
 };
 
-const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ orders, onApproveRefund, onDenyRefund, currentRole, onLoadOrder, onPrintA4, onInitiateRefund, onViewReceipt }) => {
-    const { settings, setView } = useAppContext();
-    const { tables } = useDataContext();
-    const { setCurrentTable } = usePOSContext();
+const OrderHistoryView: React.FC = () => {
+    const { 
+        settings, setView, tables, orders, roles, currentEmployee,
+        onLoadOrder, onPrintA4, onInitiateRefund, onViewReceipt, onApproveRefund, onDenyRefund
+    } = useAppContext();
+
     const t = useTranslations(settings.language.staff);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterDate, setFilterDate] = useState(new Date());
+    const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
     const sortedOrders = useMemo(() => {
         return [...(orders || [])].sort((a, b) => b.createdAt - a.createdAt);
@@ -78,11 +69,15 @@ const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ orders, onApproveRe
     const handleViewOnFloor = (tableId: string) => {
         const table = tables.find((t: Table) => t.id === tableId);
         if (table) {
-            setCurrentTable(table);
             setView('tables');
         }
     };
 
+    const currentRole = useMemo(() => {
+        if (!currentEmployee) return null;
+        return roles.find((r: Role) => r.id === currentEmployee.roleId);
+    }, [currentEmployee, roles]);
+    
     const renderActions = (order: Order) => {
         if (!currentRole) return null;
 
@@ -170,6 +165,7 @@ const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ orders, onApproveRe
                     <table className="min-w-full divide-y divide-border">
                          <thead className="bg-muted/50 sticky top-0">
                             <tr>
+                                <th className={thClass} style={{ width: '40px' }}></th>
                                 <th className={thClass}>{t('order_hash')}</th>
                                 <th className={thClass}>{t('customers')}</th>
                                 <th className={thClass}>Type</th>
@@ -188,23 +184,54 @@ const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ orders, onApproveRe
                                const orderTypeLabel = order.orderType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
 
                                return (
-                                   <tr key={order.id} className={`hover:bg-muted/50 border-l-4 ${typeColors[order.orderType] || 'border-transparent'}`}>
-                                       <td className="px-4 py-3 font-mono text-foreground">#{order.orderNumber}</td>
-                                       <td className="px-4 py-3 text-muted-foreground">{order.customer?.name || t('walk_in_customer')}</td>
-                                       <td className="px-4 py-3 text-muted-foreground">{orderTypeLabel}</td>
-                                       <td className="px-4 py-3 text-muted-foreground">{table ? table.name : 'N/A'}</td>
-                                       <td className="px-4 py-3 text-muted-foreground">{new Date(order.createdAt).toLocaleString()}</td>
-                                       <td className={`px-4 py-3 font-semibold ${order.balanceDue > 0 ? 'text-amber-500' : 'text-muted-foreground'}`}>${order.balanceDue.toFixed(2)}</td>
-                                       <td className="px-4 py-3 font-semibold text-foreground">${order.total.toFixed(2)}</td>
-                                       <td className="px-4 py-3">
-                                           <span className={`px-2 py-1 text-xs font-bold rounded-full ${statusStyle.bg} ${statusStyle.text_color}`}>
-                                               {statusStyle.text}
-                                           </span>
-                                       </td>
-                                       <td className="px-4 py-3">
-                                           {renderActions(order)}
-                                       </td>
-                                   </tr>
+                                   <Fragment key={order.id}>
+                                       <tr className={`hover:bg-muted/50 border-l-4 ${typeColors[order.orderType] || 'border-transparent'}`}>
+                                           <td className="px-2 py-3 text-center">
+                                               {order.payments.length > 0 && (
+                                                   <button onClick={() => setExpandedOrderId(prev => prev === order.id ? null : order.id)} className="p-1 rounded-full hover:bg-secondary">
+                                                        <ChevronDownIcon className={`w-5 h-5 transition-transform ${expandedOrderId === order.id ? 'rotate-180' : ''}`} />
+                                                   </button>
+                                               )}
+                                           </td>
+                                           <td className="px-4 py-3 font-mono text-foreground">#{order.orderNumber}</td>
+                                           <td className="px-4 py-3 text-muted-foreground">{order.customer?.name || t('walk_in_customer')}</td>
+                                           <td className="px-4 py-3 text-muted-foreground">{orderTypeLabel}</td>
+                                           <td className="px-4 py-3 text-muted-foreground">{table ? table.name : 'N/A'}</td>
+                                           <td className="px-4 py-3 text-muted-foreground">{new Date(order.createdAt).toLocaleString()}</td>
+                                           <td className={`px-4 py-3 font-semibold ${order.balanceDue > 0 ? 'text-amber-500' : 'text-muted-foreground'}`}>${order.balanceDue.toFixed(2)}</td>
+                                           <td className="px-4 py-3 font-semibold text-foreground">${order.total.toFixed(2)}</td>
+                                           <td className="px-4 py-3">
+                                               <span className={`px-2 py-1 text-xs font-bold rounded-full ${statusStyle.bg} ${statusStyle.text_color}`}>
+                                                   {statusStyle.text}
+                                               </span>
+                                           </td>
+                                           <td className="px-4 py-3">
+                                               {renderActions(order)}
+                                           </td>
+                                       </tr>
+                                       {expandedOrderId === order.id && (
+                                           <tr className="bg-accent">
+                                               <td colSpan={10} className="p-4">
+                                                    <h4 className="font-bold text-foreground mb-2">Payment Transactions</h4>
+                                                    {order.payments.length > 0 ? (
+                                                        <div className="space-y-2">
+                                                            {order.payments.map((p, i) => (
+                                                                <div key={i} className="flex justify-between items-center bg-background p-2 rounded-md text-sm">
+                                                                    <div>
+                                                                        <span className="font-semibold text-foreground">{p.method}</span>
+                                                                        <span className="text-muted-foreground ml-4">{new Date(p.timestamp).toLocaleString()}</span>
+                                                                    </div>
+                                                                    <span className="font-mono font-semibold text-green-500">${p.amount.toFixed(2)}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-sm text-muted-foreground">No payment transactions for this order.</p>
+                                                    )}
+                                               </td>
+                                           </tr>
+                                       )}
+                                   </Fragment>
                                );
                            })}
                         </tbody>

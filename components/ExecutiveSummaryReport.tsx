@@ -2,8 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Order, MenuItem, Employee, AIExecutiveSummary, AISettings } from '../types';
 import DocumentChartBarIcon from './icons/DocumentChartBarIcon';
+import { useTranslations } from '../hooks/useTranslations';
+import { useAppContext } from '../contexts/AppContext';
 
 const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[], employees: Employee[], startDate: Date, endDate: Date, aiSettings: AISettings }> = ({ orders, menuItems, employees, startDate, endDate, aiSettings }) => {
+    const { settings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const [summary, setSummary] = useState<AIExecutiveSummary | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -28,6 +32,7 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                 const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
                 const salesByDay = orders.reduce((acc, o) => {
                     const day = new Date(o.createdAt).toLocaleDateString();
+                    // FIX: Ensure arithmetic operation is on numbers (removed redundant Number() cast)
                     acc[day] = (acc[day] || 0) + o.total;
                     return acc;
                 }, {} as Record<string, number>);
@@ -35,6 +40,7 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                 const topDay = topDayArr.length > 0 ? topDayArr[0] : null;
                 
                 const menuPerformance = orders.flatMap(o => o.cart).reduce((acc, item) => {
+                    // FIX: Ensure arithmetic operation is on numbers (removed redundant Number() cast)
                     acc[item.menuItem.name] = (acc[item.menuItem.name] || 0) + (item.menuItem.price * item.quantity);
                     return acc;
                 }, {} as Record<string, number>);
@@ -42,6 +48,7 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                 
                 const staffPerformance = orders.reduce((acc, o) => {
                     if (o.employeeId) {
+                         // FIX: Ensure arithmetic operation is on numbers (removed redundant Number() cast)
                          acc[o.employeeId] = (acc[o.employeeId] || 0) + o.total;
                     }
                     return acc;
@@ -124,7 +131,7 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
         if (!summary) {
              return (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                    <p>No data available to generate a summary for this period, or AI analysis is disabled in settings.</p>
+                    <p>{t('noDataSummary')}</p>
                 </div>
             );
         }

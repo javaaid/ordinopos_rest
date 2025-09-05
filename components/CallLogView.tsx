@@ -1,10 +1,13 @@
+
 import React, { useState, useMemo } from 'react';
-import { useDataContext } from '../contexts/AppContext';
+import { useDataContext, useAppContext } from '../contexts/AppContext';
 import { CallLogEntry, Customer } from '../types';
 import PhoneIcon from './icons/PhoneIcon';
+import { useTranslations } from '../hooks/useTranslations';
 
 const CallLogView: React.FC = () => {
-    const { callLog, customers, orders } = useDataContext();
+    const { callLog, customers, orders, settings } = useDataContext();
+    const t = useTranslations(settings.language.staff);
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredLog = useMemo(() => {
@@ -18,22 +21,23 @@ const CallLogView: React.FC = () => {
         });
     }, [callLog, customers, searchTerm]);
     
-    const thClass = "px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider";
+    const thClass = "px-4 py-3 text-start rtl:text-end text-xs font-semibold text-muted-foreground uppercase tracking-wider";
 
     return (
         <div className="p-6 h-full flex flex-col">
-            <h2 className="text-2xl font-bold text-foreground mb-2 flex items-center gap-3">
-                <PhoneIcon className="w-6 h-6"/> Call Log
+            <h2 className="text-2xl font-bold text-foreground mb-2 flex items-center gap-3 rtl:text-right rtl:flex-row-reverse">
+                <PhoneIcon className="w-6 h-6"/> {/* FIX: Corrected translation key from 'callLog' to 'call_log'. */}
+{t('call_log')}
             </h2>
-            <p className="text-sm text-muted-foreground mb-4">History of all incoming calls detected by the system.</p>
+            <p className="text-sm text-muted-foreground mb-4 rtl:text-right">{t('callLogDescription')}</p>
             
             <div className="mb-4">
                 <input
                     type="search"
-                    placeholder="Search by phone number or customer name..."
+                    placeholder={t('searchByPhoneOrName')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full max-w-sm bg-secondary border border-border rounded-md px-3 py-2 text-foreground focus:ring-primary focus:border-primary"
+                    className="w-full max-w-sm bg-secondary border border-border rounded-md px-3 py-2 text-foreground focus:ring-primary focus:border-primary rtl:text-right"
                 />
             </div>
 
@@ -42,10 +46,10 @@ const CallLogView: React.FC = () => {
                     <table className="min-w-full divide-y divide-border">
                         <thead className="bg-muted/50 sticky top-0">
                             <tr>
-                                <th className={thClass}>Date & Time</th>
-                                <th className={thClass}>Phone Number</th>
-                                <th className={thClass}>Customer</th>
-                                <th className={thClass}>Status</th>
+                                <th className={thClass}>{t('dateTime')}</th>
+                                <th className={thClass}>{t('phoneNumber')}</th>
+                                <th className={thClass}>{t('customer')}</th>
+                                <th className={thClass}>{t('status')}</th>
                             </tr>
                         </thead>
                         <tbody className="bg-card divide-y divide-border">

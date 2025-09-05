@@ -1,7 +1,8 @@
 
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Order, MenuItem, Employee, Location, Category, Customer, Supplier, WastageEntry, Role, AppSettings, Ingredient, RecipeItem, PaymentType, AISettings } from '../types';
+// FIX: Added TranslationKey to the import list to resolve a type error.
+import { Order, MenuItem, Employee, Location, Category, Customer, Supplier, WastageEntry, Role, AppSettings, Ingredient, RecipeItem, PaymentType, AISettings, ReportGroup, ReportTab, TranslationKey } from '../types';
 import SalesDashboard from './SalesDashboard';
 import MenuReport from './MenuReport';
 import StaffSalesReport from './StaffSalesReport';
@@ -23,36 +24,28 @@ import BIView from './BIView';
 import DocumentDuplicateIcon from './icons/DocumentDuplicateIcon';
 import { Select } from './ui/Select';
 import { useDataContext, useAppContext, useModalContext } from '../contexts/AppContext';
+import { useTranslations } from '../hooks/useTranslations';
 
-type ReportGroup = 'sales' | 'people' | 'operations' | 'bi';
-type ReportTab = 'summary' | 'sales' | 'menu' | 'categories' | 'inventory' | 'staff_performance' | 'labor' | 'customer' | 'financials' | 'discounts' | 'delivery' | 'retention' | 'kiosk' | 'cfd' | 'bi_dashboard';
-
-const reportGroups: Record<ReportGroup, { name: string, tabs: ReportTab[] }> = {
-    sales: { name: 'Sales & Financials', tabs: ['summary', 'sales', 'menu', 'categories', 'financials', 'discounts', 'delivery'] },
-    people: { name: 'People & Customers', tabs: ['staff_performance', 'labor', 'customer', 'retention'] },
-    operations: { name: 'Operations', tabs: ['inventory', 'kiosk', 'cfd'] },
-    bi: { name: 'BI & Analytics', tabs: ['bi_dashboard'] },
+const reportTitles: Record<ReportTab, TranslationKey> = {
+    summary: 'executiveSummary',
+    sales: 'salesDashboard',
+    menu: 'menuPerformanceAnalysis',
+    categories: 'categoryPerformanceAnalysis',
+    financials: 'financialsReportZ',
+    discounts: 'discountPromotionReport',
+    delivery: 'deliveryOnlineOrderReport',
+    staff_performance: 'staffPerformanceReport',
+    labor: 'laborAttendanceReport',
+    customer: 'customerSpendingHabits',
+    retention: 'customerRetentionReport',
+    inventory: 'inventoryReport',
+    kiosk: 'kioskPerformanceReport',
+    cfd: 'cfdPerformanceReport',
+    bi_dashboard: 'businessIntelligence',
 };
 
-const reportTitles: Record<ReportTab, string> = {
-    summary: 'Executive Summary',
-    sales: 'Sales Dashboard',
-    menu: 'Menu Performance Analysis',
-    categories: 'Category Performance Analysis',
-    financials: 'Financials Report (Z-Report)',
-    discounts: 'Discount & Promotion Report',
-    delivery: 'Delivery & Online Order Report',
-    staff_performance: 'Staff Performance Report',
-    labor: 'Labor & Attendance Report',
-    customer: 'Customer Spending Habits',
-    retention: 'Customer Retention Report',
-    inventory: 'Inventory Report',
-    kiosk: 'Kiosk Performance Report',
-    cfd: 'CFD Performance Report',
-    bi_dashboard: 'Business Intelligence',
-};
-
-const ReportsView: React.FC = () => {
+// FIX: Changed to a named export to resolve "Module has no default export" error.
+export const ReportsView: React.FC = () => {
     const {
         orders, menuItems, ingredients, recipes, employees, locations, 
         categories, customers, suppliers, wastageLog, roles,
@@ -66,7 +59,15 @@ const ReportsView: React.FC = () => {
     if (!settings) {
         return null; 
     }
+    const t = useTranslations(settings.language.staff);
     
+    const reportGroups = useMemo((): Record<ReportGroup, { name: string, tabs: ReportTab[] }> => ({
+        sales: { name: t('salesFinancials'), tabs: ['summary', 'sales', 'menu', 'categories', 'financials', 'discounts', 'delivery'] },
+        people: { name: t('peopleCustomers'), tabs: ['staff_performance', 'labor', 'customer', 'retention'] },
+        operations: { name: t('operations'), tabs: ['inventory', 'kiosk', 'cfd'] },
+        bi: { name: t('biAnalytics'), tabs: ['bi_dashboard'] },
+    }), [t]);
+
     const [startDate, setStartDate] = useState<Date>(() => {
         const d = new Date();
         d.setDate(d.getDate() - 6);
@@ -94,11 +95,11 @@ const ReportsView: React.FC = () => {
 
         const accessibleGroups: Partial<Record<ReportGroup, { name: string; tabs: ReportTab[]; }>> = {};
         if (p.canViewInventoryReport) {
-            accessibleGroups.operations = { name: 'Operations', tabs: ['inventory'] };
+            accessibleGroups.operations = { name: t('operations'), tabs: ['inventory'] };
         }
         
         return accessibleGroups;
-    }, [currentEmployee, roles]);
+    }, [currentEmployee, roles, reportGroups, t]);
     
     const [activeGroup, setActiveGroup] = useState<ReportGroup>('sales');
     const [activeTab, setActiveTab] = useState<ReportTab>('summary');
@@ -164,20 +165,24 @@ const ReportsView: React.FC = () => {
         <div className="p-6 h-full flex flex-col">
             <header className="flex-shrink-0 mb-6">
                 <div className="flex justify-between items-center mb-4">
-                    <h1 className="text-3xl font-bold text-foreground">Reports</h1>
+                    <h1 className="text-3xl font-bold text-foreground rtl:text-right">{t('reports')}</h1>
                     <div className="flex items-center gap-2">
                         <button className="flex items-center gap-2 bg-secondary hover:bg-muted text-secondary-foreground font-bold py-2 px-4 rounded-lg">
-                            <DocumentDuplicateIcon className="w-5 h-5"/> Export
+                            <DocumentDuplicateIcon className="w-5 h-5"/> {t('export')}
                         </button>
                     </div>
                 </div>
                 <DateRangePicker startDate={startDate} endDate={endDate} onDateChange={(start, end) => { setStartDate(start); setEndDate(end); }} />
                  <div className="mt-4 flex gap-x-6 gap-y-2 border-b border-border flex-wrap">
-                    {Object.entries(availableGroups).map(([key, groupData]) => (
-                         <button key={key} onClick={() => { setActiveGroup(key as ReportGroup); setActiveTab(groupData.tabs[0]); }} className={`py-2 px-1 text-sm font-semibold transition-colors border-b-2 ${activeGroup === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-                            {groupData.name}
-                        </button>
-                    ))}
+                    {(Object.keys(availableGroups) as ReportGroup[]).map((key) => {
+                         const groupData = availableGroups[key];
+                         if (!groupData) return null;
+                         return (
+                            <button key={key} onClick={() => { setActiveGroup(key); setActiveTab(groupData.tabs[0]); }} className={`py-2 px-1 text-sm font-semibold transition-colors border-b-2 ${activeGroup === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+                                {groupData.name}
+                            </button>
+                         );
+                    })}
                 </div>
             </header>
             
@@ -185,8 +190,8 @@ const ReportsView: React.FC = () => {
                 <aside className="w-56 bg-card rounded-xl p-3 shrink-0 flex flex-col border border-border">
                     <nav className="space-y-1">
                         {currentGroupData.tabs.map((tabId: ReportTab) => (
-                             <button key={tabId} onClick={() => setActiveTab(tabId)} className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium ${activeTab === tabId ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
-                                {reportTitles[tabId]}
+                             <button key={tabId} onClick={() => setActiveTab(tabId)} className={`w-full text-start rtl:text-right px-3 py-2 rounded-md text-sm font-medium ${activeTab === tabId ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}>
+                                {t(reportTitles[tabId])}
                             </button>
                         ))}
                     </nav>
@@ -198,5 +203,3 @@ const ReportsView: React.FC = () => {
         </div>
     );
 };
-
-export default ReportsView;

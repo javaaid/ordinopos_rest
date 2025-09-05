@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext, useToastContext } from '../contexts/AppContext';
-import { AppSettings, FontSettings } from '../types';
+import { AppSettings, FontSettings, TranslationKey } from '../types';
 import { Button } from './ui/Button';
+import { useTranslations } from '../hooks/useTranslations';
 
 const FontSettingsView: React.FC = () => {
     const { settings, setSettings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const { addToast } = useToastContext();
     const [localSettings, setLocalSettings] = useState<FontSettings>(settings.fontSettings);
 
@@ -25,10 +27,10 @@ const FontSettingsView: React.FC = () => {
         setLocalSettings(prev => ({ ...prev, [name]: parseInt(value, 10) }));
     };
 
-    const FontSlider: React.FC<{ name: keyof FontSettings, label: string }> = ({ name, label }) => (
-        <div>
+    const FontSlider: React.FC<{ name: keyof FontSettings, labelKey: TranslationKey }> = ({ name, labelKey }) => (
+        <div className="text-start rtl:text-end">
             <label htmlFor={name} className="flex justify-between items-center text-sm font-medium text-muted-foreground mb-1">
-                <span>{label}</span>
+                <span>{t(labelKey)}</span>
                 <span className="font-mono bg-background px-2 py-0.5 rounded text-foreground">{localSettings[name]}px</span>
             </label>
             <input
@@ -47,23 +49,25 @@ const FontSettingsView: React.FC = () => {
 
     return (
         <div className="p-6 h-full flex flex-col">
-            <h3 className="text-xl font-bold text-foreground">Font Settings</h3>
-            <p className="text-sm text-muted-foreground mb-6">Adjust font sizes for better readability across the application.</p>
+            <div className="text-start rtl:text-end">
+                <h3 className="text-xl font-bold text-foreground">{t('fonts_title')}</h3>
+                <p className="text-sm text-muted-foreground mb-6">{t('fonts_description')}</p>
+            </div>
             
             <div className="space-y-6 max-w-md">
                 <div className="bg-secondary p-6 rounded-lg space-y-4">
-                    <FontSlider name="baseSize" label="Base Font Size" />
-                    <FontSlider name="menuItemName" label="Menu Item Name Size" />
-                    <FontSlider name="menuItemPrice" label="Menu Item Price Size" />
-                    <FontSlider name="orderSummaryItem" label="Order Summary Item Size" />
-                    <FontSlider name="orderSummaryTotal" label="Order Summary Total Size" />
-                    <FontSlider name="categoryTabs" label="Category Tabs Size" />
+                    <FontSlider name="baseSize" labelKey="fonts_base_label" />
+                    <FontSlider name="menuItemName" labelKey="fonts_menuItemName_label" />
+                    <FontSlider name="menuItemPrice" labelKey="fonts_menuItemPrice_label" />
+                    <FontSlider name="orderSummaryItem" labelKey="fonts_orderSummaryItem_label" />
+                    <FontSlider name="orderSummaryTotal" labelKey="fonts_orderSummaryTotal_label" />
+                    <FontSlider name="categoryTabs" labelKey="fonts_categoryTabs_label" />
                 </div>
             </div>
 
-            <div className="mt-auto pt-6 text-right">
+            <div className="mt-auto pt-6 text-end rtl:text-left">
                 <Button onClick={handleSave}>
-                    Save Font Settings
+                    {t('saveSettings')}
                 </Button>
             </div>
         </div>

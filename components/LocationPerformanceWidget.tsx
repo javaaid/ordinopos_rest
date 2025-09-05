@@ -1,5 +1,6 @@
 
 
+
 import React, { useMemo } from 'react';
 import { Order, Location, RecipeItem, Ingredient } from '../types';
 import BuildingStorefrontIcon from './icons/BuildingStorefrontIcon';
@@ -50,7 +51,7 @@ const LocationPerformanceWidget: React.FC<LocationPerformanceWidgetProps> = ({ o
 
     }, [orders, locations, ingredients, recipes]);
 
-    const thClass = "px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider";
+    const thClass = "px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wider";
 
     return (
         <div>

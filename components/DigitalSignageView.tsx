@@ -1,6 +1,7 @@
 
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { SignageContentItem, SignagePlaylist, SignageDisplay, SignageScheduleEntry, MenuItem, SignageContentType, SignageSubView, AppSettings } from '../types';
+import { SignageContentItem, SignagePlaylist, SignageDisplay, SignageScheduleEntry, MenuItem, SignageContentType, SignageSubView, AppSettings, TranslationKey } from '../types';
 import PhotoIcon from './icons/PhotoIcon';
 import VideoCameraIcon from './icons/VideoCameraIcon';
 import TagIcon from './icons/TagIcon';
@@ -12,8 +13,9 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import { Textarea } from './ui/Textarea';
+import { useTranslations } from '../hooks/useTranslations';
 
-const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAYS_OF_WEEK: TranslationKey[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
 // #region --- Sub-components ---
 
@@ -43,8 +45,8 @@ const SignagePreview: React.FC<{
                 <div className="flex-grow flex items-center justify-center text-muted-foreground">No content scheduled</div>
             ) : (
                 <div className="flex-grow relative text-white flex items-center justify-center">
-                    {content.type === 'image' && <img src={content.sourceUrl} alt={content.name} className="max-w-full max-h-full object-contain" />}
-                    {content.type === 'video' && <div className="text-center"><VideoCameraIcon className="w-24 h-24 mx-auto" /><p>Simulating video: {content.name}</p></div>}
+                    {content.type === 'image' && <img src={content.sourceUrl} alt={content.name as string} className="max-w-full max-h-full object-contain" />}
+                    {content.type === 'video' && <div className="text-center"><VideoCameraIcon className="w-24 h-24 mx-auto" /><p>Simulating video: {content.name as string}</p></div>}
                     {content.type === 'menu_promo' && menuItems && menuItems.length > 0 && (
                         <div className="p-4 bg-gradient-to-br from-blue-900 to-purple-900 w-full h-full flex flex-col justify-center items-center overflow-y-auto">
                             <div className={`grid gap-4 items-center justify-center ${menuItems.length > 4 ? 'grid-cols-3' : (menuItems.length > 1 ? 'grid-cols-2' : 'grid-cols-1')}`}>
@@ -61,7 +63,7 @@ const SignagePreview: React.FC<{
                 </div>
             )}
              <div className="absolute bottom-0 left-0 w-full h-1.5 bg-muted/50">
-                {content && <div ref={progressRef} className="h-full bg-primary" />}
+                {content && <div ref={progressRef} className="h-full bg-primary" style={{animation: `progress ${content.duration}s linear forwards`}} />}
             </div>
         </div>
     );
@@ -70,8 +72,8 @@ const SignagePreview: React.FC<{
 const TableRow: React.FC<{ children: React.ReactNode, onEdit: () => void, onDelete: () => void }> = ({ children, onEdit, onDelete }) => (
     <tr className="hover:bg-muted/50">
         {children}
-        <td className="p-3 text-end">
-            <div className="flex gap-2 justify-end">
+        <td className="p-3 text-end rtl:text-start">
+            <div className="flex gap-2 justify-end rtl:justify-start">
                 <button onClick={onEdit} className="text-primary hover:opacity-80"><PencilSquareIcon className="w-5 h-5"/></button>
                 <button onClick={onDelete} className="text-destructive hover:opacity-80"><TrashIcon className="w-5 h-5"/></button>
             </div>
@@ -82,7 +84,7 @@ const TableRow: React.FC<{ children: React.ReactNode, onEdit: () => void, onDele
 const TableHeader: React.FC<{ headers: string[] }> = ({ headers }) => (
     <thead className="bg-muted/50 sticky top-0">
         <tr>
-            {headers.map(h => <th key={h} className="p-3 text-start text-xs font-semibold text-muted-foreground uppercase">{h}</th>)}
+            {headers.map(h => <th key={h} className="p-3 text-start rtl:text-end text-xs font-semibold text-muted-foreground uppercase">{h}</th>)}
             <th className="p-3"></th>
         </tr>
     </thead>
@@ -104,8 +106,9 @@ const DigitalSignageView: React.FC = () => {
         handleSaveSignageContent, handleDeleteSignageContent, handleSaveSignagePlaylist, handleDeleteSignagePlaylist,
         handleSaveSignageDisplay, handleDeleteSignageDisplay, handleSaveSignageSchedule, handleDeleteSignageSchedule
     } = useDataContext();
-    const { settings, setSettings: onSaveCfdSettings } = useAppContext();
-    const { openModal, closeModal } = useModalContext();
+    const { settings, setSettings: onSaveCfdSettings, addToast } = useAppContext();
+    const t = useTranslations(settings.language.staff);
+    const { openModal } = useModalContext();
     
     const [activeTab, setActiveTab] = useState<SignageSubView>('displays');
     
@@ -119,18 +122,18 @@ const DigitalSignageView: React.FC = () => {
         const dayOfWeek = now.getDay();
         const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         
-        const activeSchedule = signageSchedule.find(s => 
+        const activeSchedule = signageSchedule.find((s: SignageScheduleEntry) => 
             s.displayId === selectedDisplayId &&
             s.dayOfWeek === dayOfWeek &&
             s.startTime <= currentTime &&
             s.endTime >= currentTime
         );
-        return activeSchedule ? signagePlaylists.find(p => p.id === activeSchedule.playlistId) : null;
+        return activeSchedule ? signagePlaylists.find((p: SignagePlaylist) => p.id === activeSchedule.playlistId) : null;
     }, [selectedDisplayId, signageSchedule, signagePlaylists]);
 
     const playlistContent = useMemo(() => {
         if (!currentPlaylist) return [];
-        return currentPlaylist.items.map(itemId => signageContent.find(c => c.id === itemId)).filter(Boolean) as SignageContentItem[];
+        return currentPlaylist.items.map(itemId => signageContent.find((c: SignageContentItem) => c.id === itemId)).filter(Boolean) as SignageContentItem[];
     }, [currentPlaylist, signageContent]);
 
     useEffect(() => {
@@ -144,46 +147,50 @@ const DigitalSignageView: React.FC = () => {
     const currentContent = playlistContent[activeContentIndex];
     const currentMenuItems = useMemo(() => {
         if (currentContent?.type === 'menu_promo' && currentContent.menuItemIds) {
-            return currentContent.menuItemIds.map(id => menuItems.find(m => m.id === id)).filter(Boolean) as MenuItem[];
+            return currentContent.menuItemIds.map(id => menuItems.find((m: MenuItem) => m.id === id)).filter(Boolean) as MenuItem[];
         }
         return [];
     }, [currentContent, menuItems]);
 
+    const getDisplayDataName = (name: TranslationKey | string): string => {
+        return t(name as TranslationKey);
+    }
+
     const renderTabContent = () => {
         switch(activeTab) {
             case 'content': return (
-                <div className="space-y-4">
-                    <Button onClick={() => openModal('signageContentEdit', { onSave: handleSaveSignageContent })} className="flex items-center gap-2"><PlusIcon className="w-5 h-5"/> Add Content</Button>
-                    <table className="min-w-full bg-card rounded-lg"><TableHeader headers={['Name', 'Type', 'Duration']} />
+                <div className="space-y-4 rtl:text-right">
+                    <Button onClick={() => openModal('signageContentEdit', { onSave: handleSaveSignageContent })} className="flex items-center gap-2"><PlusIcon className="w-5 h-5"/> {t('addContent')}</Button>
+                    <table className="min-w-full bg-card rounded-lg"><TableHeader headers={[t('name'), t('type'), t('durationSeconds')]} />
                         <tbody className="divide-y divide-border">
-                            {signageContent.map(c => <TableRow key={c.id} onEdit={() => openModal('signageContentEdit', { content: c, onSave: handleSaveSignageContent })} onDelete={() => handleDeleteSignageContent(c.id)}>
-                                <td className="p-3 font-semibold">{c.name}</td><td className="p-3 capitalize">{c.type.replace('_', ' ')}</td><td className="p-3">{c.duration}s</td>
+                            {signageContent.map((c: SignageContentItem) => <TableRow key={c.id} onEdit={() => openModal('signageContentEdit', { content: c, onSave: handleSaveSignageContent })} onDelete={() => handleDeleteSignageContent(c.id)}>
+                                <td className="p-3 font-semibold">{t(c.name as TranslationKey)}</td><td className="p-3 capitalize">{c.type.replace('_', ' ')}</td><td className="p-3">{c.duration}s</td>
                             </TableRow>)}
                         </tbody>
                     </table>
                 </div>
             );
             case 'playlists': return (
-                 <div className="space-y-4">
-                    <Button onClick={() => openModal('signagePlaylistEdit', { onSave: handleSaveSignagePlaylist })} className="flex items-center gap-2"><PlusIcon className="w-5 h-5"/> Add Playlist</Button>
-                    <table className="min-w-full bg-card rounded-lg"><TableHeader headers={['Name', 'Item Count']} />
+                 <div className="space-y-4 rtl:text-right">
+                    <Button onClick={() => openModal('signagePlaylistEdit', { onSave: handleSaveSignagePlaylist })} className="flex items-center gap-2"><PlusIcon className="w-5 h-5"/> {t('addPlaylist')}</Button>
+                    <table className="min-w-full bg-card rounded-lg"><TableHeader headers={[t('name'), t('itemCount')]} />
                         <tbody className="divide-y divide-border">
-                            {signagePlaylists.map(p => <TableRow key={p.id} onEdit={() => openModal('signagePlaylistEdit', { playlist: p, onSave: handleSaveSignagePlaylist })} onDelete={() => handleDeleteSignagePlaylist(p.id)}>
-                                <td className="p-3 font-semibold">{p.name}</td><td className="p-3">{p.items.length}</td>
+                            {signagePlaylists.map((p: SignagePlaylist) => <TableRow key={p.id} onEdit={() => openModal('signagePlaylistEdit', { playlist: p, onSave: handleSaveSignagePlaylist })} onDelete={() => handleDeleteSignagePlaylist(p.id)}>
+                                <td className="p-3 font-semibold">{t(p.name as TranslationKey)}</td><td className="p-3">{p.items.length}</td>
                             </TableRow>)}
                         </tbody>
                     </table>
                 </div>
             );
             case 'scheduler': return (
-                 <div className="space-y-4">
-                    <Button onClick={() => openModal('signageScheduleEdit', { onSave: handleSaveSignageSchedule })} className="flex items-center gap-2"><PlusIcon className="w-5 h-5"/> Add Schedule</Button>
-                    <table className="min-w-full bg-card rounded-lg"><TableHeader headers={['Display', 'Playlist', 'Day', 'Time']} />
+                 <div className="space-y-4 rtl:text-right">
+                    <Button onClick={() => openModal('signageScheduleEdit', { onSave: handleSaveSignageSchedule })} className="flex items-center gap-2"><PlusIcon className="w-5 h-5"/> {t('addSchedule')}</Button>
+                    <table className="min-w-full bg-card rounded-lg"><TableHeader headers={[t('display'), t('playlist'), t('dayOfWeek'), t('time')]} />
                         <tbody className="divide-y divide-border">
-                            {signageSchedule.map(s => <TableRow key={s.id} onEdit={() => openModal('signageScheduleEdit', { schedule: s, onSave: handleSaveSignageSchedule })} onDelete={() => handleDeleteSignageSchedule(s.id)}>
-                                <td className="p-3 font-semibold">{signageDisplays.find(d=>d.id===s.displayId)?.name}</td>
-                                <td className="p-3">{signagePlaylists.find(p=>p.id===s.playlistId)?.name}</td>
-                                <td className="p-3">{DAYS_OF_WEEK[s.dayOfWeek]}</td>
+                            {signageSchedule.map((s: SignageScheduleEntry) => <TableRow key={s.id} onEdit={() => openModal('signageScheduleEdit', { schedule: s, onSave: handleSaveSignageSchedule })} onDelete={() => handleDeleteSignageSchedule(s.id)}>
+                                <td className="p-3 font-semibold">{getDisplayDataName(signageDisplays.find((d:SignageDisplay)=>d.id===s.displayId)?.name || '')}</td>
+                                <td className="p-3">{getDisplayDataName(signagePlaylists.find((p:SignagePlaylist)=>p.id===s.playlistId)?.name || '')}</td>
+                                <td className="p-3">{t(DAYS_OF_WEEK[s.dayOfWeek])}</td>
                                 <td className="p-3">{s.startTime} - {s.endTime}</td>
                             </TableRow>)}
                         </tbody>
@@ -192,43 +199,43 @@ const DigitalSignageView: React.FC = () => {
             );
             case 'displays': return (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div>
+                    <div className="rtl:text-right">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold text-lg text-foreground">Displays</h3>
-                            <Button onClick={() => openModal('signageDisplayEdit', { onSave: handleSaveSignageDisplay })} size="sm" className="flex items-center gap-1"><PlusIcon className="w-4 h-4"/> Add</Button>
+                            <h3 className="font-bold text-lg text-foreground">{t('displays')}</h3>
+                            <Button onClick={() => openModal('signageDisplayEdit', { onSave: handleSaveSignageDisplay })} size="sm" className="flex items-center gap-1"><PlusIcon className="w-4 h-4"/> {t('add')}</Button>
                         </div>
                         <div className="space-y-2">
-                            {signageDisplays.map(d => <div key={d.id} className={`w-full p-3 rounded-lg flex items-center justify-between transition-colors ${selectedDisplayId === d.id ? 'bg-primary' : 'bg-secondary'}`}>
-                                <button onClick={() => setSelectedDisplayId(d.id)} className="flex-grow text-start font-semibold">{d.name}</button>
+                            {signageDisplays.map((d: SignageDisplay) => <div key={d.id} className={`w-full p-3 rounded-lg flex items-center justify-between transition-colors ${selectedDisplayId === d.id ? 'bg-primary' : 'bg-secondary'}`}>
+                                <button onClick={() => setSelectedDisplayId(d.id)} className="flex-grow text-start rtl:text-end font-semibold">{getDisplayDataName(d.name)}</button>
                                 <div className="flex items-center gap-2">
-                                    <span className={`flex items-center gap-2 text-xs font-bold ${d.status === 'online' ? 'text-green-500' : 'text-red-500'}`}><div className={`w-2 h-2 rounded-full ${d.status === 'online' ? 'bg-green-500' : 'bg-red-500'}`}></div>{d.status.toUpperCase()}</span>
+                                    <span className={`flex items-center gap-2 text-xs font-bold ${d.status === 'online' ? 'text-green-500' : 'text-red-500'}`}><div className={`w-2 h-2 rounded-full ${d.status === 'online' ? 'bg-green-500' : 'bg-red-500'}`}></div>{t(d.status).toUpperCase()}</span>
                                     <button onClick={() => openModal('signageDisplayEdit', { display: d, onSave: handleSaveSignageDisplay })} className="text-muted-foreground hover:text-foreground"><PencilSquareIcon className="w-4 h-4"/></button>
                                     <button onClick={() => handleDeleteSignageDisplay(d.id)} className="text-muted-foreground hover:text-destructive"><TrashIcon className="w-4 h-4"/></button>
                                 </div>
                             </div>)}
                         </div>
                     </div>
-                    <div>
-                         <h3 className="font-bold text-lg text-foreground mb-4">Live Preview</h3>
+                    <div className="rtl:text-right">
+                         <h3 className="font-bold text-lg text-foreground mb-4">{t('livePreview')}</h3>
                          <SignagePreview content={currentContent} menuItems={currentMenuItems} onNext={handleNextContent} />
                          <div className="text-sm text-muted-foreground mt-2">
-                             <p>Playing on: <span className="font-semibold text-foreground">{signageDisplays.find(d=>d.id===selectedDisplayId)?.name || 'N/A'}</span></p>
-                             <p>Current Playlist: <span className="font-semibold text-foreground">{currentPlaylist?.name || 'None Scheduled'}</span></p>
+                             <p>{t('display')}: <span className="font-semibold text-foreground">{getDisplayDataName(signageDisplays.find((d:SignageDisplay)=>d.id===selectedDisplayId)?.name || 'N/A')}</span></p>
+                             <p>{t('playlist')}: <span className="font-semibold text-foreground">{t(currentPlaylist?.name as TranslationKey) || 'None Scheduled'}</span></p>
                          </div>
                     </div>
                 </div>
             );
             case 'cfd_attract': return (
-                <div className="p-6">
-                    <h3 className="text-xl font-bold text-foreground mb-2">CFD Attract Screen Settings</h3>
+                <div className="p-6 rtl:text-right">
+                    <h3 className="text-xl font-bold text-foreground mb-2">{t('cfdAttractSettings')}</h3>
                     <p className="text-sm text-muted-foreground mb-6">
-                        Select a playlist to run on the Customer Facing Display when it's idle. You can create and manage playlists in the 'Playlists' tab.
+                       {t('cfdAttractDescription')}
                     </p>
                     <div className="max-w-md">
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">Active Playlist</label>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1 rtl:text-right">{t('activePlaylist')}</label>
                         <Select
                             value={settings.cfd.attractScreenPlaylistId || ''}
-                            onChange={e => {
+                            onChange={(e: any) => {
                                 onSaveCfdSettings({
                                     ...settings,
                                     cfd: {
@@ -238,16 +245,16 @@ const DigitalSignageView: React.FC = () => {
                                 })
                             }}
                         >
-                            <option value="">-- No Attract Screen --</option>
-                            {signagePlaylists.map(p => (
-                                <option key={p.id} value={p.id}>{p.name}</option>
+                            <option value="">{t('noAttractScreen')}</option>
+                            {signagePlaylists.map((p: SignagePlaylist) => (
+                                <option key={p.id} value={p.id}>{t(p.name as TranslationKey)}</option>
                             ))}
                         </Select>
                          <Button
-                            onClick={() => alert("CFD Settings Saved!")}
+                            onClick={() => addToast({type: 'success', title: 'Saved', message: 'CFD Attract Screen settings saved.'})}
                             className="mt-4"
                         >
-                            Save Settings
+                            {t('saveSettings')}
                         </Button>
                     </div>
                 </div>
@@ -259,13 +266,13 @@ const DigitalSignageView: React.FC = () => {
 
     return (
         <div className="p-6 h-full flex flex-col">
-            <h2 className="text-2xl font-bold text-foreground mb-4">Digital Signage</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4 rtl:text-right">{t('digital_signage')}</h2>
             <div className="flex gap-2 border-b border-border mb-6 flex-wrap">
-                <button onClick={() => setActiveTab('displays')} className={tabButtonClass('displays')}>Displays & Preview</button>
-                <button onClick={() => setActiveTab('content')} className={tabButtonClass('content')}>Content Library</button>
-                <button onClick={() => setActiveTab('playlists')} className={tabButtonClass('playlists')}>Playlists</button>
-                <button onClick={() => setActiveTab('scheduler')} className={tabButtonClass('scheduler')}>Scheduler</button>
-                 <button onClick={() => setActiveTab('cfd_attract')} className={tabButtonClass('cfd_attract')}>CFD Attract Screen</button>
+                <button onClick={() => setActiveTab('displays')} className={tabButtonClass('displays')}>{t('displaysPreview')}</button>
+                <button onClick={() => setActiveTab('content')} className={tabButtonClass('content')}>{t('contentLibrary')}</button>
+                <button onClick={() => setActiveTab('playlists')} className={tabButtonClass('playlists')}>{t('playlists')}</button>
+                <button onClick={() => setActiveTab('scheduler')} className={tabButtonClass('scheduler')}>{t('scheduler')}</button>
+                 <button onClick={() => setActiveTab('cfd_attract')} className={tabButtonClass('cfd_attract')}>{t('cfdAttractScreen')}</button>
             </div>
             <div className="flex-grow">{renderTabContent()}</div>
         </div>

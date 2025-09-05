@@ -10,12 +10,15 @@ import { cn } from '../lib/utils';
 import ProductManagementTab from './ProductManagementTab';
 import { Button } from './ui/Button';
 import PencilSquareIcon from './icons/PencilSquareIcon';
-import ExportButtons from './ExportButtons';
+// FIX: Changed to a named import to resolve "Module has no default export" error.
+import { ExportButtons } from './ExportButtons';
 import { exportToCsv } from '../lib/utils';
+import { useTranslations } from '../hooks/useTranslations';
 
 
 const ProductsView: React.FC = () => {
     const { 
+        settings,
         menuItems, 
         categories,
         printers,
@@ -26,6 +29,7 @@ const ProductsView: React.FC = () => {
         handleImportMenuItems,
         handleBulkUpdateProducts,
     } = useDataContext();
+    const t = useTranslations(settings.language.staff);
 
     const { openModal, closeModal, addToast } = useModalContext();
     const { justAddedCategoryId, onClearJustAddedCategoryId } = useAppContext();
@@ -143,7 +147,7 @@ const ProductsView: React.FC = () => {
                         <SearchIcon className="w-5 h-5 text-muted-foreground absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none"/>
                         <input 
                             type="search" 
-                            placeholder="Search items..."
+                            placeholder={t('search_items')}
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
                             className="w-full bg-secondary rounded-lg ps-10 pe-4 py-2 text-foreground border border-border focus:border-primary focus:ring-0"
@@ -154,24 +158,24 @@ const ProductsView: React.FC = () => {
                         onChange={e => setFilterCategory(e.target.value)}
                         className="bg-secondary rounded-lg px-4 py-2 text-foreground border border-border focus:border-primary focus:ring-0"
                     >
-                        <option value="all">All Categories</option>
+                        <option value="all">{t('all')}</option>
                         {categories.map((cat: Category) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                     </select>
                 </div>
                 <div className="flex gap-2 flex-wrap">
                     <Button onClick={handleBulkEdit} variant="outline" size="sm" className="flex items-center gap-2" disabled={selectedIds.size === 0}>
-                        <PencilSquareIcon className="w-5 h-5" /> Bulk Edit ({selectedIds.size})
+                        <PencilSquareIcon className="w-5 h-5" /> {t('bulkEditN').replace('{count}', String(selectedIds.size))}
                     </Button>
                     <input type="file" ref={importInputRef} onChange={handleFileImport} className="hidden" accept=".csv" />
                     <Button onClick={triggerImport} variant="outline" size="sm" className="flex items-center gap-2">
-                        <ArrowUpTrayIcon className="w-5 h-5" /> Import CSV
+                        <ArrowUpTrayIcon className="w-5 h-5" /> {t('import')} {t('csv')}
                     </Button>
                     <ExportButtons onCsvExport={handleExportToCSV} onPrint={handlePrint} />
                      <button onClick={() => setIsFullScreen(fs => !fs)} title={isFullScreen ? "Exit Full Screen" : "Enter Full Screen"} className="p-2 bg-secondary rounded-lg text-muted-foreground hover:text-foreground">
                         {isFullScreen ? <ArrowsPointingInIcon className="w-5 h-5" /> : <ArrowsPointingOutIcon className="w-5 h-5" />}
                     </button>
                     <button onClick={onAddNew} className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2 px-3 rounded-lg text-sm">
-                        <PlusIcon className="w-5 h-5" /> Add Item
+                        <PlusIcon className="w-5 h-5" /> {t('addItem')}
                     </button>
                 </div>
             </div>

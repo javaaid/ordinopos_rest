@@ -11,6 +11,7 @@ import { cn } from '../lib/utils';
 import ArrowPathIcon from './icons/ArrowPathIcon';
 import PlusIcon from './icons/PlusIcon';
 import XMarkIcon from './icons/XMarkIcon';
+import { useTranslations } from '../hooks/useTranslations';
 
 interface MenuItemEditModalProps {
   isOpen: boolean;
@@ -24,12 +25,16 @@ interface MenuItemEditModalProps {
 
 type Tab = 'General' | 'Pricing' | 'Inventory' | 'Recipe' | 'Advanced';
 
-const Toggle: React.FC<{ label: string; enabled: boolean; onToggle: () => void; disabled?: boolean }> = ({ label, enabled, onToggle, disabled = false }) => (
+const Toggle: React.FC<{ label: string; enabled: boolean; onToggle?: () => void; disabled?: boolean }> = ({ label, enabled, onToggle, disabled = false }) => (
     <label className={cn("flex items-center justify-between p-2 rounded-md bg-secondary", disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer")}>
-        <span className="text-sm font-medium text-secondary-foreground">{label}</span>
+        <span className="text-sm font-medium text-secondary-foreground text-start rtl:text-end">{label}</span>
         <button
             type="button"
-            onClick={onToggle}
+            onClick={() => {
+                if (typeof onToggle === 'function') {
+                    onToggle();
+                }
+            }}
             disabled={disabled}
             className={`relative inline-flex items-center h-5 w-9 transition-colors rounded-full ${enabled ? 'bg-primary' : 'bg-muted'}`}
         >
@@ -40,7 +45,8 @@ const Toggle: React.FC<{ label: string; enabled: boolean; onToggle: () => void; 
 
 
 const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, onSave, product, onAddNewCategory, justAddedCategoryId, onClearJustAddedCategoryId }) => {
-    const { categories, modifierGroups, kitchenNotes, printers, kitchenDisplays, ingredients, recipes } = useDataContext();
+    const { categories, modifierGroups, kitchenNotes, printers, kitchenDisplays, ingredients, recipes, settings } = useDataContext();
+    const t = useTranslations(settings.language.staff);
     const { isAdvancedInventoryPluginActive } = useAppContext();
     const [activeTab, setActiveTab] = useState<Tab>('General');
     const [formData, setFormData] = useState<Partial<MenuItem>>({});
@@ -152,19 +158,19 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
     };
     
     const renderGeneralTab = () => (
-        <div className="space-y-4">
-            <Input name="name" value={formData.name || ''} onChange={handleChange} placeholder="Product Name" required />
+        <div className="space-y-4 text-start rtl:text-end">
+            <Input name="name" value={formData.name || ''} onChange={handleChange} placeholder={t('productName')} required />
             <div className="flex gap-2">
                 <Select name="category" value={formData.category} onChange={handleChange} className="flex-grow" required>
                     <option value="" disabled>Select a Category</option>
                     {categories.map((cat: Category) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                 </Select>
-                <Button type="button" variant="outline" onClick={onAddNewCategory}>New</Button>
+                <Button type="button" variant="outline" onClick={onAddNewCategory}>{t('new')}</Button>
             </div>
-            <Input name="course" value={formData.course || ''} onChange={handleChange} placeholder="Course (e.g., Appetizer, Main)" />
-            <Input name="kitchenName" value={formData.kitchenName || ''} onChange={handleChange} placeholder="Kitchen Name (for KDS/printers)" />
+            <Input name="course" value={formData.course || ''} onChange={handleChange} placeholder={t('course')} />
+            <Input name="kitchenName" value={formData.kitchenName || ''} onChange={handleChange} placeholder={t('kitchenName')} />
              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">Barcodes</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">{t('barcodes')}</label>
                  <div className="flex items-center flex-wrap gap-2 p-2 bg-input border border-border rounded-md">
                      {(formData.barcodes || []).map((barcode, index) => (
                         <div key={index} className="flex items-center gap-1.5 bg-secondary text-secondary-foreground text-sm font-mono px-2 py-1 rounded">
@@ -179,67 +185,67 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
                         value={barcodeInput}
                         onChange={(e) => setBarcodeInput(e.target.value)}
                         onKeyDown={handleBarcodeKeyDown}
-                        placeholder="Add barcode..."
+                        placeholder={t('addBarcode')}
                         className="bg-transparent outline-none flex-grow text-sm"
                     />
                  </div>
                  <div className="flex items-center gap-2 mt-2">
                      <Button type="button" variant="outline" size="sm" onClick={generateBarcode} className="flex items-center gap-2">
-                        <ArrowPathIcon className="w-4 h-4" /> Generate EAN-13
+                        <ArrowPathIcon className="w-4 h-4" /> {t('generateEAN13')}
                     </Button>
                 </div>
             </div>
-            <Input name="imageUrl" value={formData.imageUrl || ''} onChange={handleChange} placeholder="Image URL" />
+            <Input name="imageUrl" value={formData.imageUrl || ''} onChange={handleChange} placeholder={t('imageUrl')} />
              <div>
-                <label className="text-xs text-muted-foreground">Display Order</label>
-                <Input type="number" name="displayOrder" value={formData.displayOrder ?? ''} onChange={handleNumberChange} placeholder="e.g., 1, 2, 3... for sorting" />
+                <label className="text-xs text-muted-foreground">{t('displayOrder')}</label>
+                <Input type="number" name="displayOrder" value={formData.displayOrder ?? ''} onChange={handleNumberChange} placeholder={t('displayOrderExample')} />
             </div>
              <div className="grid grid-cols-3 gap-2">
-                <Toggle label="Active" enabled={!!formData.isActive} onToggle={() => setFormData(p => ({...p, isActive: !p.isActive}))} />
-                <Toggle label="Is Veg" enabled={!!formData.isVeg} onToggle={() => setFormData(p => ({...p, isVeg: !p.isVeg}))} />
-                <Toggle label="Display Image on POS" enabled={!!formData.displayImage} onToggle={() => setFormData(p => ({...p, displayImage: !p.displayImage}))} />
+                <Toggle label={t('active')} enabled={!!formData.isActive} onToggle={() => setFormData(p => ({...p, isActive: !p.isActive}))} />
+                <Toggle label={t('isVeg')} enabled={!!formData.isVeg} onToggle={() => setFormData(p => ({...p, isVeg: !p.isVeg}))} />
+                <Toggle label={t('displayImageOnPOS')} enabled={!!formData.displayImage} onToggle={() => setFormData(p => ({...p, displayImage: !p.displayImage}))} />
             </div>
         </div>
     );
     
     const renderPricingTab = () => (
-        <div className="space-y-4">
+        <div className="space-y-4 text-start rtl:text-end">
             <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs text-muted-foreground">Dine In Price</label><Input type="number" name="price" value={formData.price ?? ''} onChange={handleNumberChange} required /></div>
-                <div><label className="text-xs text-muted-foreground">Take Out Price</label><Input type="number" name="takeawayPrice" value={formData.takeawayPrice ?? ''} onChange={handleNumberChange} /></div>
-                <div><label className="text-xs text-muted-foreground">Delivery Price</label><Input type="number" name="deliveryPrice" value={formData.deliveryPrice ?? ''} onChange={handleNumberChange} /></div>
-                <div><label className="text-xs text-muted-foreground">Cost</label><Input type="number" name="cost" value={formData.cost ?? ''} onChange={handleNumberChange} /></div>
+                <div><label className="text-xs text-muted-foreground">{t('dineInPrice')}</label><Input type="number" name="price" value={formData.price ?? ''} onChange={handleNumberChange} required /></div>
+                <div><label className="text-xs text-muted-foreground">{t('takeOutPrice')}</label><Input type="number" name="takeawayPrice" value={formData.takeawayPrice ?? ''} onChange={handleNumberChange} /></div>
+                <div><label className="text-xs text-muted-foreground">{t('deliveryPrice')}</label><Input type="number" name="deliveryPrice" value={formData.deliveryPrice ?? ''} onChange={handleNumberChange} /></div>
+                <div><label className="text-xs text-muted-foreground">{t('cost')}</label><Input type="number" name="cost" value={formData.cost ?? ''} onChange={handleNumberChange} /></div>
             </div>
              <div className="pt-4 border-t border-border mt-4">
-                <h4 className="font-bold text-foreground mb-2">Member Pricing</h4>
+                <h4 className="font-bold text-foreground mb-2">{t('memberPricing')}</h4>
                 <div className="grid grid-cols-3 gap-4">
-                    <div><label className="text-xs text-muted-foreground">Member Price 1</label><Input type="number" name="memberPrice1" value={formData.memberPrice1 ?? ''} onChange={handleNumberChange} /></div>
-                    <div><label className="text-xs text-muted-foreground">Member Price 2</label><Input type="number" name="memberPrice2" value={formData.memberPrice2 ?? ''} onChange={handleNumberChange} /></div>
-                    <div><label className="text-xs text-muted-foreground">Member Price 3</label><Input type="number" name="memberPrice3" value={formData.memberPrice3 ?? ''} onChange={handleNumberChange} /></div>
+                    <div><label className="text-xs text-muted-foreground">{t('memberPrice1')}</label><Input type="number" name="memberPrice1" value={formData.memberPrice1 ?? ''} onChange={handleNumberChange} /></div>
+                    <div><label className="text-xs text-muted-foreground">{t('memberPrice2')}</label><Input type="number" name="memberPrice2" value={formData.memberPrice2 ?? ''} onChange={handleNumberChange} /></div>
+                    <div><label className="text-xs text-muted-foreground">{t('memberPrice3')}</label><Input type="number" name="memberPrice3" value={formData.memberPrice3 ?? ''} onChange={handleNumberChange} /></div>
                 </div>
             </div>
-             <Toggle label="Ask for price on sale" enabled={!!formData.askPrice} onToggle={() => setFormData(p => ({...p, askPrice: !p.askPrice}))} />
+             <Toggle label={t('askPriceOnSale')} enabled={!!formData.askPrice} onToggle={() => setFormData(p => ({...p, askPrice: !p.askPrice}))} />
         </div>
     );
 
     const hasRecipe = recipeItems.length > 0;
     
     const renderInventoryTab = () => (
-            <div className="space-y-4">
+            <div className="space-y-4 text-start rtl:text-end">
                  {hasRecipe ? (
                     <p className="text-sm text-yellow-600 p-3 bg-yellow-500/10 rounded-md border border-yellow-500/20">
-                        <strong>Inventory is managed by recipe.</strong><br/>
-                        Stock levels are calculated from ingredients in the 'Recipe' tab. Any values entered here will be ignored during sales.
+                        <strong>{t('inventoryManagedByRecipe')}</strong><br/>
+                        {t('inventoryManagedByRecipeDesc')}
                     </p>
                 ) : (
                     <p className="text-sm text-muted-foreground p-2 bg-blue-500/10 rounded-md border border-blue-500/20">
-                        Use direct stock management for items that are sold as-is, like bottled drinks or pre-packaged snacks.
+                        {t('directStockManagementInfo')}
                     </p>
                 )}
 
                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="text-xs text-muted-foreground">Stock</label>
+                        <label className="text-xs text-muted-foreground">{t('stock')}</label>
                         <Input 
                             type="number" 
                             name="stock" 
@@ -248,7 +254,7 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
                         />
                     </div>
                     <div>
-                        <label className="text-xs text-muted-foreground">Warn Qty</label>
+                        <label className="text-xs text-muted-foreground">{t('warnQty')}</label>
                         <Input 
                             type="number" 
                             name="warnQty" 
@@ -258,7 +264,7 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
                     </div>
                 </div>
                 <Toggle 
-                    label="Stop sale at zero stock" 
+                    label={t('stopSaleAtZeroStock')}
                     enabled={!!formData.stopSaleAtZeroStock} 
                     onToggle={() => setFormData(p => ({...p, stopSaleAtZeroStock: !p.stopSaleAtZeroStock}))} 
                 />
@@ -281,11 +287,11 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
         };
 
         return (
-            <div className="space-y-4">
+            <div className="space-y-4 text-start rtl:text-end">
                 <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">Add Ingredient to Recipe</label>
+                    <label className="block text-sm font-medium text-muted-foreground mb-1">{t('addIngredientToRecipe')}</label>
                     <Select onChange={e => handleAddIngredient(e.target.value)} value="">
-                        <option value="" disabled>-- Select an ingredient --</option>
+                        <option value="" disabled>{t('selectAnIngredient')}</option>
                         {ingredients.map((ing: Ingredient) => (
                             <option key={ing.id} value={ing.id}>{ing.name} ({ing.unit})</option>
                         ))}
@@ -314,24 +320,24 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
                     })}
                 </div>
                 {recipeItems.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">No ingredients in recipe. Stock will be tracked directly on this product via the 'Inventory' tab.</p>
+                    <p className="text-sm text-muted-foreground text-center py-4">{t('noIngredientsInRecipe')}</p>
                 )}
             </div>
         );
     };
 
     const renderAdvancedTab = () => (
-        <div className="space-y-4">
+        <div className="space-y-4 text-start rtl:text-end">
             <div className="grid grid-cols-2 gap-2">
-                <Toggle label="Discountable" enabled={!!formData.isDiscountable} onToggle={() => setFormData(p => ({...p, isDiscountable: !p.isDiscountable}))} />
-                <Toggle label="Hide Name on Bill" enabled={!!formData.hideName} onToggle={() => setFormData(p => ({...p, hideName: !p.hideName}))} />
-                <Toggle label="Ask for Quantity" enabled={!!formData.askQuantity} onToggle={() => setFormData(p => ({...p, askQuantity: !p.askQuantity}))} />
-                <Toggle label="Use Weighing Scale" enabled={!!formData.useScale} onToggle={() => setFormData(p => ({...p, useScale: !p.useScale}))} />
-                <Toggle label="Always Show Modifiers" enabled={!!formData.alwaysShowModifiers} onToggle={() => setFormData(p => ({...p, alwaysShowModifiers: !p.alwaysShowModifiers}))} />
-                <Toggle label="Prompt for Kitchen Note" enabled={!!formData.promptForKitchenNote} onToggle={() => setFormData(p => ({...p, promptForKitchenNote: !p.promptForKitchenNote}))} />
+                <Toggle label={t('discountable')} enabled={!!formData.isDiscountable} onToggle={() => setFormData(p => ({...p, isDiscountable: !p.isDiscountable}))} />
+                <Toggle label={t('hideNameOnBill')} enabled={!!formData.hideName} onToggle={() => setFormData(p => ({...p, hideName: !p.hideName}))} />
+                <Toggle label={t('askForQuantity')} enabled={!!formData.askQuantity} onToggle={() => setFormData(p => ({...p, askQuantity: !p.askQuantity}))} />
+                <Toggle label={t('useWeighingScale')} enabled={!!formData.useScale} onToggle={() => setFormData(p => ({...p, useScale: !p.useScale}))} />
+                <Toggle label={t('alwaysShowModifiers')} enabled={!!formData.alwaysShowModifiers} onToggle={() => setFormData(p => ({...p, alwaysShowModifiers: !p.alwaysShowModifiers}))} />
+                <Toggle label={t('promptForKitchenNote')} enabled={!!formData.promptForKitchenNote} onToggle={() => setFormData(p => ({...p, promptForKitchenNote: !p.promptForKitchenNote}))} />
             </div>
             <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">Modifiers</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">{t('modifiers')}</label>
                 <div className="max-h-32 overflow-y-auto bg-secondary p-2 rounded-md space-y-1">
                     {modifierGroups.map((group: ModifierGroup) => (
                         <label key={group.id} className="flex items-center gap-2 p-1.5 rounded hover:bg-muted">
@@ -341,17 +347,17 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
                     ))}
                 </div>
             </div>
-             <div><label className="text-xs text-muted-foreground">Kitchen Note</label><Textarea name="kitchenNote" value={formData.kitchenNote || ''} onChange={handleChange} /></div>
+             <div><label className="text-xs text-muted-foreground">{t('kitchenNote')}</label><Textarea name="kitchenNote" value={formData.kitchenNote || ''} onChange={handleChange} /></div>
             <div className="grid grid-cols-2 gap-4">
                  <div>
-                    <label className="text-xs text-muted-foreground">Kitchen Printer</label>
+                    <label className="text-xs text-muted-foreground">{t('kitchenPrinter')}</label>
                     <Select name="kitchenPrinterId" value={formData.kitchenPrinterId || ''} onChange={handleChange}>
                         <option value="">Default</option>
                         {printers.map((p: Printer) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </Select>
                  </div>
                  <div>
-                    <label className="text-xs text-muted-foreground">Kitchen Display (KDS)</label>
+                    <label className="text-xs text-muted-foreground">{t('kitchenDisplay')}</label>
                      <Select name="kdsId" value={formData.kdsId || ''} onChange={handleChange}>
                         <option value="">Default</option>
                         {kitchenDisplays.map((kds: KitchenDisplay) => <option key={kds.id} value={kds.id}>{kds.name}</option>)}
@@ -371,22 +377,24 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
       ? "Enable the 'Advanced Inventory' plugin to manage recipes."
       : undefined;
 
-    const tabs: { name: Tab; content: () => React.ReactNode; disabled?: boolean; tooltip?: string; }[] = [
-        { name: 'General', content: renderGeneralTab },
-        { name: 'Pricing', content: renderPricingTab },
+    const tabs: { name: Tab; label: string; content: () => React.ReactNode; disabled?: boolean; tooltip?: string; }[] = [
+        { name: 'General', label: t('general'), content: renderGeneralTab },
+        { name: 'Pricing', label: t('pricing'), content: renderPricingTab },
         { 
             name: 'Inventory', 
+            label: t('inventory'),
             content: renderInventoryTab, 
             disabled: isInventoryTabDisabled,
             tooltip: inventoryTooltip,
         },
         { 
-            name: 'Recipe', 
+            name: 'Recipe',
+            label: t('recipe'),
             content: renderRecipeTab,
             disabled: isRecipeTabDisabled,
             tooltip: recipeTooltip,
         },
-        { name: 'Advanced', content: renderAdvancedTab },
+        { name: 'Advanced', label: t('advanced'), content: renderAdvancedTab },
     ];
 
 
@@ -394,7 +402,7 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
         <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl">
             <form onSubmit={handleSubmit}>
                 <ModalHeader>
-                    <ModalTitle>{product ? 'Edit Product' : 'Add New Product'}</ModalTitle>
+                    <ModalTitle>{product ? t('editProduct') : t('addNewProduct')}</ModalTitle>
                 </ModalHeader>
                 <ModalContent className="p-0">
                     <div className="border-b border-border flex">
@@ -415,15 +423,15 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
                                 )}
                                 disabled={tab.disabled}
                             >
-                                {tab.name}
+                                {tab.label}
                             </button>
                         ))}
                     </div>
                     <div className="p-6">{tabs.find(t => t.name === activeTab)?.content()}</div>
                 </ModalContent>
                 <ModalFooter>
-                    <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-                    <Button type="submit">Save Product</Button>
+                    <Button type="button" variant="ghost" onClick={onClose}>{t('cancel')}</Button>
+                    <Button type="submit">{t('saveProduct')}</Button>
                 </ModalFooter>
             </form>
         </Modal>

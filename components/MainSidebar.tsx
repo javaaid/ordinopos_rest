@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { View, Role } from '../types';
 import HomeIcon from './icons/HomeIcon';
@@ -16,6 +15,7 @@ import QueueListIcon from './icons/QueueListIcon';
 import { useAppContext, useDataContext } from '../contexts/AppContext';
 import { cn } from '../lib/utils';
 import { useTranslations } from '../hooks/useTranslations';
+import { ordinoLogoBase64 } from '../assets/logo';
 
 interface SidebarNavItemDef {
   id: View;
@@ -96,7 +96,7 @@ export const MainSidebar = (): React.ReactElement | null => {
       
       <div className='p-4 mb-8 bg-background rounded-xl shadow-inner'>
         <div className='flex items-center justify-center h-10'>
-            {logoError || !settings.receipt.logoUrl ? (
+            {logoError ? (
                 <div className='flex items-center gap-3'>
                     <div className="w-10 h-10 bg-primary text-primary-foreground flex items-center justify-center rounded-md font-bold text-xl shrink-0">
                         OP
@@ -105,7 +105,7 @@ export const MainSidebar = (): React.ReactElement | null => {
                 </div>
             ) : (
                 <img 
-                    src={settings.receipt.logoUrl} 
+                    src={ordinoLogoBase64} 
                     alt="ordino Pos Logo" 
                     className={cn('h-full w-auto transition-all duration-300', isSidebarCollapsed ? 'max-w-10' : 'max-w-36')}
                     onError={() => setLogoError(true)}

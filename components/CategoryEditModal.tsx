@@ -1,7 +1,10 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { Category } from '../types';
+import { useTranslations } from '../hooks/useTranslations';
+import { useAppContext } from '../contexts/AppContext';
+import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/Modal';
+import { Input } from './ui/Input';
+import { Button } from './ui/Button';
 
 interface CategoryEditModalProps {
   isOpen: boolean;
@@ -11,6 +14,8 @@ interface CategoryEditModalProps {
 }
 
 const CategoryEditModal: React.FC<CategoryEditModalProps> = ({ isOpen, onClose, onSave, category }) => {
+  const { settings } = useAppContext();
+  const t = useTranslations(settings.language.staff);
   const [name, setName] = useState('');
 
   useEffect(() => {
@@ -36,18 +41,18 @@ const CategoryEditModal: React.FC<CategoryEditModalProps> = ({ isOpen, onClose, 
     <div className="fixed inset-0 bg-background/70 flex justify-center items-center z-[60] p-4">
       <div className="bg-card rounded-lg shadow-xl w-full max-w-md border border-border">
         <form onSubmit={handleSubmit}>
-          <div className="p-6 border-b border-border">
-            <h2 className="text-2xl font-bold text-foreground">{category ? 'Edit Category' : 'Add New Category'}</h2>
-          </div>
-          <div className="p-6 space-y-4">
+          <ModalHeader>
+            <ModalTitle>{category ? t('edit') : t('addNewCategory')}</ModalTitle>
+          </ModalHeader>
+          <ModalContent>
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1">Category Name</label>
-              <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-input p-2 rounded-md border border-border text-foreground" required />
+              <label className="block text-sm font-medium text-muted-foreground mb-1 text-start rtl:text-end">{t('categoryName')}</label>
+              <Input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-input p-2 rounded-md border border-border text-foreground text-start rtl:text-end" required />
             </div>
-          </div>
+          </ModalContent>
           <div className="p-6 border-t border-border flex justify-end items-center space-x-4">
-            <button type="button" onClick={onClose} className="px-6 py-2 rounded-md bg-secondary text-secondary-foreground font-semibold hover:bg-muted">Cancel</button>
-            <button type="submit" className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90">Save Category</button>
+            <Button type="button" variant="ghost" onClick={onClose}>{t('cancel')}</Button>
+            <Button type="submit">{t('saveCategory')}</Button>
           </div>
         </form>
       </div>

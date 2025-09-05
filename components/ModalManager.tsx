@@ -1,10 +1,6 @@
-
-
-
-
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { useModalContext } from '../contexts/AppContext';
+import { useAppContext } from '../contexts/AppContext';
 
 // Import all modal components
 import ModifierModal from './ModifierModal';
@@ -55,7 +51,6 @@ import ChooseStaffModal from './ChooseStaffModal';
 import CallerIDModal from './CallerIDModal';
 import AIChatModal from './AIChatModal';
 import ProductBulkEditModal from './ProductBulkEditModal';
-import A4Invoice from './A4Invoice';
 import SignageContentEditModal from './SignageContentEditModal';
 import SignagePlaylistEditModal from './SignagePlaylistEditModal';
 import SignageScheduleEditModal from './SignageScheduleEditModal';
@@ -68,18 +63,21 @@ import LoyaltyRedemptionModal from './LoyaltyRedemptionModal';
 import BarcodeScannerModal from './BarcodeScannerModal';
 import BurgerOptionEditModal from './BurgerOptionEditModal';
 import ItemDiscountModal from './ItemDiscountModal';
+import { KDSModal } from './KDSView';
+import { CFDModal } from './CFDView';
+import { KioskModal } from './KIOSKView';
+import { NumberDisplayModal } from './OrderNumberDisplayView';
+
 
 const ModalManager: React.FC = () => {
-    const { modal, closeModal } = useModalContext();
+    const { modal, closeModal } = useAppContext();
     const { type, props } = modal;
     const modalRoot = document.getElementById('modal-root');
 
-    // A simple mapping of modal types to their components
     const MODAL_COMPONENTS: { [key: string]: React.FC<any> } = {
         modifier: ModifierModal,
         pizzaBuilder: PizzaBuilder,
         burgerBuilder: BurgerBuilder,
-        burgerOptionEdit: BurgerOptionEditModal,
         payment: PaymentModal,
         receipt: ReceiptModal,
         reservation: ReservationModal,
@@ -115,7 +113,6 @@ const ModalManager: React.FC = () => {
         voidOrder: VoidOrderModal,
         productEdit: ProductEditModal,
         productBulkEdit: ProductBulkEditModal,
-        A4Invoice: A4Invoice, // Retained for modal-like preview if needed, but not for printing.
         discount: DiscountModal,
         itemDiscount: ItemDiscountModal,
         paymentTerminalSettings: PaymentTerminalSettingsModal,
@@ -137,6 +134,11 @@ const ModalManager: React.FC = () => {
         dashboardCustomize: DashboardCustomizeModal,
         loyaltyRedemption: LoyaltyRedemptionModal,
         barcodeScanner: BarcodeScannerModal,
+        burgerOptionEdit: BurgerOptionEditModal,
+        kds: KDSModal,
+        cfd: CFDModal,
+        kiosk: KioskModal,
+        orderNumberDisplay: NumberDisplayModal,
     };
 
     const SpecificModal = type ? MODAL_COMPONENTS[type] : null;

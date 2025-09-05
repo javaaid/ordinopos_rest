@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import CalendarDaysIcon from './icons/CalendarDaysIcon';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { useAppContext } from '../contexts/AppContext';
+import { useTranslations } from '../hooks/useTranslations';
 
 interface DateRangePickerProps {
     startDate: Date;
@@ -12,7 +14,8 @@ interface DateRangePickerProps {
 type Preset = 'today' | 'yesterday' | '7days' | '30days' | 'month' | 'last_month';
 
 const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, endDate, onDateChange }) => {
-    
+    const { settings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const [activePreset, setActivePreset] = useState<Preset | 'custom'>('7days');
     
     const formatDateForInput = (date: Date) => date.toISOString().split('T')[0];
@@ -66,13 +69,13 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({ startDate, endDate, o
         <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">
                 <CalendarDaysIcon className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm font-semibold text-foreground">Date Range:</span>
+                <span className="text-sm font-semibold text-foreground">{t('dateRange')}</span>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-                <Button onClick={() => handlePresetClick('today')} variant={activePreset === 'today' ? 'default' : 'secondary'} size="sm">Today</Button>
-                <Button onClick={() => handlePresetClick('yesterday')} variant={activePreset === 'yesterday' ? 'default' : 'secondary'} size="sm">Yesterday</Button>
-                <Button onClick={() => handlePresetClick('7days')} variant={activePreset === '7days' ? 'default' : 'secondary'} size="sm">Last 7 Days</Button>
-                <Button onClick={() => handlePresetClick('month')} variant={activePreset === 'month' ? 'default' : 'secondary'} size="sm">This Month</Button>
+                <Button onClick={() => handlePresetClick('today')} variant={activePreset === 'today' ? 'default' : 'secondary'} size="sm">{t('today')}</Button>
+                <Button onClick={() => handlePresetClick('yesterday')} variant={activePreset === 'yesterday' ? 'default' : 'secondary'} size="sm">{t('yesterday')}</Button>
+                <Button onClick={() => handlePresetClick('7days')} variant={activePreset === '7days' ? 'default' : 'secondary'} size="sm">{t('last7Days')}</Button>
+                <Button onClick={() => handlePresetClick('month')} variant={activePreset === 'month' ? 'default' : 'secondary'} size="sm">{t('thisMonth')}</Button>
             </div>
             <div className="flex items-center gap-2">
                  <Input

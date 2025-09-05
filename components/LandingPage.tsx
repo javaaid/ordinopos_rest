@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { View } from '../types';
@@ -13,6 +12,7 @@ import QrCodeIcon from './icons/QrCodeIcon';
 import QueueListIcon from './icons/QueueListIcon';
 import MoonIcon from './icons/MoonIcon';
 import SunIcon from './icons/SunIcon';
+import { ordinoLogoBase64 } from '../assets/logo';
 
 interface FeatureCardProps {
   icon: React.FC<React.SVGProps<SVGSVGElement>>;
@@ -99,10 +99,10 @@ const LandingPage: React.FC = () => {
             </div>
             <div className="container mx-auto px-4 py-16">
                 <header className="text-center mb-16">
-                    <img src={settings.receipt.logoUrl} alt="ordino Pos" className="h-20 w-auto mx-auto mb-4" />
+                    <img src={ordinoLogoBase64} alt="ordino Pos" className="h-20 w-auto mx-auto mb-4" />
                     <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-foreground">The All-in-One Solution for Your Business</h1>
                     <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-                        Streamline operations with our intuitive Point of Sale, Kitchen Display, Delivery Management, and more.
+                        Fast • Reliable • Smart POS
                     </p>
                     <div className="mt-8">
                         <Button size="lg" onClick={() => setView('pos')}>

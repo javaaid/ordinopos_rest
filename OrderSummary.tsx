@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { CartItem, Customer, OrderType, Employee, AppliedDiscount, Language, Table, Location, Order, AppSettings, AIResponse, AISettings, Promotion, ManualDiscount, Surcharge } from '../types';
 import OrderItem from './OrderItem';
@@ -305,7 +306,8 @@ export default function OrderSummary() {
                           if (tablesInFloor.length === 0) return null;
                           return (
                               <optgroup key={floor} label={floor}>
-                                  {tablesInFloor.map(table => (
+                                  {/* FIX: Cast `tablesInFloor` to `Table[]` to resolve TypeScript error. */}
+                                  {(tablesInFloor as Table[]).map(table => (
                                       <option key={table.id} value={table.id}>{table.name} (seats {table.capacity})</option>
                                   ))}
                               </optgroup>
@@ -354,12 +356,14 @@ export default function OrderSummary() {
           </div>
         ) : (
           <>
+            {/* FIX: Guard against cart being null or undefined. */}
             {(cart || []).length > 0 && (
               <div>
                 <h3 className="text-xs font-bold uppercase text-muted-foreground mb-1.5 pt-1.5 px-1">
                   {t('new_items')}
                 </h3>
                 <div className="space-y-1.5">
+                  {/* FIX: Guard against cart being null or undefined. */}
                   {(cart || []).map((item) => <OrderItem key={item.cartId} cartItem={item} onRemoveItem={onRemoveItem} onUpdateCartQuantity={onUpdateCartQuantity} orderType={orderType} customer={selectedCustomer} onClick={() => handleItemClick(item)} />)}
                 </div>
               </div>
@@ -430,7 +434,7 @@ export default function OrderSummary() {
             <div className="flex justify-between items-center pt-1 mt-1 border-t border-border">
                 <span className="text-lg font-bold text-foreground">{t('total')}</span>
                 <div className="text-right">
-                    <span className="text-2xl font-bold text-primary">{currency}{total.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-primary">{currency}{(total as number).toFixed(2)}</span>
                     {settings.dualCurrency.enabled && (
                         <p className="text-xs text-muted-foreground font-mono">
                             ≈ {settings.dualCurrency.secondaryCurrency} {(total * settings.dualCurrency.exchangeRate).toFixed(2)}

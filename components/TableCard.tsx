@@ -4,6 +4,8 @@ import ClockIcon from './icons/ClockIcon';
 import UsersIcon from './icons/UsersIcon';
 import QrCodeIcon from './icons/QrCodeIcon';
 import { cn } from '../lib/utils';
+import { useAppContext } from '../contexts/AppContext';
+import { useTranslations } from '../hooks/useTranslations';
 
 interface TableCardProps {
     table: Table;
@@ -30,6 +32,8 @@ const formatTimeElapsed = (startTime?: number): string => {
 };
 
 const TableCard: React.FC<TableCardProps> = ({ table, onSelect, isEditMode, isQRCodePluginActive, onGenerateQRCode, isDragging, isDragOver, onDragStart, onDragOver, onDragLeave, onDrop, onDragEnd }) => {
+    const { settings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const [timeElapsed, setTimeElapsed] = useState(() => formatTimeElapsed(table.occupiedSince));
 
     useEffect(() => {
@@ -125,7 +129,7 @@ const TableCard: React.FC<TableCardProps> = ({ table, onSelect, isEditMode, isQR
                     </>
                 )}
                 {table.status === 'available' && (
-                    <p className={cn('text-lg font-bold', styles.text)}>Available</p>
+                    <p className={cn('text-lg font-bold', styles.text)}>{t('available')}</p>
                 )}
             </div>
             {isQRCodePluginActive && isEditMode && (

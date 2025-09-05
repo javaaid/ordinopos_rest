@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo } from 'react';
 import { Order, MenuItem, Location, Ingredient, RecipeItem, AISettings } from '../types';
 import AIReportSummary from './AIReportSummary';
@@ -102,7 +103,7 @@ const MenuReport: React.FC<MenuReportProps> = ({ orders, menuItems, ingredients,
         return sortDirection === 'desc' ? '▼' : '▲';
     };
     
-    const thClass = "px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer";
+    const thClass = "px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer";
 
     return (
         <div className="w-full">

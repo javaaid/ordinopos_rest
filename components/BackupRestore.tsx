@@ -1,7 +1,8 @@
-
 import React, { useState } from 'react';
 import ArrowDownTrayIcon from './icons/ArrowDownTrayIcon';
 import ArrowUpTrayIcon from './icons/ArrowUpTrayIcon';
+import { useTranslations } from '../hooks/useTranslations';
+import { useAppContext } from '../contexts/AppContext';
 
 interface BackupRestoreProps {
   onSuccess: (message: string) => void;
@@ -9,6 +10,8 @@ interface BackupRestoreProps {
 }
 
 const BackupRestore: React.FC<BackupRestoreProps> = ({ onSuccess, onError }) => {
+  const { settings } = useAppContext();
+  const t = useTranslations(settings.language.staff);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
 
@@ -39,10 +42,10 @@ const BackupRestore: React.FC<BackupRestoreProps> = ({ onSuccess, onError }) => 
   };
 
   return (
-    <div className="bg-secondary p-4 rounded-lg mt-4">
-      <p className="font-bold text-foreground mb-1">Backup & Restore</p>
+    <div className="bg-secondary p-4 rounded-lg mt-4 text-start rtl:text-end">
+      <p className="font-bold text-foreground mb-1">{t('backup_title')}</p>
       <p className="text-muted-foreground text-sm mb-4">
-        Create a local backup of all your application data, including sales, products, and settings. You can restore from this backup file at any time.
+        {t('backup_desc')}
       </p>
       <div className="flex gap-4">
         <button
@@ -51,7 +54,7 @@ const BackupRestore: React.FC<BackupRestoreProps> = ({ onSuccess, onError }) => 
           className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-muted disabled:cursor-wait"
         >
           <ArrowDownTrayIcon className="w-5 h-5" />
-          {isBackingUp ? 'Backing Up...' : 'Backup Data'}
+          {isBackingUp ? t('backup_backingUp') : t('backup_backup_button')}
         </button>
         <button
           onClick={handleRestore}
@@ -59,7 +62,7 @@ const BackupRestore: React.FC<BackupRestoreProps> = ({ onSuccess, onError }) => 
           className="flex-1 flex items-center justify-center gap-2 bg-muted hover:bg-muted/80 text-muted-foreground font-bold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-wait"
         >
           <ArrowUpTrayIcon className="w-5 h-5" />
-          {isRestoring ? 'Restoring...' : 'Restore from Backup'}
+          {isRestoring ? t('backup_restoring') : t('backup_restore_button')}
         </button>
       </div>
     </div>

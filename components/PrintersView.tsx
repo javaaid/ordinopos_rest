@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Printer } from '../types';
 import { useDataContext, useModalContext, useAppContext, useToastContext } from '../contexts/AppContext';
@@ -9,10 +8,12 @@ import { Button } from './ui/Button';
 import PrinterSettingsView from './PrinterSettingsView';
 import KitchenPrinterProfilesView from './KitchenPrinterProfilesView';
 import SignalIcon from './icons/SignalIcon';
+import { useTranslations } from '../hooks/useTranslations';
 
 const PrintersView: React.FC = () => {
     const { printers, handleSavePrinter, handleDeletePrinter } = useDataContext();
     const { settings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const { addToast } = useToastContext();
     const { openModal, closeModal } = useModalContext();
     const [editingPrinter, setEditingPrinter] = useState<Printer | null>(null);
@@ -84,18 +85,18 @@ const PrintersView: React.FC = () => {
         return <PrinterSettingsView printer={editingPrinter} onBack={handleBack} onSave={handleSave} />;
     }
 
-    const thClass = "px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider";
+    const thClass = "px-4 py-3 text-start rtl:text-end text-xs font-semibold text-muted-foreground uppercase tracking-wider";
 
     return (
         <div className="p-6 h-full flex flex-col">
             <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-                <h2 className="text-2xl font-bold text-foreground">Manage Printers</h2>
+                <h2 className="text-2xl font-bold text-foreground rtl:text-right">{t('managePrinters')}</h2>
                 <div className="flex items-center gap-2">
                      <Button variant="outline" onClick={handleDiscoverPrinters} className="flex items-center gap-2">
-                        <SignalIcon className="w-5 h-5" /> Discover Printers
+                        <SignalIcon className="w-5 h-5" /> {t('discoverPrinters')}
                     </Button>
                     <Button onClick={handleAddNew} className="flex items-center gap-2">
-                        <PlusIcon className="w-5 h-5" /> Add Printer
+                        <PlusIcon className="w-5 h-5" /> {t('addPrinter')}
                     </Button>
                 </div>
             </div>
@@ -103,28 +104,28 @@ const PrintersView: React.FC = () => {
                 <table className="min-w-full divide-y divide-border">
                     <thead className="bg-muted/50">
                         <tr>
-                            <th className={thClass}>Name</th>
-                            <th className={thClass}>Type</th>
-                            <th className={thClass}>Connection</th>
-                            <th className={thClass}>IP Address / ID</th>
-                            <th className={thClass}>Status</th>
-                            <th className={thClass}>Actions</th>
+                            <th className={thClass}>{t('printers_col_name')}</th>
+                            <th className={thClass}>{t('printers_col_type')}</th>
+                            <th className={thClass}>{t('printers_col_connection')}</th>
+                            <th className={thClass}>{t('printers_col_ip')}</th>
+                            <th className={thClass}>{t('printers_col_status')}</th>
+                            <th className={thClass}>{t('printers_col_actions')}</th>
                         </tr>
                     </thead>
                     <tbody className="bg-card divide-y divide-border">
                         {(printers || []).map((p: Printer) => (
                             <tr key={p.id} className="hover:bg-muted/50">
-                                <td className="px-4 py-3 font-medium text-foreground">{p.name}</td>
-                                <td className="px-4 py-3 capitalize text-muted-foreground">{p.type}</td>
-                                <td className="px-4 py-3 text-muted-foreground">{p.connection}</td>
-                                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{p.ipAddress || 'N/A'}</td>
-                                <td className="px-4 py-3">
+                                <td className="px-4 py-3 font-medium text-foreground rtl:text-right">{p.name}</td>
+                                <td className="px-4 py-3 capitalize text-muted-foreground rtl:text-right">{p.type}</td>
+                                <td className="px-4 py-3 text-muted-foreground rtl:text-right">{p.connection}</td>
+                                <td className="px-4 py-3 font-mono text-xs text-muted-foreground rtl:text-right">{p.ipAddress || 'N/A'}</td>
+                                <td className="px-4 py-3 rtl:text-right">
                                     <span className={`px-2 py-1 text-xs font-bold rounded-full ${p.status === 'connected' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                                         {p.status}
                                     </span>
                                 </td>
                                 <td className="px-4 py-3">
-                                    <div className="flex gap-4">
+                                    <div className="flex gap-4 justify-start rtl:justify-end">
                                         <button onClick={() => handleEdit(p)} className="text-primary hover:opacity-80"><PencilSquareIcon className="w-5 h-5"/></button>
                                         <button onClick={() => handleDeletePrinter(p.id)} className="text-destructive hover:opacity-80"><TrashIcon className="w-5 h-5"/></button>
                                     </div>

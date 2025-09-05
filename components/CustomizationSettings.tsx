@@ -1,29 +1,9 @@
-
-
 import React, { useState, useEffect } from 'react';
-import { AppSettings, PrinterReceiptSettings, ThemeSettings, LanguageSettings, Language, NotificationSettings, ReceiptTemplateId, InvoiceTemplateId, ReceiptSettings } from '../types';
+import { AppSettings, PrinterReceiptSettings, LanguageSettings, Language, NotificationSettings, ReceiptTemplateId, InvoiceTemplateId, ReceiptSettings, TranslationKey } from '../types';
 import SwatchIcon from './icons/SwatchIcon';
 import ProBadge from './ProBadge';
 import { useAppContext, useToastContext } from '../contexts/AppContext';
-
-const presets: Record<string, ThemeSettings> = {
-    dark: { primary: '#0ea5e9', background: '#0f172a', surface: '#1e293b', textBase: '#f8fafc', textMuted: '#94a3b8' },
-    ocean: { primary: '#3b82f6', background: '#0c1f43', surface: '#15326c', textBase: '#e0f2fe', textMuted: '#a5c9f4' },
-};
-
-const Toggle: React.FC<{ label: string; enabled: boolean; onToggle: () => void; disabled?: boolean }> = ({ label, enabled, onToggle, disabled = false }) => (
-    <label className={`flex items-center justify-between p-3 rounded-lg bg-secondary ${disabled ? 'opacity-50' : 'cursor-pointer'}`}>
-        <span className="font-medium text-foreground">{label}</span>
-        <button
-            type="button"
-            onClick={onToggle}
-            disabled={disabled}
-            className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${enabled ? 'bg-primary' : 'bg-muted'}`}
-        >
-            <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`}/>
-        </button>
-    </label>
-);
+import { useTranslations } from '../hooks/useTranslations';
 
 const TemplatePreview: React.FC<{ title: string; description: string; isSelected: boolean; onClick: () => void; children: React.ReactNode }> = ({ title, description, isSelected, onClick, children }) => (
     <div
@@ -41,6 +21,7 @@ const TemplatePreview: React.FC<{ title: string; description: string; isSelected
 
 const CustomizationSettings: React.FC = () => {
     const { settings, setSettings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const { addToast } = useToastContext();
     const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
 
@@ -59,11 +40,6 @@ const CustomizationSettings: React.FC = () => {
 
     const handleInvoiceTemplateChange = (templateId: InvoiceTemplateId) => {
         setLocalSettings(prev => ({ ...prev, invoice: { ...prev.invoice, template: templateId } }));
-    };
-
-    const handleThemeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setLocalSettings(prev => ({ ...prev, theme: { ...prev.theme, [name]: value } }));
     };
 
     const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -89,40 +65,40 @@ const CustomizationSettings: React.FC = () => {
 
     return (
         <div className="p-6 h-full flex flex-col">
-            <div className="shrink-0">
-                <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2">
-                    <SwatchIcon className="w-6 h-6" /> White-Label & Customization
+            <div className="shrink-0 text-start rtl:text-end">
+                <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2 rtl:flex-row-reverse">
+                    <SwatchIcon className="w-6 h-6" /> {t('customize_title')}
                 </h3>
-                <p className="text-sm text-muted-foreground mb-6">Tailor the look and feel of the POS to match your brand identity.</p>
+                <p className="text-sm text-muted-foreground mb-6">{t('customize_description')}</p>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 flex-grow overflow-y-auto pr-4">
                 {/* Left Column */}
-                <div className="lg:col-span-3 space-y-6">
+                <div className="lg:col-span-3 space-y-6 text-start rtl:text-end">
                     {/* Receipt Template */}
                     <div className="bg-secondary p-4 rounded-lg">
-                        <h4 className="font-bold text-foreground mb-4">Receipt Template</h4>
-                        <p className="text-sm text-muted-foreground mb-4">Select a template for printed and PDF thermal receipts.</p>
+                        <h4 className="font-bold text-foreground mb-4">{t('customize_receiptTemplate_group')}</h4>
+                        <p className="text-sm text-muted-foreground mb-4">{t('customize_receiptTemplate_desc')}</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                             <TemplatePreview 
-                                title="Standard" 
-                                description="Clean, modern English layout." 
+                                title={t('customize_template_standard_title')}
+                                description={t('customize_template_standard_desc')}
                                 isSelected={localSettings.receipt.template === 'standard'} 
                                 onClick={() => handleTemplateChange('standard')}
                             >
                                 <div className="w-16 h-20 bg-white p-1 font-mono text-black text-[5px] leading-tight flex flex-col justify-between"><div>**COMPANY**<br/>- - - -<br/>Item.....$10</div><div className="font-bold">TOTAL..$11</div></div>
                             </TemplatePreview>
                             <TemplatePreview 
-                                title="Compact" 
-                                description="Minimal, space-saving English design." 
+                                title={t('customize_template_compact_title')}
+                                description={t('customize_template_compact_desc')} 
                                 isSelected={localSettings.receipt.template === 'compact'} 
                                 onClick={() => handleTemplateChange('compact')}
                             >
                                 <div className="w-16 h-20 bg-white p-1 font-mono text-black text-[5px] leading-tight flex flex-col justify-between"><div>Item...$10<br/>Item...$15</div><div className="font-bold">TOTAL $27.50</div></div>
                             </TemplatePreview>
                             <TemplatePreview 
-                                title="Bilingual (ZATCA)" 
-                                description="For Saudi Arabia. English & Arabic." 
+                                title={t('customize_template_bilingual_title')}
+                                description={t('customize_template_bilingual_desc')}
                                 isSelected={localSettings.receipt.template === 'zatca_bilingual'} 
                                 onClick={() => handleTemplateChange('zatca_bilingual')}
                             >
@@ -132,11 +108,11 @@ const CustomizationSettings: React.FC = () => {
                     </div>
 
                     <div className="bg-secondary p-4 rounded-lg">
-                        <h4 className="font-bold text-foreground mb-4">A4 Invoice Template</h4>
+                        <h4 className="font-bold text-foreground mb-4">{t('customize_invoiceTemplate_group')}</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                             <TemplatePreview 
-                                title="Modern" 
-                                description="Clean, contemporary design with a color accent." 
+                                title={t('customize_invoiceTemplate_modern_title')}
+                                description={t('customize_invoiceTemplate_modern_desc')}
                                 isSelected={localSettings.invoice.template === 'modern'} 
                                 onClick={() => handleInvoiceTemplateChange('modern')}
                             >
@@ -148,8 +124,8 @@ const CustomizationSettings: React.FC = () => {
                                 </div>
                             </TemplatePreview>
                             <TemplatePreview 
-                                title="Classic" 
-                                description="Traditional, formal layout." 
+                                title={t('customize_invoiceTemplate_classic_title')}
+                                description={t('customize_invoiceTemplate_classic_desc')}
                                 isSelected={localSettings.invoice.template === 'classic'} 
                                 onClick={() => handleInvoiceTemplateChange('classic')}
                             >
@@ -161,8 +137,8 @@ const CustomizationSettings: React.FC = () => {
                                 </div>
                             </TemplatePreview>
                             <TemplatePreview 
-                                title="Bilingual (ZATCA)" 
-                                description="For Saudi Arabia. English & Arabic." 
+                                title={t('customize_template_bilingual_title')}
+                                description={t('customize_template_bilingual_desc')}
                                 isSelected={localSettings.invoice.template === 'zatca_bilingual'} 
                                 onClick={() => handleInvoiceTemplateChange('zatca_bilingual')}
                             >
@@ -175,14 +151,14 @@ const CustomizationSettings: React.FC = () => {
                     </div>
 
                     <div className="bg-secondary p-4 rounded-lg">
-                        <h4 className="font-bold text-foreground mb-2">Receipt Branding</h4>
+                        <h4 className="font-bold text-foreground mb-2">{t('customize_receiptBranding_group')}</h4>
                         <div className="space-y-4">
                             <div>
-                                <label htmlFor="logoUrl" className="block text-sm font-medium text-muted-foreground mb-1">Logo URL</label>
+                                <label htmlFor="logoUrl" className="block text-sm font-medium text-muted-foreground mb-1">{t('customize_logoUrl_label')}</label>
                                 <input type="text" id="logoUrl" name="logoUrl" value={localSettings.receipt.logoUrl} onChange={handleReceiptChange} className="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground" />
                             </div>
                             <div>
-                                <label htmlFor="promoMessage" className="block text-sm font-medium text-muted-foreground mb-1">Promotional Message</label>
+                                <label htmlFor="promoMessage" className="block text-sm font-medium text-muted-foreground mb-1">{t('customize_promoMessage_label')}</label>
                                 <textarea id="promoMessage" name="promoMessage" value={localSettings.receipt.promoMessage} onChange={handleReceiptChange} className="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground h-20"></textarea>
                             </div>
                         </div>
@@ -190,29 +166,13 @@ const CustomizationSettings: React.FC = () => {
                 </div>
 
                 {/* Right Column */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-secondary p-4 rounded-lg">
-                        <h4 className="font-bold text-foreground mb-2 flex items-center gap-2">UI Theme & Colors <ProBadge /></h4>
-                        <p className="text-sm text-muted-foreground mb-4">Choose a preset or create your own custom theme.</p>
-                        <div className="flex gap-2 mb-4">
-                            <button onClick={() => setLocalSettings(prev => ({...prev, theme: presets.dark}))} className="text-xs font-semibold px-3 py-1 rounded-md bg-muted hover:bg-muted/80">Default Dark</button>
-                            <button onClick={() => setLocalSettings(prev => ({...prev, theme: presets.ocean}))} className="text-xs font-semibold px-3 py-1 rounded-md bg-muted hover:bg-muted/80">Ocean Blue</button>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4">
-                            {Object.entries(localSettings.theme).map(([key, value]) => (
-                                <div key={key}>
-                                    <label className="block text-sm font-medium text-muted-foreground mb-1 capitalize">{key.replace(/([A-Z])/g, ' $1')}</label>
-                                    <input type="color" name={key} value={value} onChange={handleThemeChange} className="w-full h-10 bg-input p-1 rounded-md border border-border" />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                <div className="lg:col-span-2 space-y-6 text-start rtl:text-end">
                     
                     <div className="bg-secondary p-4 rounded-lg">
-                        <h4 className="font-bold text-foreground mb-2">Multi-Language Support</h4>
+                        <h4 className="font-bold text-foreground mb-2">{t('customize_language_group')}</h4>
                         <div className="space-y-4">
                             <div>
-                                <label htmlFor="staff-language" className="block text-sm font-medium text-muted-foreground mb-1">Staff-Facing Language</label>
+                                <label htmlFor="staff-language" className="block text-sm font-medium text-muted-foreground mb-1">{t('customize_staffLang_label')}</label>
                                 <select id="staff-language" name="staff" value={localSettings.language.staff} onChange={handleLanguageChange} className="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground">
                                     <option value="en">English</option>
                                     <option value="es">Español</option>
@@ -220,7 +180,7 @@ const CustomizationSettings: React.FC = () => {
                                 </select>
                             </div>
                             <div>
-                                <label htmlFor="customer-language" className="block text-sm font-medium text-muted-foreground mb-1">Customer-Facing Language</label>
+                                <label htmlFor="customer-language" className="block text-sm font-medium text-muted-foreground mb-1">{t('customize_customerLang_label')}</label>
                                 <select id="customer-language" name="customer" value={localSettings.language.customer} onChange={handleLanguageChange} className="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground">
                                     <option value="en">English</option>
                                     <option value="es">Español</option>
@@ -231,26 +191,26 @@ const CustomizationSettings: React.FC = () => {
                     </div>
 
                     <div className="bg-secondary p-4 rounded-lg">
-                        <h4 className="font-bold text-foreground mb-2">Notification Settings</h4>
+                        <h4 className="font-bold text-foreground mb-2">{t('customize_notifications_group')}</h4>
                         <div className="space-y-4">
                              <div>
-                                <label htmlFor="duration" className="block text-sm font-medium text-muted-foreground mb-1">Display Duration (seconds)</label>
+                                <label htmlFor="duration" className="block text-sm font-medium text-muted-foreground mb-1">{t('customize_notifDuration_label')}</label>
                                 <input type="number" id="duration" name="duration" value={localSettings.notificationSettings.duration} onChange={handleNotificationChange} className="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground" min="1" max="30" />
                             </div>
                             <div>
-                                <label htmlFor="position" className="block text-sm font-medium text-muted-foreground mb-1">Position on Screen</label>
+                                <label htmlFor="position" className="block text-sm font-medium text-muted-foreground mb-1">{t('customize_notifPosition_label')}</label>
                                 <select id="position" name="position" value={localSettings.notificationSettings.position} onChange={handleNotificationChange} className="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground">
-                                    <option value="top-right">Top Right</option>
-                                    <option value="top-left">Top Left</option>
-                                    <option value="bottom-right">Bottom Right</option>
-                                    <option value="bottom-left">Bottom Left</option>
+                                    <option value="top-right">{t('customize_notifPosition_tr')}</option>
+                                    <option value="top-left">{t('customize_notifPosition_tl')}</option>
+                                    <option value="bottom-right">{t('customize_notifPosition_br')}</option>
+                                    <option value="bottom-left">{t('customize_notifPosition_bl')}</option>
                                 </select>
                             </div>
                              <div>
-                                <label htmlFor="theme" className="block text-sm font-medium text-muted-foreground mb-1">Notification Theme</label>
+                                <label htmlFor="theme" className="block text-sm font-medium text-muted-foreground mb-1">{t('customize_notifTheme_label')}</label>
                                 <select id="theme" name="theme" value={localSettings.notificationSettings.theme} onChange={handleNotificationChange} className="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground">
-                                    <option value="dark">Dark</option>
-                                    <option value="transparent">Transparent</option>
+                                    <option value="dark">{t('customize_notifTheme_dark')}</option>
+                                    <option value="transparent">{t('customize_notifTheme_transparent')}</option>
                                 </select>
                             </div>
                         </div>
@@ -259,12 +219,12 @@ const CustomizationSettings: React.FC = () => {
                 </div>
             </div>
 
-            <div className="mt-auto pt-6 text-right">
+            <div className="mt-auto pt-6 text-end rtl:text-left">
                 <button
                     onClick={handleSave}
                     className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors shadow-lg"
                 >
-                    Save Customization Settings
+                    {t('saveSettings')}
                 </button>
             </div>
         </div>

@@ -1,17 +1,22 @@
 
+
+
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { Supplier } from '../types';
 import UserPlusIcon from './icons/UserPlusIcon';
 import PencilSquareIcon from './icons/PencilSquareIcon';
 import TrashIcon from './icons/TrashIcon';
-import { useDataContext, useModalContext } from '../contexts/AppContext';
+import { useDataContext, useModalContext, useAppContext } from '../contexts/AppContext';
 import { cn } from '../lib/utils';
 import ArrowsPointingOutIcon from './icons/ArrowsPointingOutIcon';
 import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
-import ExportButtons from './ExportButtons';
+// FIX: Changed to a named import to resolve "Module has no default export" error.
+import { ExportButtons } from './ExportButtons';
+import { useTranslations } from '../hooks/useTranslations';
 
 const SuppliersView: React.FC = () => {
-    const { suppliers, handleSaveSupplier, handleDeleteSupplier } = useDataContext();
+    const { suppliers, handleSaveSupplier, handleDeleteSupplier, settings } = useDataContext();
+    const t = useTranslations(settings.language.staff);
     const { openModal } = useModalContext();
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [columnWidths, setColumnWidths] = useState([200, 150, 250, 300, 120]);
@@ -74,12 +79,12 @@ const SuppliersView: React.FC = () => {
         };
     }, [onMouseMove, onMouseUp]);
 
-    const thClass = "px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider";
+    const thClass = "px-4 py-3 text-start rtl:text-end text-xs font-semibold text-muted-foreground uppercase tracking-wider";
 
     return (
         <div className={cn("p-6 h-full flex flex-col", isFullScreen && "fixed inset-0 z-50 bg-card")}>
             <div className="flex justify-between items-center mb-4 no-print">
-                <h2 className="text-2xl font-bold text-foreground">Manage Suppliers</h2>
+                <h2 className="text-2xl font-bold text-foreground rtl:text-right">{t('manageSuppliers')}</h2>
                  <div className="flex items-center gap-2">
                     <ExportButtons onCsvExport={handleCsvExport} onPrint={handlePrint} />
                     <button
@@ -87,7 +92,7 @@ const SuppliersView: React.FC = () => {
                         className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2 px-4 rounded-lg"
                     >
                         <UserPlusIcon className="w-5 h-5" />
-                        Add Supplier
+                        {t('addSupplier')}
                     </button>
                     <button onClick={() => setIsFullScreen(fs => !fs)} title={isFullScreen ? "Exit Full Screen" : "Enter Full Screen"} className="p-2 bg-secondary rounded-lg text-muted-foreground hover:text-foreground">
                         {isFullScreen ? <ArrowsPointingInIcon className="w-5 h-5" /> : <ArrowsPointingOutIcon className="w-5 h-5" />}
@@ -101,11 +106,11 @@ const SuppliersView: React.FC = () => {
                     </colgroup>
                     <thead className="bg-card sticky top-0 z-10 border-b border-border">
                         <tr>
-                            <th className={`${thClass} relative`}>Name<div onMouseDown={e => onMouseDown(0, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                            <th className={`${thClass} relative`}>Phone<div onMouseDown={e => onMouseDown(1, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                            <th className={`${thClass} relative`}>Email<div onMouseDown={e => onMouseDown(2, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                            <th className={`${thClass} relative`}>Address<div onMouseDown={e => onMouseDown(3, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
-                            <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider no-print">Actions</th>
+                            <th className={`${thClass} relative`}>{t('name')}<div onMouseDown={e => onMouseDown(0, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                            <th className={`${thClass} relative`}>{t('phone')}<div onMouseDown={e => onMouseDown(1, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                            <th className={`${thClass} relative`}>{t('email')}<div onMouseDown={e => onMouseDown(2, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                            <th className={`${thClass} relative`}>{t('address')}<div onMouseDown={e => onMouseDown(3, e)} className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/50"/></th>
+                            <th className="px-4 py-3 text-end text-xs font-semibold text-muted-foreground uppercase tracking-wider no-print">{t('actions')}</th>
                         </tr>
                     </thead>
                     <tbody className="bg-card divide-y divide-border">
@@ -115,7 +120,7 @@ const SuppliersView: React.FC = () => {
                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground truncate">{supplier.phone}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground truncate">{supplier.email}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground truncate">{supplier.address}</td>
-                                <td className="px-4 py-3 whitespace-nowrap text-right no-print">
+                                <td className="px-4 py-3 whitespace-nowrap text-end no-print">
                                     <div className="flex gap-2 justify-end">
                                         <button onClick={() => onEdit(supplier)} className="p-1 text-primary hover:opacity-80"><PencilSquareIcon className="w-5 h-5"/></button>
                                         <button onClick={() => handleDeleteSupplier(supplier.id)} className="p-1 text-destructive hover:opacity-80"><TrashIcon className="w-5 h-5"/></button>

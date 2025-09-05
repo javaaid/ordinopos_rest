@@ -6,19 +6,22 @@ import WaitlistView from './WaitlistView';
 import PencilIcon from './icons/PencilIcon';
 import PlusIcon from './icons/PlusIcon';
 import { useAppContext, useDataContext, usePOSContext } from '../contexts/AppContext';
+import { useTranslations } from '../hooks/useTranslations';
 
 type TableViewTab = 'floor' | 'reservations' | 'waitlist';
 
 const TableServicesView: React.FC = () => {
     const { settings, isReservationPluginActive, isWaitlistPluginActive, isQRCodePluginActive, setView, handleTransferTable } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const { 
         tables, floors, reservations, customers, waitlist, 
         onEditTable, onAddFloor, onRenameFloor, onDeleteFloor, 
         onAddReservation, onEditReservation, onUpdateReservationStatus, onSeatReservationParty, 
-        onAddToWaitlist, onUpdateWaitlistStatus, onSeatWaitlistParty, onGenerateQRCode,
+        onAddToWaitlist, onUpdateWaitlistStatus, onSeatWaitlistParty,
         onSyncReservations, lastReservationSync, onSuggestWaitTime
     } = useDataContext();
     const { setCurrentTable: onSelectTableContext } = usePOSContext();
+    const { openModal } = useAppContext();
 
 
     const [activeTab, setActiveTab] = useState<TableViewTab>('waitlist');
@@ -27,6 +30,10 @@ const TableServicesView: React.FC = () => {
     
     const [draggedTableId, setDraggedTableId] = useState<string | null>(null);
     const [dragOverTableId, setDragOverTableId] = useState<string | null>(null);
+
+    const onGenerateQRCode = (table: Table) => {
+        openModal('qrCode', { table, baseUrl: settings.qrOrdering.baseUrl });
+    };
 
 
     useEffect(() => {
@@ -99,18 +106,18 @@ const TableServicesView: React.FC = () => {
                 <div className="flex items-center gap-2">
                      {isEditMode && (
                         <div className="flex items-center gap-2 animate-fade-in-down">
-                            <button onClick={onAddFloor} className="bg-green-500/20 text-green-400 hover:bg-green-500/40 text-xs font-semibold py-1 px-2 rounded">Add Floor</button>
-                            <button onClick={() => onRenameFloor(activeFloor)} className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/40 text-xs font-semibold py-1 px-2 rounded">Rename</button>
-                            <button onClick={() => onDeleteFloor(activeFloor)} className="bg-red-500/20 text-red-400 hover:bg-red-500/40 text-xs font-semibold py-1 px-2 rounded" disabled={(floors || []).length <= 1}>Delete</button>
+                            <button onClick={onAddFloor} className="bg-green-500/20 text-green-400 hover:bg-green-500/40 text-xs font-semibold py-1 px-2 rounded">{t('addFloor')}</button>
+                            <button onClick={() => onRenameFloor(activeFloor)} className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/40 text-xs font-semibold py-1 px-2 rounded">{t('rename')}</button>
+                            <button onClick={() => onDeleteFloor(activeFloor)} className="bg-red-500/20 text-red-400 hover:bg-red-500/40 text-xs font-semibold py-1 px-2 rounded" disabled={(floors || []).length <= 1}>{t('delete')}</button>
                             <div className="h-4 w-px bg-border mx-2"></div>
-                            <button onClick={() => onEditTable(null)} className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-3 rounded-lg text-sm"><PlusIcon className="w-4 h-4" /> Add Table</button>
+                            <button onClick={() => onEditTable(null)} className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-3 rounded-lg text-sm"><PlusIcon className="w-4 h-4" /> {t('addTable')}</button>
                         </div>
                     )}
                     <button 
                         onClick={() => setIsEditMode(prev => !prev)}
                         className={`flex items-center gap-2 font-semibold py-2 px-4 rounded-lg text-sm transition-colors ${ isEditMode ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-muted'}`}>
                         <PencilIcon className="w-4 h-4" />
-                        {isEditMode ? 'Finish Editing' : 'Edit Floor'}
+                        {isEditMode ? t('finishEditing') : t('editFloor')}
                     </button>
                 </div>
             </div>
@@ -139,9 +146,9 @@ const TableServicesView: React.FC = () => {
     return (
         <div className="h-full flex flex-col rounded-2xl bg-background">
             <div className="flex gap-4 border-b border-border px-6">
-                <button onClick={() => setActiveTab('floor')} className={tabButtonClass('floor')}>Floor Plan</button>
-                {isReservationPluginActive && <button onClick={() => setActiveTab('reservations')} className={tabButtonClass('reservations')}>Reservations</button>}
-                {isWaitlistPluginActive && <button onClick={() => setActiveTab('waitlist')} className={tabButtonClass('waitlist')}>Waitlist</button>}
+                <button onClick={() => setActiveTab('floor')} className={tabButtonClass('floor')}>{t('floorplan')}</button>
+                {isReservationPluginActive && <button onClick={() => setActiveTab('reservations')} className={tabButtonClass('reservations')}>{t('reservations')}</button>}
+                {isWaitlistPluginActive && <button onClick={() => setActiveTab('waitlist')} className={tabButtonClass('waitlist')}>{t('waitingList')}</button>}
             </div>
 
             <div className="flex-grow overflow-hidden">

@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { useAppContext, useDataContext, useToastContext, useModalContext } from '../contexts/AppContext';
 import { AppSettings, DeviceSettings, Printer, KitchenDisplay, CustomerDisplay, GenericDevice } from '../types';
@@ -9,9 +7,11 @@ import { Select } from './ui/Select';
 import { Input } from './ui/Input';
 import QuestionMarkCircleIcon from './icons/QuestionMarkCircleIcon';
 import PingButton from './PingButton';
+import { useTranslations } from '../hooks/useTranslations';
 
 const DeviceSettingsView: React.FC = () => {
     const { settings, setSettings } = useAppContext();
+    const t = useTranslations(settings.language.staff);
     const { printers, kitchenDisplays, customerDisplays, scales } = useDataContext();
     const { addToast } = useToastContext();
     const { openModal } = useModalContext();
@@ -35,7 +35,7 @@ const DeviceSettingsView: React.FC = () => {
     };
 
     const renderPrinterSelect = (id: keyof DeviceSettings, label: string, availablePrinters: Printer[]) => (
-         <div>
+         <div className="text-start rtl:text-end">
             <label className="block text-sm font-medium text-muted-foreground mb-1">{label}</label>
             <Select name={id} value={localSettings[id] || ''} onChange={handleChange}>
                 <option value="">-- Not Assigned --</option>
@@ -45,7 +45,7 @@ const DeviceSettingsView: React.FC = () => {
     );
     
     const renderDeviceSelect = (id: keyof DeviceSettings, label: string, availableDevices: any[]) => (
-         <div>
+         <div className="text-start rtl:text-end">
             <label className="block text-sm font-medium text-muted-foreground mb-1">{label}</label>
             <Select name={id} value={localSettings[id] || ''} onChange={handleChange}>
                 <option value="">-- Not Assigned --</option>
@@ -56,29 +56,29 @@ const DeviceSettingsView: React.FC = () => {
 
     return (
          <div className="h-full flex flex-col p-6">
-             <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2">
-                <ServerStackIcon className="w-6 h-6" /> Device Assignment
+             <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2 rtl:text-right">
+                <ServerStackIcon className="w-6 h-6" /> {t('devices_title')}
             </h3>
-            <p className="text-sm text-muted-foreground mb-6">Assign default devices for different functions. Manage the devices themselves under the main "Printers" settings tab.</p>
+            <p className="text-sm text-muted-foreground mb-6 rtl:text-right">{t('devices_description')}</p>
             <div className="space-y-6 max-w-2xl overflow-y-auto pr-2">
                 <div className="bg-card p-6 rounded-lg space-y-4 border border-border">
-                    <h4 className="font-bold text-foreground">Printers</h4>
-                    {renderPrinterSelect('receiptPrinterId', 'Default Receipt Printer', printers)}
-                    {renderPrinterSelect('kitchenPrinterId', 'Default Kitchen Printer', printers)}
-                    {renderPrinterSelect('kioskPrinterId', 'Kiosk Receipt Printer', printers)}
-                    {renderPrinterSelect('barPrinterId', 'Default Bar Printer', printers)}
-                    {renderPrinterSelect('reportPrinterId', 'Default Report Printer (A4)', (printers || []).filter(p => p.type === 'a4'))}
+                    <h4 className="font-bold text-foreground rtl:text-right">{t('devices_printers_group')}</h4>
+                    {renderPrinterSelect('receiptPrinterId', t('devices_defaultReceiptPrinter_label'), printers)}
+                    {renderPrinterSelect('kitchenPrinterId', t('devices_defaultKitchenPrinter_label'), printers)}
+                    {renderPrinterSelect('kioskPrinterId', t('devices_kioskReceiptPrinter_label'), printers)}
+                    {renderPrinterSelect('barPrinterId', t('devices_defaultBarPrinter_label'), printers)}
+                    {renderPrinterSelect('reportPrinterId', t('devices_defaultReportPrinter_label'), (printers || []).filter(p => p.type === 'a4'))}
                 </div>
                  <div className="bg-card p-6 rounded-lg space-y-4 border border-border">
-                     <h4 className="font-bold text-foreground">Displays & Other Hardware</h4>
-                     {renderDeviceSelect('customerDisplayId', 'Customer Facing Display (CFD)', customerDisplays)}
-                     {renderDeviceSelect('kitchenDisplayId', 'Kitchen Display (KDS)', kitchenDisplays)}
-                     {renderDeviceSelect('scaleId', 'Weighing Scale', scales)}
+                     <h4 className="font-bold text-foreground rtl:text-right">{t('devices_displaysHardware_group')}</h4>
+                     {renderDeviceSelect('customerDisplayId', t('devices_cfd_label'), customerDisplays)}
+                     {renderDeviceSelect('kitchenDisplayId', t('devices_kds_label'), kitchenDisplays)}
+                     {renderDeviceSelect('scaleId', t('devices_scale_label'), scales)}
                  </div>
                  <div className="bg-card p-6 rounded-lg space-y-4 border border-border">
-                     <h4 className="font-bold text-foreground">Print Server</h4>
-                     <div>
-                        <label htmlFor="printServerUrl" className="block text-sm font-medium text-muted-foreground mb-1">Print Server URL</label>
+                     <h4 className="font-bold text-foreground rtl:text-right">{t('devices_printServer_group')}</h4>
+                     <div className="text-start rtl:text-end">
+                        <label htmlFor="printServerUrl" className="block text-sm font-medium text-muted-foreground mb-1">{t('devices_printServerUrl_label')}</label>
                         <div className="flex items-center gap-2">
                             <Input 
                                 id="printServerUrl"
@@ -92,12 +92,12 @@ const DeviceSettingsView: React.FC = () => {
                                 <QuestionMarkCircleIcon className="w-6 h-6" />
                             </Button>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">The local URL of your print server application.</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t('devices_printServerUrl_desc')}</p>
                      </div>
                  </div>
             </div>
-            <div className="mt-auto pt-6 text-right">
-                <Button onClick={handleSave}>Save Device Settings</Button>
+            <div className="mt-auto pt-6 text-end rtl:text-left">
+                <Button onClick={handleSave}>{t('saveSettings')}</Button>
             </div>
          </div>
     );

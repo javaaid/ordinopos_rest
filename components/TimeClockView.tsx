@@ -1,17 +1,18 @@
-
 import React, { useState, useMemo } from 'react';
 import { Employee, Shift, ScheduleEntry } from '../types';
 import ClockIcon from './icons/ClockIcon';
 import { useDataContext, useAppContext } from '../contexts/AppContext';
+import { useTranslations } from '../hooks/useTranslations';
 
 const TimeClockView: React.FC = () => {
-    const { currentEmployee } = useAppContext();
+    const { currentEmployee, settings } = useAppContext();
     const { employees: allEmployees, schedule, onToggleClockStatus, onSaveScheduleEntry, onDeleteScheduleEntry } = useDataContext();
+    const t = useTranslations(settings.language.staff);
 
     const [selectedEmployeeId, setSelectedEmployeeId] = useState(currentEmployee?.id || '');
 
     const selectedEmployee = useMemo(() => {
-        return allEmployees.find(e => e.id === selectedEmployeeId);
+        return allEmployees.find((e: Employee) => e.id === selectedEmployeeId);
     }, [selectedEmployeeId, allEmployees]);
     
     if (!currentEmployee) return null;
@@ -22,18 +23,18 @@ const TimeClockView: React.FC = () => {
 
         return (
             <div className="bg-card p-6 rounded-lg text-center border border-border">
-                <h3 className="text-xl font-bold text-foreground mb-4">My Time Clock</h3>
+                <h3 className="text-xl font-bold text-foreground mb-4">{t('myTimeClock')}</h3>
                 <button
                     onClick={() => onToggleClockStatus(currentEmployee.id)}
                     className={`px-8 py-4 rounded-lg font-bold text-lg transition-colors ${
                         isClockedIn ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground' : 'bg-primary hover:bg-primary/90 text-primary-foreground'
                     }`}
                 >
-                    {isClockedIn ? 'Clock Out' : 'Clock In'}
+                    {isClockedIn ? t('clockOut') : t('clockIn')}
                 </button>
                  {isClockedIn && lastShift && (
                      <p className="text-muted-foreground text-sm mt-4">
-                         Clocked in since: {new Date(lastShift.clockIn).toLocaleTimeString()}
+                         {t('clockedInSince')} {new Date(lastShift.clockIn).toLocaleTimeString()}
                     </p>
                  )}
             </div>
@@ -44,9 +45,9 @@ const TimeClockView: React.FC = () => {
         const shifts = selectedEmployee?.shifts.slice().reverse() || [];
         return (
             <div className="bg-card p-6 rounded-lg border border-border">
-                <h3 className="text-xl font-bold text-foreground mb-4">Timesheet for:</h3>
+                <h3 className="text-xl font-bold text-foreground mb-4">{t('timesheetFor')}</h3>
                 <select value={selectedEmployeeId} onChange={e => setSelectedEmployeeId(e.target.value)} className="w-full bg-secondary p-2 rounded-md mb-4 border border-border text-foreground">
-                    {allEmployees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                    {allEmployees.map((e: Employee) => <option key={e.id} value={e.id}>{e.name}</option>)}
                 </select>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                     {shifts.map((shift, i) => (
@@ -55,10 +56,9 @@ const TimeClockView: React.FC = () => {
                             <p className="text-muted-foreground">
                                 {new Date(shift.clockIn).toLocaleTimeString()} - {shift.clockOut ? new Date(shift.clockOut).toLocaleTimeString() : 'Ongoing'}
                             </p>
-                            {/* Edit/Delete buttons could go here */}
                         </div>
                     ))}
-                    {shifts.length === 0 && <p className="text-muted-foreground text-center py-4">No shifts recorded for this employee.</p>}
+                    {shifts.length === 0 && <p className="text-muted-foreground text-center py-4">{t('noShiftsRecorded')}</p>}
                 </div>
             </div>
         );
@@ -66,17 +66,17 @@ const TimeClockView: React.FC = () => {
     
     return (
         <div className="p-6 h-full overflow-y-auto">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Time Clock & Scheduling</h1>
-            <p className="text-muted-foreground mb-6 -mt-1 text-sm">Track employee work hours and manage weekly schedules.</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{t('timeClockScheduling')}</h1>
+            <p className="text-muted-foreground mb-6 -mt-1 text-sm">{t('timeClockDescription')}</p>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-1 space-y-6">
                     {renderPersonalTimeClock()}
                     {currentEmployee.roleId !== 'role_cashier' && renderTimesheetEditor()}
                 </div>
                 <div className="lg:col-span-2 bg-card p-6 rounded-lg border border-border">
-                     <h3 className="text-xl font-bold text-foreground mb-4">Weekly Schedule</h3>
+                     <h3 className="text-xl font-bold text-foreground mb-4">{t('weeklySchedule')}</h3>
                      {/* Schedule component would go here */}
-                     <p className="text-muted-foreground">Full weekly schedule component coming soon.</p>
+                     <p className="text-muted-foreground">{t('weeklyScheduleComingSoon')}</p>
                 </div>
             </div>
         </div>

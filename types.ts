@@ -21,6 +21,7 @@ export type ManagementSubView =
   'plugins' | 'email_reporting' | 'reports' | 'signage' | 'accounting' | 
   'locations' | 'tax_rates' | 'payment_types' | 'suppliers' | 'ingredients' |
   'dine_in_settings' | 'delivery_settings' | 'take_away_settings' | 'tab_settings' |
+  'qr_ordering_settings' |
   // New Menu sub-views
   'menu_categories' | 'menu_products' | 'menu_modifiers' | 'menu_promotions' | 
   'menu_kitchen_notes' | 'menu_void_reasons' | 'menu_discounts' | 
@@ -32,9 +33,16 @@ export type ManagementSubView =
 export type SettingsSubView = 'integrations' | 'customization' | 'activity' | 'advanced' | 'zatca' | 'ai' | 'numbering' | 'device_settings' | 'printers' | 'advanced_pos_settings' | 'preferences_settings' | 'fonts';
 export type SignageSubView = 'displays' | 'content' | 'playlists' | 'scheduler' | 'cfd_attract';
 
+// FIX: Added missing ReportGroup and ReportTab types for the ReportsView.
+export type ReportGroup = 'sales' | 'people' | 'operations' | 'bi';
+export type ReportTab = 
+  'summary' | 'sales' | 'menu' | 'categories' | 'financials' | 
+  'discounts' | 'delivery' | 'staff_performance' | 'labor' | 
+  'customer' | 'retention' | 'inventory' | 'kiosk' | 'cfd' | 'bi_dashboard';
+
 export type TranslationKey = 
   // General
-  'add' | 'all' | 'total' | 'cancel' | 'tax' | 'subtotal' | 'discount' | 'change' |
+  'add' | 'all' | 'total' | 'cancel' | 'tax' | 'subtotal' | 'discount' | 'change' | 'save' |
   
   // Kiosk / CFD Shared
   'welcome' | 'your_order' | 'thank_you' |
@@ -69,6 +77,7 @@ export type TranslationKey =
   
   // Main Sidebar
   'dashboard' | 'pos' | 'tables' | 'order_history' | 'time_clock' | 'management' | 'settings' | 'logout' | 'sidebar_user' | 'sidebar_role' |
+  'floorplan' | 'reservations' | 'waitingList' |
 
   // Print Queue
   'print_queue' |
@@ -78,25 +87,171 @@ export type TranslationKey =
   
   // Management Sidebar
   'menu' | 'menu_categories' | 'menu_products' | 'menu_modifiers' | 'menu_promotions' | 
-  'menu_pizza_builder' | 'menu_kitchen_notes' | 'menu_void_reasons' | 'menu_discounts' | 
+  'menu_kitchen_notes' | 'menu_void_reasons' | 'menu_discounts' | 
   'menu_surcharges' | 'menu_gratuity' | 'services' | 'preferences' | 
+  // FIX: Added 'menu_pizza_builder' to TranslationKey to match its usage in the management sidebar navigation.
+  'menu_pizza_builder' |
+  // FIX: Added 'menu_burger_builder' to TranslationKey to support translations for this feature.
+'menu_burger_builder' |
   'contacts' | 'customers' | 'suppliers' | 'users_and_roles' | 'users' | 'roles' | 
   'purchasing' | 'reports' | 'view_reports' | 'email_reporting' | 'accounting' | 
   'locations' | 'tax_rates' | 'payment_types' | 'telephony' | 'call_log' | 'plugins' | 
-  'digital_signage' | 'menu_burger_builder' |
+  'digital_signage' | 'usersRoles' |
   
-  // Settings Sidebar
-  'integrations' | 'customization' | 'devices' | 'printers' | 'numbering' | 'activity_log' | 
-  'zatca_ksa' | 'ai_settings' | 'advanced' | 'branding_localization' | 'pos_configuration' | 
-  'advanced_pos' | 'system_and_data' | 'backup_restore' | 'fonts' |
+  // Settings Sidebar - Standardized Keys
+  // Groups
+  'brandingLocalization' | 'posConfiguration' | 'hardwareDevices' | 'integrationsGroup' | 'systemAndData' |
+  // Items
+  'appearance' | 'fonts' | 'numbering' | 'generalSettings' | 'advancedPOS' | 'deviceSettings' | 'printers' |
+  'integrations' | 'aiSettings' | 'zatcaKsa' | 'activityLog' | 'backupRestore' | 'languageRegion' | 'receipts' | 'taxes' |
+  'discounts' | 'paymentMethods' | 'userPermissions' | 'notifications' | 'timeClock' |
   
   // Order History
   'order_hash' | 'date_time' | 'balance_due' | 'status' | 'actions' |
   
   // Loyalty Program
   'loyalty_program' | 'loyalty_points' | 'redeem_points' | 'apply_points' | 
-  'points_to_redeem' | 'points_balance' | 'loyalty_discount';
+  'points_to_redeem' | 'points_balance' | 'loyalty_discount' |
 
+  // New Dashboard Keys
+  'upsell' | 'offers' | 'customize' | 'todaysRevenue' | 'todaysOrders' |
+  'avgOrderValue' | 'todaysSales' | 'revenueByHour' | 'quickActions' |
+  'topSellingProducts' | 'lowStockAlerts' | 'allStockHealthy' | 'recentTransactions' |
+  // Customize Dashboard Modal Keys
+  'customizeDashboard' | 'reorderWidgets' | 'keyStatCards' | 'salesTrendChart' |
+  'topSellingItems' | 'saveLayout' | 'paymentBreakdown' | 'locationPerformance' |
+
+  // Table Services & Floor Plan
+  'editFloor' | 'finishEditing' | 'addFloor' | 'rename' | 'delete' | 'addTable' |
+  'available' | 'occupied' | 'reserved' | 'seats' |
+  'editTable' | 'addNewTable' | 'tableName' | 'capacity' | 'shape' | 'floor' | 'addNewFloor' | 'enterNewFloorName' |
+  
+  // Reservations
+  'time' | 'partySize' | 'notes' | 'syncNow' | 'lastSynced' | 'notSynced' | 'seatParty' | 'edit' | 'noShow' | 'date' |
+  'noReservationsForDate' | 'newReservation' | 'editReservation' | 'searchByName' | 'selectAvailableTable' |
+  'saveReservation' | 'addNewCustomer' |
+
+  // Waitlist
+  'quotedWait' | 'waitlistEmpty' | 'notify' | 'remove' | 'addToWaitlist' | 'customerName' |
+  'phoneNumber' | 'quotedWaitTimeMinutes' | 'aiSuggest' | 'addParty' |
+
+  // New reservation/waitlist keys
+  'completeReservation' | 'cancelReservation' | 'confirmReservation' | 'moveUp' | 'moveDown' |
+
+  // New keys from user
+  'deleteTable' | 'tableNo' | 'reservation' | 'addReservation' | 'addToWaitingList' |
+  
+  // Delivery View
+  'deliveryManagement' | 'syncDeliveryOrders' | 'outForDelivery' | 'noOrdersOutForDelivery' |
+  'readyForDelivery' | 'noOrdersWaitingDriver' | 'preparing' | 'noOrdersBeingPrepared' |
+  'incoming' | 'noNewDeliveryOrders' | 'clickSync' | 'acceptAndSendToKitchen' |
+  'preparingInKitchen' | 'assignDriverPlaceholder' | 'assign' | 'markAsDelivered' | 'assignedTo' |
+
+  // Time Clock View
+  'timeClockScheduling' | 'timeClockDescription' | 'weeklySchedule' | 'weeklyScheduleComingSoon' |
+  'myTimeClock' | 'clockIn' | 'clockOut' | 'clockedInSince' | 'timesheetFor' | 'noShiftsRecorded' |
+
+  // ** START: Management Views Translation Keys **
+  'categories' | 'products' | 'modifiers' | 'promotions' | 'kitchenNotes' | 'voidReasons' |
+  'categoryName' | 'itemCount' | 'addNewCategory' | 'searchCategories' | 'addItem' | 'bulkEdit' |
+  'importCSV' | 'searchModifierGroups' | 'addNewModifierGroup' | 'groupName' | 'options' | 'rules' |
+  'appliedTo' | 'managePromotions' | 'addPromotion' | 'schedule' | 'name' | 'predefinedKitchenNotes' |
+  'addNote' | 'note' | 'predefinedVoidReasons' | 'addReason' | 'reason' | 'manualDiscounts' |
+  'addDiscount' | 'discountName' | 'percentage' | 'surcharges' | 'addSurcharge' | 'surchargeName' | 'value' |
+  'gratuitySettings' | 'gratuitySettingsDescription' | 'option1' | 'option2' | 'option3' | 'option4' | 'saveGratuitySettings' | 'pizzaBuilderSettings' |
+  'pizzaBuilderSettingsDescription' | 'sizes' | 'crusts' | 'sauces' | 'cheeses' | 'toppings' | 'savePizzaSettings' |
+  'burgerBuilderSettings' | 'burgerBuilderSettingsDescription' | 'buns' | 'patties' | 'extras' | 'saveBurgerSettings' |
+  'dineInSettings' | 'dineInSettingsDescription' | 'general' | 'guestManagement' | 'minimumCharge' | 'surcharge' |
+  'enableDineIn' | 'defaultGuests' | 'maxGuests' | 'chooseStaffStart' | 'enableMinimumCharge' |
+  'minimumAmount' | 'enableDineInSurcharge' | 'surchargeType' | 'saveDineInSettings' | 'deliverySettings' |
+  'deliverySettingsDescription' | 'deliveryZonesAndFees' | 'zoneName' | 'fee' | 'addDeliveryZone' |
+  'enableDeliverySurcharge' | 'selectSurcharge' | 'saveDeliverySettings' | 'takeAwaySettings' |
+  'takeAwaySettingsDescription' | 'customName' | 'requireCustomerName' | 'useHoldReasons' | 'saveTakeAwaySettings' |
+  'tabSettings' | 'tabSettingsDescription' | 'enableTabs' | 'saveTabSettings' | 'addCustomer' | 'sendPromo' |
+  'phone' | 'membershipId' | 'email' | 'totalSpent' | 'loyaltyPoints' | 'subscribe' | 'manageSuppliers' |
+  'addSupplier' | 'address' | 'manageUsers' | 'addUser' | 'role' | 'location' | 'manageRolesPermissions' |
+  'addNewRole' | 'roleName' | 'export' | 'dateRange' | 'salesFinancials' | 'peopleCustomers' | 'operations' |
+  'biAnalytics' | 'executiveSummary' | 'salesDashboard' | 'menuPerformanceAnalysis' | 'categoryPerformanceAnalysis' |
+  'financialsReportZ' | 'discountPromotionReport' | 'deliveryOnlineOrderReport' | 'staffPerformanceReport' |
+  'laborAttendanceReport' | 'customerSpendingHabits' | 'customerRetentionReport' | 'inventoryReport' |
+  'kioskPerformanceReport' | 'cfdPerformanceReport' | 'businessIntelligence' | 'csv' | 'excel' | 'pdf' | 'print' |
+  'manageIngredients' | 'addIngredient' | 'stock' | 'unitCost' | 'onHandValue' | 'reorderAt' | 'createPO' |
+  'poNumber' | 'supplier' | 'totalCost' | 'saveLoyaltySettings' | 'loyaltyProgramDescription' |
+  'enableLoyaltyProgram' | 'pointsPerDollar' | 'redemptionRate' | 'bulkEditSelected' |
+  'active' | 'inactive' | 'manageCategories' | 'bulkEditN' | 'import' |
+  // New Service Settings Keys
+  'serviceCharge' | 'type' |
+  'enableDelivery' | 'enableTakeAway' | 'customNameUsage' |
+  'orderRules' | 'enableTakeAwaySurcharge' | 'tabCustomNameUsage' |
+  'loyaltyProgram' | 'loyaltyDescription' | 'enableLoyaltyProgram' | 'pointsEarnedPerDollar' |
+  'pointsEarnedDescription' | 'redemptionDescription' |
+  'callLogDescription' | 'searchByPhoneOrName' | 'dateTime' | 'customer' |
+  'today' | 'yesterday' | 'last7Days' | 'thisMonth' | 'noDataSummary' |
+  'noAccountingConnected' | 'connectAccounting' | 'manageLocations' | 'addLocation' |
+  'manageTaxRates' | 'selectLocationTaxes' | 'addTaxRate' | 'managePaymentTypes' |
+  'addPaymentType' | 'pluginsDescription' | 'displaysPreview' |
+  'contentLibrary' | 'playlists' | 'scheduler' | 'cfdAttractScreen' | 'displays' |
+  'mainEntranceTV' | 'online' | 'barScreen' | 'offline' | 'livePreview' | 'addContent' |
+  'addPlaylist' | 'addSchedule' | 'cfdAttractSettings' | 'cfdAttractDescription' |
+  'activePlaylist' | 'noAttractScreen' |
+  // Digital Signage Modals
+  'addNewDisplay' | 'displayName' | 'displayExample' | 'saveDisplay' |
+  'addNewPlaylist' | 'playlistName' | 'availableContent' | 'inPlaylist' | 'burgerPromo' | 'drinkSpecials' | 'savePlaylist' |
+  'addNewSchedule' | 'display' | 'playlist' | 'lunchSpecials' | 'dayOfWeek' |
+  'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' |
+  'startTime' | 'endTime' | 'saveSchedule' |
+  'addNewContent' | 'contentName' | 'image' | 'video' | 'menu_promo' | 'durationSeconds' | 'imageUrl' | 'saveContent' |
+  // Add Payment Type Modal
+  'paymentMethodName' | 'enabled' |
+  // Add Tax Rate Modal
+  'addNewTaxRate' | 'taxName' | 'ratePercent' | 'applyToLocations' | 'allLocations' | 'saveTaxRate' |
+  // Add Location Modal
+  'addNewLocation' | 'locationName' | 'countryOfOperation' | 'unitedStates' | 'currencySymbol' |
+  'taxRates' | 'standard' | 'addNewTaxRateSmall' | 'receiptFooterText' | 'thankYouBusiness' |
+  // Category & Product Modals
+  'saveCategory' | 'addNewProduct' | 'editProduct' | 'pricing' | 'inventory' | 'recipe' | 'advanced' | 'productName' | 'new' |
+  'course' | 'kitchenName' | 'addBarcode' | 'generateEAN13' | 'displayOrder' | 'displayOrderExample' | 'isVeg' | 'displayImageOnPOS' |
+  'saveProduct' | 'dineInPrice' | 'takeOutPrice' | 'deliveryPrice' | 'cost' | 'memberPricing' | 'memberPrice1' | 'memberPrice2' |
+  'memberPrice3' | 'askPriceOnSale' | 'discountable' | 'hideNameOnBill' | 'askForQuantity' | 'useWeighingScale' |
+  'alwaysShowModifiers' | 'promptForKitchenNote' | 'addOns' | 'customizations' | 'kitchenPrinter' | 'kitchenDisplay' |
+  'inventoryManagedByRecipe' | 'inventoryManagedByRecipeDesc' | 'directStockManagementInfo' | 'warnQty' |
+  'addIngredientToRecipe' | 'selectAnIngredient' | 'noIngredientsInRecipe' | 'appetizers' | 'cheese' |
+  // FIX: Add missing translation keys for product editing.
+  'barcodes' | 'stopSaleAtZeroStock' | 'kitchenNote' |
+  // ** END: Management Views Translation Keys **
+
+  // ** START: Settings Views Translation Keys **
+  'saveChanges' | 'saveSettings' |
+  // PrintersView
+  'managePrinters' | 'discoverPrinters' | 'addPrinter' | 'printers_col_name' | 'printers_col_type' | 'printers_col_connection' | 'printers_col_ip' | 'printers_col_status' | 'printers_col_actions' |
+  // DeviceSettingsView
+  'devices_title' | 'devices_description' | 'devices_printers_group' | 'devices_defaultReceiptPrinter_label' | 'devices_defaultKitchenPrinter_label' | 'devices_kioskReceiptPrinter_label' | 'devices_defaultBarPrinter_label' | 'devices_defaultReportPrinter_label' | 'devices_displaysHardware_group' | 'devices_cfd_label' | 'devices_kds_label' | 'devices_scale_label' | 'devices_printServer_group' | 'devices_printServerUrl_label' | 'devices_printServerUrl_desc' |
+  // AdvancedPOSSettingsView
+  'advpos_title' | 'advpos_description' | 'advpos_ordering_group' | 'advpos_paymentReceipt_group' | 'advpos_inventoryNotifications_group' | 'advpos_staffEndOfDay_group' | 'advpos_enableItemNumber_label' | 'advpos_enableItemNumber_desc' | 'advpos_separateSameItems_label' | 'advpos_separateSameItems_desc' | 'advpos_combineKitchenItems_label' | 'advpos_combineKitchenItems_desc' | 'advpos_kitchenPrintFooter_label' | 'advpos_kitchenPrintFooter_desc' | 'advpos_printReservedOrder_label' | 'advpos_printReservedOrder_desc' | 'advpos_sortItemsInKitchen_label' | 'advpos_sortItemsInKitchen_desc' | 'advpos_sortModifiers_label' | 'advpos_sortModifiers_desc' | 'advpos_sortOrderInKDS_label' | 'advpos_sortOrderInKDS_desc' | 'advpos_printVoidedItems_label' | 'advpos_printVoidedItems_desc' | 'advpos_printAfterSending_label' | 'advpos_printAfterSending_desc' | 'advpos_quickPay_label' | 'advpos_quickPay_desc' | 'advpos_useVoidReason_label' | 'advpos_useVoidReason_desc' | 'advpos_defaultPrepTime_label' | 'advpos_defaultPrepTime_desc' | 'advpos_confirmPayment_label' | 'advpos_confirmPayment_desc' | 'advpos_printReceiptAfterPayment_label' | 'advpos_printReceiptAfterPayment_desc' | 'advpos_combineReceiptItems_label' | 'advpos_combineReceiptItems_desc' | 'advpos_sortItemsOnReceipt_label' | 'advpos_sortItemsOnReceipt_desc' | 'advpos_showItemDiscount_label' | 'advpos_showItemDiscount_desc' | 'advpos_showVoidedItems_label' | 'advpos_showVoidedItems_desc' | 'advpos_emailReceipt_label' | 'advpos_emailReceipt_desc' | 'advpos_showTaxOnReceipt_label' | 'advpos_showTaxOnReceipt_desc' | 'advpos_enableInventory_label' | 'advpos_enableInventory_desc' | 'advpos_allowNegativeStock_label' | 'advpos_allowNegativeStock_desc' | 'advpos_useInventoryPrint_label' | 'advpos_useInventoryPrint_desc' | 'advpos_sendLowStockEmails_label' | 'advpos_sendLowStockEmails_desc' | 'advpos_lowStockRecipients_label' | 'advpos_eodReport_label' | 'advpos_eodReport_desc' | 'advpos_staffSalary_label' | 'advpos_staffSalary_desc' | 'advpos_printCashInOut_label' | 'advpos_printCashInOut_desc' | 'advpos_printWorkTime_label' | 'advpos_printWorkTime_desc' | 'advpos_enableTimeClock_label' | 'advpos_enableTimeClock_desc' | 'advpos_autoClockOut_label' | 'advpos_autoClockOut_desc' | 'advpos_forcePinEntry_label' | 'advpos_forcePinEntry_desc' |
+  // PreferencesSettingsView
+  'prefs_title' | 'prefs_description' | 'prefs_actionAfterSend_label' | 'prefs_actionAfterSend_desc' | 'prefs_actionAfterPayment_label' | 'prefs_actionAfterPayment_desc' | 'prefs_defaultPayment_label' | 'prefs_defaultOrderType_label' | 'prefs_enableOrderNotes_label' | 'prefs_enableKitchenPrint_label' | 'prefs_enableOrderHold_label' | 'prefs_resetOrderNumberDaily_label' | 'prefs_action_option_order' | 'prefs_action_option_tables' | 'prefs_action_option_login' |
+  // ZatcaSettingsView
+  'zatca_title' | 'zatca_description' | 'zatca_enable_label' | 'zatca_qrSize_label' | 'zatca_qrPosition_label' | 'zatca_qrPosition_top' | 'zatca_qrPosition_bottom' | 'zatca_save_button' |
+  // FontSettingsView
+  'fonts_title' | 'fonts_description' | 'fonts_base_label' | 'fonts_menuItemName_label' | 'fonts_menuItemPrice_label' | 'fonts_orderSummaryItem_label' | 'fonts_orderSummaryTotal_label' | 'fonts_categoryTabs_label' |
+  // NumberingSettingsView
+  'numbering_title' | 'numbering_description' | 'numbering_invoice_group' | 'numbering_invoicePrefix_label' | 'numbering_nextInvoiceNum_label' | 'numbering_invoiceSuffix_label' | 'numbering_invoiceExample_label' | 'numbering_dailyOrder_group' | 'numbering_dailyOrder_desc' | 'numbering_nextOrderNum_label' |
+  // CustomizationSettingsView
+  'customize_title' | 'customize_description' | 'customize_receiptTemplate_group' | 'customize_receiptTemplate_desc' | 'customize_template_standard_title' | 'customize_template_standard_desc' | 'customize_template_compact_title' | 'customize_template_compact_desc' | 'customize_template_bilingual_title' | 'customize_template_bilingual_desc' | 'customize_invoiceTemplate_group' | 'customize_invoiceTemplate_modern_title' | 'customize_invoiceTemplate_modern_desc' | 'customize_invoiceTemplate_classic_title' | 'customize_invoiceTemplate_classic_desc' | 'customize_receiptBranding_group' | 'customize_logoUrl_label' | 'customize_promoMessage_label' | 'customize_uiTheme_group' | 'customize_uiTheme_desc' | 'customize_theme_preset_dark' | 'customize_theme_preset_ocean' | 'customize_language_group' | 'customize_staffLang_label' | 'customize_customerLang_label' | 'customize_notifications_group' | 'customize_notifDuration_label' | 'customize_notifPosition_label' | 'customize_notifPosition_tr' | 'customize_notifPosition_tl' | 'customize_notifPosition_br' | 'customize_notifPosition_bl' | 'customize_notifTheme_label' | 'customize_notifTheme_dark' | 'customize_notifTheme_transparent' |
+  // IntegrationsSettingsView
+  'integrations_title' | 'integrations_description' | 'integrations_delivery_group' | 'integrations_uberEats_name' | 'integrations_uberEats_desc' | 'integrations_doordash_name' | 'integrations_doordash_desc' | 'integrations_iot_group' | 'integrations_smartFridges_name' | 'integrations_smartFridges_desc' | 'integrations_storageSensors_name' | 'integrations_storageSensors_desc' | 'integrations_dualCurrency_group' | 'integrations_dualCurrency_enable_label' | 'integrations_dualCurrency_enable_desc' | 'integrations_dualCurrency_symbol_label' | 'integrations_dualCurrency_rate_label' | 'integrations_connected_badge' | 'integrations_connect_button' | 'integrations_hide_button' | 'integrations_apiKey_label' | 'integrations_apiKeyEndpoint_label' | 'pro' | 'saveIntegrationSettings' |
+  // AISettings
+  'ai_title' | 'ai_description' | 'ai_apiStatus_group' | 'ai_apiKey_label' | 'ai_apiKey_help' | 'ai_apiKeyStatus_configured' | 'ai_apiKeyStatus_notConfigured' | 'ai_featureControls_group' | 'ai_enableAll_label' | 'ai_enableUpsell_label' | 'ai_enableCFDSuggestions_label' | 'ai_enableReportAnalysis_label' | 'ai_save_button' |
+  // UserActivityReport
+  'activity_title' | 'activity_description' | 'activity_summary' | 'activity_newUsers' | 'activity_editedUsers' | 'activity_editedRoles' | 'activity_failedLogins' | 'activity_recentActivity' | 'activity_by' | 'activity_notTracked' | 'loggedInByAdmin' |
+  // AdvancedSettings
+  'advanced_title' | 'advanced_description' | 'advanced_partialRefunds_title' | 'advanced_partialRefunds_desc' | 'advanced_archiving_title' | 'advanced_archiving_desc' | 'advanced_disasterRecovery_title' | 'advanced_disasterRecovery_desc' | 'advanced_fullRefund_note' |
+  'backup_title' | 'backup_desc' | 'backup_backup_button' | 'backup_restore_button' | 'backup_backingUp' | 'backup_restoring' |
+  // PrinterEditModal
+  'addNewPrinter' | 'printerName' | 'newPrinter' | 'printerRole' | 'standardReceiptPrinter' | 'printsReceipts' | 'kitchenStationPrinter' | 'kitchenStationPrinterDesc' | 'kitchenProfileHub' | 'kitchenProfileHubDesc' | 'createAndConfigure'
+  // ** END: Settings Views Translation Keys **
+  ;
+  
 export type PaymentMethod = string;
 export type OrderType = 'dine-in' | 'takeaway' | 'delivery' | 'kiosk' | 'tab';
 
@@ -791,7 +946,7 @@ export interface CallLogEntry {
 export type SignageContentType = 'image' | 'video' | 'menu_promo';
 export interface SignageContentItem {
   id: string;
-  name: string;
+  name: TranslationKey | string;
   type: SignageContentType;
   sourceUrl: string;
   duration: number;
@@ -799,12 +954,12 @@ export interface SignageContentItem {
 }
 export interface SignagePlaylist {
   id: string;
-  name: string;
+  name: TranslationKey | string;
   items: string[]; // array of SignageContentItem ids
 }
 export interface SignageDisplay {
   id: string;
-  name: string;
+  name: TranslationKey | string;
   status: 'online' | 'offline';
 }
 export interface SignageScheduleEntry {
@@ -823,6 +978,15 @@ export interface FontSettings {
     orderSummaryItem: number;
     orderSummaryTotal: number;
     categoryTabs: number;
+}
+
+// FIX: Add missing ThemeSettings interface to support theme customization.
+export interface ThemeSettings {
+    primary: string;
+    background: string;
+    surface: string;
+    textBase: string;
+    textMuted: string;
 }
 
 // App Settings
@@ -855,13 +1019,6 @@ export interface ZatcaSettings {
     fatooraApiKey: string;
     qrCodeSize: number;
     qrCodePosition: 'top' | 'bottom';
-}
-export interface ThemeSettings {
-    primary: string;
-    background: string;
-    surface: string;
-    textBase: string;
-    textMuted: string;
 }
 export interface LanguageSettings {
     staff: Language;
@@ -911,6 +1068,10 @@ export interface TakeAwaySettings {
 export interface TabSettings {
     enabled: boolean;
     customName: string;
+}
+export interface QROrderingSettings {
+    enabled: boolean;
+    baseUrl: string;
 }
 export interface DeviceSettings {
     receiptPrinterId: string | null;
@@ -988,11 +1149,11 @@ export type ReceiptTemplateId = 'standard' | 'compact' | 'zatca_bilingual';
 export type InvoiceTemplateId = 'modern' | 'classic' | 'zatca_bilingual';
 
 export interface ReceiptSettings extends PrinterReceiptSettings {
-    template: ReceiptTemplateId;
+  template: ReceiptTemplateId;
 }
 
 export interface InvoiceSettings {
-    template: InvoiceTemplateId;
+  template: InvoiceTemplateId;
 }
 export interface AppSettings {
     paymentProvider: PaymentProvider;
@@ -1009,7 +1170,6 @@ export interface AppSettings {
     zatca: ZatcaSettings;
     receipt: ReceiptSettings;
     invoice: InvoiceSettings;
-    theme: ThemeSettings;
     language: LanguageSettings;
     deliveryApps: { [key: string]: DeliveryAppSettings };
     iotSensors: IoTSensorIntegrations;
@@ -1020,11 +1180,14 @@ export interface AppSettings {
     delivery: DeliverySettings;
     takeAway: TakeAwaySettings;
     tab: TabSettings;
+    qrOrdering: QROrderingSettings;
     devices: DeviceSettings;
     advancedPOS: AdvancedPOSSettings;
     preferences: POSPreferences;
     loyalty: LoyaltySettings;
     fontSettings: FontSettings;
+    // FIX: Add missing theme property to AppSettings interface.
+    theme: ThemeSettings;
 }
 
 export interface SimulationLogEntry {

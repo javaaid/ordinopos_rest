@@ -1,4 +1,4 @@
-import { Category, MenuItem, Customer, Driver, Employee, Location, Supplier, WastageEntry, Role, PermissionSet, AuditLogEntry, Printer, Table, Subscription, PurchaseOrder, AppPlugin, ScheduleEntry, Reservation, WaitlistEntry, Ingredient, RecipeItem, SignageDisplay, SignageContentItem, SignagePlaylist, SignageScheduleEntry, PaymentType, PizzaSize, PizzaCrust, PizzaSauce, PizzaCheese, PizzaToppingItem, Promotion, ModifierGroup, KitchenDisplay, KitchenNote, VoidReason, ManualDiscount, Surcharge, GenericDevice, PrinterReceiptSettings, KitchenPrintSettings, CustomerDisplay, CallLogEntry, KitchenProfileType, BurgerBuilderSettings, BurgerBun, BurgerPatty, BurgerCheese, BurgerToppingItem, BurgerSauce, BurgerExtras } from './types';
+import { Category, MenuItem, Customer, Driver, Employee, Location, Supplier, WastageEntry, Role, PermissionSet, AuditLogEntry, Printer, Table, Subscription, PurchaseOrder, AppPlugin, ScheduleEntry, Reservation, WaitlistEntry, Ingredient, RecipeItem, SignageDisplay, SignageContentItem, SignagePlaylist, SignageScheduleEntry, PaymentType, PizzaSize, PizzaCrust, PizzaSauce, PizzaCheese, PizzaToppingItem, Promotion, ModifierGroup, KitchenDisplay, KitchenNote, VoidReason, ManualDiscount, Surcharge, GenericDevice, PrinterReceiptSettings, KitchenPrintSettings, CustomerDisplay, CallLogEntry, KitchenProfileType, BurgerBuilderSettings, BurgerBun, BurgerPatty, BurgerCheese, BurgerToppingItem, BurgerSauce, BurgerExtras, TranslationKey } from './types';
 import { OPTIONAL_PLUGIN_DEFINITIONS } from './plugins/definitions';
 
 // New Pizza Builder Settings
@@ -666,17 +666,17 @@ export const RESERVATIONS: Reservation[] = [];
 export const WAITLIST: WaitlistEntry[] = [];
 
 export const SIGNAGE_DISPLAYS: SignageDisplay[] = [
-    { id: 'disp_1', name: 'Main Entrance TV', status: 'online' },
-    { id: 'disp_2', name: 'Bar Screen', status: 'offline' },
+    { id: 'disp_1', name: 'mainEntranceTV' as TranslationKey, status: 'online' },
+    { id: 'disp_2', name: 'barScreen' as TranslationKey, status: 'offline' },
 ];
 
 export const SIGNAGE_CONTENT: SignageContentItem[] = [
-    { id: 'content_1', name: 'Burger Promo', type: 'menu_promo', sourceUrl: '', duration: 10, menuItemIds: [9] },
-    { id: 'content_2', name: 'Drink Specials', type: 'image', sourceUrl: 'https://images.unsplash.com/photo-1551024709-8f237c2045e5', duration: 15 },
+    { id: 'content_1', name: 'burgerPromo' as TranslationKey, type: 'menu_promo', sourceUrl: '', duration: 10, menuItemIds: [9] },
+    { id: 'content_2', name: 'drinkSpecials' as TranslationKey, type: 'image', sourceUrl: 'https://images.unsplash.com/photo-1551024709-8f237c2045e5', duration: 15 },
 ];
 
 export const SIGNAGE_PLAYLISTS: SignagePlaylist[] = [
-    { id: 'pl_1', name: 'Lunch Specials', items: ['content_1', 'content_2'] },
+    { id: 'pl_1', name: 'lunchSpecials' as TranslationKey, items: ['content_1', 'content_2'] },
 ];
 
 export const SIGNAGE_SCHEDULE: SignageScheduleEntry[] = [
