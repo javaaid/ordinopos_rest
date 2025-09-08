@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { MenuItem, Category, CartItem, ModifierOption, Order, AIResponse, Language, AppSettings } from '../types';
+import React, { useState, useMemo, useEffect } from 'react';
+import { MenuItem, CartItem, ModifierOption, Order, Language, AIResponse } from '../types';
 import CategoryTabs from './CategoryTabs';
 import MenuItemCard from './MenuItemCard';
 import OrderItem from './OrderItem';
@@ -41,7 +41,7 @@ export const KioskModal: React.FC<{ isOpen: boolean, onClose: () => void }> = ({
 
     const subtotal = useMemo(() => {
         return cart.reduce((acc, item) => {
-            const modifiersTotal = item.selectedModifiers.reduce((acc, mod) => acc + mod.price, 0);
+            const modifiersTotal = (item.selectedModifiers || []).reduce((acc, mod) => acc + mod.price, 0);
             return acc + (item.menuItem.price + modifiersTotal) * item.quantity;
         }, 0);
     }, [cart]);
@@ -51,7 +51,7 @@ export const KioskModal: React.FC<{ isOpen: boolean, onClose: () => void }> = ({
 
     const filteredMenuItems = useMemo(() => {
         if (activeCategory === 'all') return menuItems;
-        return menuItems.filter((item: MenuItem) => item.category === activeCategory);
+        return (menuItems || []).filter((item: MenuItem) => item.category === activeCategory);
     }, [menuItems, activeCategory]);
     
     const isOutOfStockMap = useMemo(() => new Map<number, boolean>(), []);
@@ -60,7 +60,7 @@ export const KioskModal: React.FC<{ isOpen: boolean, onClose: () => void }> = ({
       setCart((prevCart) => {
         const existingItem = prevCart.find(ci => 
           ci.menuItem.id === item.id && 
-          JSON.stringify(ci.selectedModifiers.map(m=>m.name).sort()) === JSON.stringify(modifiers.map(m=>m.name).sort())
+          JSON.stringify((ci.selectedModifiers || []).map(m=>m.name).sort()) === JSON.stringify(modifiers.map(m=>m.name).sort())
         );
         
         if (existingItem) {
@@ -105,7 +105,7 @@ export const KioskModal: React.FC<{ isOpen: boolean, onClose: () => void }> = ({
     };
 
     const handleSelectAISuggestion = (itemName: string) => {
-        const item = menuItems.find((m: MenuItem) => m.name === itemName);
+        const item = (menuItems || []).find((m: MenuItem) => m.name === itemName);
         if (item) {
             handleSelectItem(item);
         }

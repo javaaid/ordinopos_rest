@@ -91,7 +91,8 @@ const PrintJobProcessor: React.FC<{ isPaused: boolean }> = ({ isPaused }) => {
 
                     if (!response.ok) {
                         const errorData = await response.json().catch(() => ({ error: `HTTP error! Status: ${response.status}` }));
-                        throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
+                        const errorText = typeof errorData.error === 'string' ? errorData.error : JSON.stringify(errorData.error);
+                        throw new Error(errorText || `HTTP error! Status: ${response.status}`);
                     }
                     
                     const result = await response.json();
@@ -99,7 +100,7 @@ const PrintJobProcessor: React.FC<{ isPaused: boolean }> = ({ isPaused }) => {
                         updatePrintJobStatus(currentlyPrintingJob.id, 'completed');
                         addToast({type: 'success', title: 'Print Successful', message: `Job for ${printer.name} sent.`});
                     } else {
-                        throw new Error(result.error || 'Print server returned an unspecified error.');
+                        throw new Error(getErrorMessage(result.error) || 'Print server returned an unspecified error.');
                     }
                 } catch (error: any) {
                     const errorMessage = getErrorMessage(error);
@@ -116,7 +117,7 @@ const PrintJobProcessor: React.FC<{ isPaused: boolean }> = ({ isPaused }) => {
                         printerName: printer.name,
                         url: settings.devices.printServerUrl
                     });
-                    addToast({type: 'error', title: 'Print Failed', message});
+                    addToast({type: 'error', title: 'Print Server job failed', message: getErrorMessage(error)});
                     updatePrintJobStatus(currentlyPrintingJob.id, 'error');
                 } finally {
                     setCurrentlyPrintingJob(null);

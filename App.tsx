@@ -13,6 +13,7 @@ import CategoryTabs from './components/CategoryTabs';
 import TableServicesView from './components/TableServicesView';
 import { View, ManagementSubView, SettingsSubView, Order, Table, Location, Role, Category } from './types';
 import POSHeader from './components/POSHeader';
+import POSSubHeader from './components/POSSubHeader';
 import { useAppContext } from './contexts/AppContext';
 import ModalManager from './components/ModalManager';
 import { cn } from './lib/utils';
@@ -94,12 +95,34 @@ const App: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+        const hash = window.location.hash.replace(/^#\/?/, '');
+        const validViews: View[] = ['kds', 'cfd', 'kiosk', 'order_number_display', 'qr_ordering', 'landing', 'pos', 'dashboard', 'tables', 'history', 'timeclock', 'management', 'settings'];
+        
+        if (hash && validViews.includes(hash as View)) {
+            setView(hash as View);
+        } else if (!hash) {
+            if (!currentEmployee) {
+                setView('landing');
+            } else {
+                setView('dashboard');
+            }
+        }
+    };
+
+    window.addEventListener('hashchange', handleHashChange, false);
+    handleHashChange();
+
+    return () => window.removeEventListener('hashchange', handleHashChange, false);
+}, [setView, currentEmployee]);
   
   if (!settings) {
     return null; // or a loading spinner
   }
   const t = useTranslations(settings.language.staff);
-
+  
   const currentRole = useMemo(() => {
     if (!currentEmployee) return null;
     return roles.find((r: Role) => r.id === currentEmployee.roleId);
@@ -140,31 +163,34 @@ const App: React.FC = () => {
     setView('pos');
   };
   
-  const publicViews: View[] = ['qr_ordering'];
+  const standaloneViews: View[] = ['kds', 'cfd', 'kiosk', 'order_number_display'];
+  if (standaloneViews.includes(activeView)) {
+      const handleCloseWindow = () => window.close();
 
+      switch (activeView) {
+          case 'kds': return <KDSModal isOpen={true} onClose={handleCloseWindow} />;
+          case 'cfd': return <CFDModal isOpen={true} onClose={handleCloseWindow} />;
+          case 'kiosk': return <KioskModal isOpen={true} onClose={handleCloseWindow} />;
+          case 'order_number_display': return <NumberDisplayModal isOpen={true} onClose={handleCloseWindow} />;
+          default: return null;
+      }
+  }
+
+  const publicViews: View[] = ['qr_ordering'];
   if (!currentEmployee) {
     if (activeView === 'landing') {
       return <LandingPage />;
     }
-    // Render full-screen "views" which are now modals if accessed directly
-    if (activeView === 'kds') return <KDSModal isOpen={true} onClose={() => setView('landing')} />;
-    if (activeView === 'cfd') return <CFDModal isOpen={true} onClose={() => setView('landing')} />;
-    if (activeView === 'kiosk') return <KioskModal isOpen={true} onClose={() => setView('landing')} />;
-    if (activeView === 'order_number_display') return <NumberDisplayModal isOpen={true} onClose={() => setView('landing')} />;
-
-    if (!publicViews.includes(activeView)) {
-      return <LoginPage settings={settings} />;
-    }
-  }
-
-  const renderActiveView = () => {
     if (publicViews.includes(activeView)) {
         switch(activeView) {
             case 'qr_ordering': return <QRCodeOrderingView />;
             default: return <PermissionDenied />;
         }
     }
+    return <LoginPage settings={settings} />;
+  }
 
+  const renderActiveView = () => {
     if (!permissions) return <PermissionDenied />;
 
     const renderManagementSubView = () => {
@@ -201,6 +227,7 @@ const App: React.FC = () => {
           case 'call_log': return permissions.viewCustomers ? <CallLogView /> : <PermissionDenied />;
           case 'plugins': return permissions.canPerformManagerFunctions ? <PluginsView /> : <PermissionDenied />;
           case 'signage': return permissions.canPerformManagerFunctions ? <DigitalSignageView /> : <PermissionDenied />;
+          case 'advanced': return <AdvancedSettings />;
           default: return <PermissionDenied />;
       }
     };
@@ -218,7 +245,6 @@ const App: React.FC = () => {
             case 'zatca': return <ZatcaSettingsView />;
             case 'ai': return <AISettingsComponent />;
             case 'activity': return <UserActivityReport />;
-            case 'advanced': return <AdvancedSettings />;
             default: return null;
         }
     };
@@ -230,6 +256,7 @@ const App: React.FC = () => {
                 <div className="flex-shrink-0">
                     <POSHeader />
                 </div>
+                <POSSubHeader />
                 <div className="flex-shrink-0 px-1.5">
                     <CategoryTabs />
                 </div>

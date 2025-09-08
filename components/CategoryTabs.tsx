@@ -17,7 +17,7 @@ const COLORS = [
 ];
 
 const CategoryTabs: React.FC<CategoryTabsProps> = (props) => {
-  const { settings, categoriesWithCounts, activeCategory: contextActiveCategory, onSelectCategory: contextOnSelectCategory } = useAppContext();
+  const { settings, categoriesWithCounts, activeCategory: contextActiveCategory, setActiveCategory: contextOnSelectCategory } = useAppContext();
   const t = useTranslations(settings.language.staff);
 
   // Use props if available, otherwise fall back to context

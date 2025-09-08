@@ -18,7 +18,7 @@ import SunIcon from './icons/SunIcon';
 import MoonIcon from './icons/MoonIcon';
 import NotificationsPanel from './NotificationsPanel';
 import Bars3Icon from './icons/Bars3Icon';
-import { Role, Notification } from '../types';
+import { Role, Notification, View } from '../types';
 import ChatBubbleOvalLeftEllipsisIcon from './icons/ChatBubbleOvalLeftEllipsisIcon';
 
 const POSHeader: React.FC = () => {
@@ -32,6 +32,7 @@ const POSHeader: React.FC = () => {
         searchQuery, onSearchChange,
         openModal, addToast,
         onToggleSidebarCollapse,
+        onLaunchView,
     } = useAppContext();
 
     const [isLaunchpadOpen, setIsLaunchpadOpen] = useState(false);
@@ -96,11 +97,11 @@ const POSHeader: React.FC = () => {
                     {isLaunchpadOpen && (
                         <div className="absolute top-full end-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50 animate-fade-in-down">
                             <div className="p-1">
-                                {isPizzaBuilderPluginActive && (<button onClick={() => openModal('pizzaBuilder')} className={dropdownItemClass}><PizzaIcon className="w-5 h-5" /> {t('pizza_builder')}</button>)}
-                                <button onClick={() => openModal('kds')} className={dropdownItemClass}><ChefHatIcon className="w-5 h-5" /> {t('kds')}</button>
-                                <button onClick={() => openModal('cfd')} className={dropdownItemClass}><TvIcon className="w-5 h-5" /> {t('cfd')}</button>
-                                <button onClick={() => openModal('kiosk')} className={dropdownItemClass}><ComputerDesktopIcon className="w-5 h-5" /> {t('kiosk')}</button>
-                                {isOrderNumberDisplayPluginActive && (<button onClick={() => openModal('orderNumberDisplay')} className={dropdownItemClass}><QueueListIcon className="w-5 h-5" /> {t('order_display')}</button>)}
+                                {isPizzaBuilderPluginActive && (<button onClick={() => { openModal('pizzaBuilder'); setIsLaunchpadOpen(false); }} className={dropdownItemClass}><PizzaIcon className="w-5 h-5" /> {t('pizza_builder')}</button>)}
+                                <button onClick={() => { onLaunchView('kds' as View); setIsLaunchpadOpen(false); }} className={dropdownItemClass}><ChefHatIcon className="w-5 h-5" /> {t('kds')}</button>
+                                <button onClick={() => { onLaunchView('cfd' as View); setIsLaunchpadOpen(false); }} className={dropdownItemClass}><TvIcon className="w-5 h-5" /> {t('cfd')}</button>
+                                <button onClick={() => { onLaunchView('kiosk' as View); setIsLaunchpadOpen(false); }} className={dropdownItemClass}><ComputerDesktopIcon className="w-5 h-5" /> {t('kiosk')}</button>
+                                {isOrderNumberDisplayPluginActive && (<button onClick={() => { onLaunchView('order_number_display' as View); setIsLaunchpadOpen(false); }} className={dropdownItemClass}><QueueListIcon className="w-5 h-5" /> {t('order_display')}</button>)}
                             </div>
                         </div>
                     )}

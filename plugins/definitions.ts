@@ -116,6 +116,7 @@ export const CORE_MODULE_DEFINITIONS: PluginModule[] = [
                 { id: 'tax_rates', label: t('tax_rates'), icon: ReceiptPercentIcon },
                 { id: 'payment_types', label: t('payment_types'), icon: CreditCardIcon },
                 { id: 'plugins', label: t('plugins'), icon: PuzzlePieceIcon },
+                { id: 'advanced', label: t('advanced'), icon: ExclamationTriangleIcon },
             ]
         }),
     },
@@ -168,7 +169,6 @@ export const CORE_MODULE_DEFINITIONS: PluginModule[] = [
             id: 'system_and_data', label: t('systemAndData'), icon: ShieldCheckIcon,
             children: [
                 { id: 'activity', label: t('activityLog'), icon: ClipboardDocumentCheckIcon },
-                { id: 'advanced', label: t('backupRestore'), icon: ExclamationTriangleIcon },
             ]
         }),
     },
@@ -212,15 +212,14 @@ export const OPTIONAL_PLUGIN_DEFINITIONS: PluginModule[] = [
         getManagementNavItem: (t) => ({ id: 'menu_burger_builder', label: t('menu_burger_builder'), icon: BurgerIcon, parentId: 'menu' }),
     },
     {
-        manifest: { id: 'advanced-inventory', name: 'Advanced Inventory', description: 'Track stock levels, manage suppliers, create purchase orders, and calculate profit margins.', isFree: false, version: '1.0.0', sortOrder: 110 },
+        manifest: { id: 'advanced-inventory', name: 'Advanced Inventory', description: 'Track stock levels, manage suppliers, create purchase orders, and calculate profit margins.', isFree: false, version: '1.0.0', sortOrder: 30 },
         getManagementNavItem: (t) => ({
-            id: 'inventory',
-            label: 'Inventory',
-            icon: ArchiveBoxIcon,
-            parentId: 'management', // Corrected parent
+            id: 'purchasing_group',
+            label: t('purchasing'),
+            icon: ShoppingCartIcon,
             children: [
-                { id: 'purchasing', label: 'Purchase Orders', icon: ShoppingCartIcon },
-                { id: 'ingredients', label: 'Ingredients', icon: CubeIcon },
+                { id: 'purchasing', label: t('purchasing'), icon: ShoppingCartIcon },
+                { id: 'ingredients', label: t('ingredients'), icon: CubeIcon },
             ]
         }),
     },

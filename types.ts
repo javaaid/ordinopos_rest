@@ -29,8 +29,10 @@ export type ManagementSubView =
   // New Telephony sub-view
   'call_log' |
   // New Loyalty sub-view
-  'loyalty';
-export type SettingsSubView = 'integrations' | 'customization' | 'activity' | 'advanced' | 'zatca' | 'ai' | 'numbering' | 'device_settings' | 'printers' | 'advanced_pos_settings' | 'preferences_settings' | 'fonts';
+  'loyalty' |
+  // Moved from Settings
+  'advanced';
+export type SettingsSubView = 'integrations' | 'customization' | 'activity' | 'zatca' | 'ai' | 'numbering' | 'device_settings' | 'printers' | 'advanced_pos_settings' | 'preferences_settings' | 'fonts';
 export type SignageSubView = 'displays' | 'content' | 'playlists' | 'scheduler' | 'cfd_attract';
 
 // FIX: Added missing ReportGroup and ReportTab types for the ReportsView.
@@ -245,7 +247,7 @@ export type TranslationKey =
   // UserActivityReport
   'activity_title' | 'activity_description' | 'activity_summary' | 'activity_newUsers' | 'activity_editedUsers' | 'activity_editedRoles' | 'activity_failedLogins' | 'activity_recentActivity' | 'activity_by' | 'activity_notTracked' | 'loggedInByAdmin' |
   // AdvancedSettings
-  'advanced_title' | 'advanced_description' | 'advanced_partialRefunds_title' | 'advanced_partialRefunds_desc' | 'advanced_archiving_title' | 'advanced_archiving_desc' | 'advanced_disasterRecovery_title' | 'advanced_disasterRecovery_desc' | 'advanced_fullRefund_note' |
+  'advanced' | 'advanced_title' | 'advanced_description' | 'advanced_partialRefunds_title' | 'advanced_partialRefunds_desc' | 'advanced_archiving_title' | 'advanced_archiving_desc' | 'advanced_disasterRecovery_title' | 'advanced_disasterRecovery_desc' | 'advanced_fullRefund_note' |
   'backup_title' | 'backup_desc' | 'backup_backup_button' | 'backup_restore_button' | 'backup_backingUp' | 'backup_restoring' |
   // PrinterEditModal
   'addNewPrinter' | 'printerName' | 'newPrinter' | 'printerRole' | 'standardReceiptPrinter' | 'printsReceipts' | 'kitchenStationPrinter' | 'kitchenStationPrinterDesc' | 'kitchenProfileHub' | 'kitchenProfileHubDesc' | 'createAndConfigure'

@@ -20,14 +20,17 @@ export const KDSModal: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ i
                 <header className="flex justify-between items-center mb-4 bg-card p-4 rounded-xl shadow-md border border-border">
                     <div className="flex items-center gap-4">
                         <img src={ordinoLogoBase64} alt="Logo" className="h-8 w-auto" />
-                        <h1 className="text-2xl font-bold text-foreground">Kitchen Display System</h1>
+                        <div>
+                            <h1 className="text-2xl font-bold text-foreground">Kitchen Display System</h1>
+                            <p className="text-sm text-muted-foreground">Fast • Reliable • Smart POS</p>
+                        </div>
                     </div>
                 </header>
 
                 {pendingOrders.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 flex-grow overflow-y-auto">
                         {pendingOrders.map(order => {
-                            const table = order.tableId ? (tables || []).find(t => t.id === order.tableId) : undefined;
+                            const table = order.tableId ? (tables || []).find((t: Table) => t.id === order.tableId) : undefined;
                             return (
                                 <OrderTicket
                                     key={order.id}

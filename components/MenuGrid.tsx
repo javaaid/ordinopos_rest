@@ -36,7 +36,6 @@ const MenuGrid: React.FC = () => {
         try {
           const prompt = `A delicious, photorealistic image of ${item.name}, a popular dish in the ${item.category} category. The food is presented beautifully on a clean plate, ready to be served in a restaurant. High quality food photography.`;
           
-          // FIX: Updated Gemini API usage to generateImages for image generation tasks.
           const response = await ai.models.generateImages({
             model: 'imagen-4.0-generate-001',
             prompt: prompt,
@@ -87,7 +86,7 @@ const MenuGrid: React.FC = () => {
       x: e.clientX,
       y: e.clientY,
       onEdit: () => {
-        openModal('productEdit', { product: item, onSave: handleSaveProduct });
+        openModal('productEdit', { product: item, onSave: (product: any, recipe: any) => handleSaveProduct(product, false, recipe) });
       },
     });
   };

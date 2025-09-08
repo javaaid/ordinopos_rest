@@ -1,24 +1,31 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { CartItem, Order, MenuItem, AppSettings, SignagePlaylist, SignageContentItem, Location, OrderType } from '../types';
 import SparklesIcon from './icons/SparklesIcon';
-import QrCodeIcon from './icons/QrCodeIcon';
 import CheckCircleIcon from './icons/CheckCircleIcon';
 import { useTranslations } from '../hooks/useTranslations';
 import CFDAttractScreen from './CFDAttractScreen';
 import { calculateOrderTotals } from '../utils/calculations';
 import { ordinoLogoBase64 } from '../assets/logo';
 import { useAppContext } from '../contexts/AppContext';
-import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/Modal';
-import { Button } from './ui/Button';
+import { Modal } from './ui/Modal';
 
 export const CFDModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ isOpen, onClose }) => {
     const { 
-        cart, orderType, settings, lastCompletedOrder, menuItems, signagePlaylists, 
+        cart, orderType, settings, lastCompletedOrder, setLastCompletedOrder, menuItems, signagePlaylists, 
         signageContent, currentLocation, surcharges
     } = useAppContext();
 
     const language = settings?.language.customer || 'en';
     const t = useTranslations(language);
+
+    useEffect(() => {
+        if (lastCompletedOrder) {
+            const timer = setTimeout(() => {
+                setLastCompletedOrder(null);
+            }, 10000); // clear after 10 seconds
+            return () => clearTimeout(timer);
+        }
+    }, [lastCompletedOrder, setLastCompletedOrder]);
 
     const attractScreenContent = useMemo(() => {
         if (!settings?.cfd.attractScreenPlaylistId) return [];
@@ -46,7 +53,7 @@ export const CFDModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ 
             );
         }
         
-        if (cart.length === 0) {
+        if ((cart || []).length === 0) {
             return <CFDAttractScreen contentItems={attractScreenContent as SignageContentItem[]} menuItems={menuItems} settings={settings} />;
         }
 
