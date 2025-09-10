@@ -17,7 +17,7 @@ const DeliveryOrderCard: React.FC<DeliveryOrderCardProps> = ({ order, drivers, a
     const [selectedDriver, setSelectedDriver] = useState<string>('');
     
     const customer = order.customer;
-    const driver = order.driverId ? drivers.find(d => d.id === order.driverId) : null;
+    const driver = order.driverId ? (drivers || []).find(d => d.id === order.driverId) : null;
 
     const handleAssign = () => {
         if(selectedDriver && onAssignDriver){

@@ -112,7 +112,7 @@ export default function OrderSummary() {
 
   const getSettlementTitle = () => {
     if (!activeOrderToSettle) return '';
-    const tableForOrder = tables.find((t: Table) => t.id === activeOrderToSettle.tableId);
+    const tableForOrder = (tables || []).find((t: Table) => t.id === activeOrderToSettle.tableId);
     const customerForOrder = activeOrderToSettle.customer || (activeTab ? activeTab.customer : null);
     
     let title = tableForOrder?.name || customerForOrder?.name;
@@ -209,7 +209,7 @@ export default function OrderSummary() {
           {!isSettlingOrder && orderType === 'dine-in' && !currentTable && (
               <div className="animate-fade-in-down">
                   <select
-                      id="table-select" onChange={e => setCurrentTable(tables.find((t: Table) => t.id === e.target.value) || null)} value=""
+                      id="table-select" onChange={e => setCurrentTable((tables || []).find((t: Table) => t.id === e.target.value) || null)} value=""
                       className="w-full bg-accent border border-border rounded-lg px-3 py-2 text-foreground focus:ring-primary focus:border-primary font-semibold"
                   >
                       <option value="" disabled>{t('select_table')}</option>

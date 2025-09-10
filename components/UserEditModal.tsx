@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Employee, Role, Location, AIRoleSuggestion } from '../types';
 import SparklesIcon from './icons/SparklesIcon';
@@ -39,10 +38,11 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ isOpen, onClose, onSave, 
                 setSuggestionReason('');
             } else {
                 // Defaults for a new user
+                const safeRoles = roles || [];
                 setName('');
                 setPin('');
-                setRoleId(roles.length > 0 ? roles.find((r: Role) => r.name === 'Cashier')?.id || roles[0].id : '');
-                setLocationId(locations.length > 0 ? locations[0].id : '');
+                setRoleId(safeRoles.length > 0 ? safeRoles.find((r: Role) => r.name === 'Cashier')?.id || safeRoles[0].id : '');
+                setLocationId((locations || [])[0]?.id || '');
             }
         }
     }, [user, roles, locations, isOpen]);
@@ -83,7 +83,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ isOpen, onClose, onSave, 
         setIsSuggesting(true);
         setSuggestionReason('');
         const result = await onSuggestRole(jobTitle);
-        if (result && roles.find((r: Role) => r.id === result.suggestedRoleId)) {
+        if (result && (roles || []).find((r: Role) => r.id === result.suggestedRoleId)) {
             setRoleId(result.suggestedRoleId);
             setSuggestionReason(result.reason);
         } else {
@@ -143,13 +143,13 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ isOpen, onClose, onSave, 
                         <div>
                             <label className="block text-sm font-medium text-muted-foreground mb-1">Role</label>
                             <Select value={roleId} onChange={e => setRoleId(e.target.value)} required>
-                                {roles.map((r: Role) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                {(roles || []).map((r: Role) => <option key={r.id} value={r.id}>{r.name}</option>)}
                             </Select>
                         </div>
                          <div>
                             <label className="block text-sm font-medium text-muted-foreground mb-1">Location</label>
                             <Select value={locationId} onChange={e => setLocationId(e.target.value)} required>
-                                {locations.map((l: Location) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                                {(locations || []).map((l: Location) => <option key={l.id} value={l.id}>{l.name}</option>)}
                             </Select>
                         </div>
                     </div>

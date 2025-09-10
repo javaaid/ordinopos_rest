@@ -126,7 +126,7 @@ const ProductManagementTab: React.FC<ProductManagementTabProps> = ({
                 </thead>
                 <tbody className="bg-card divide-y divide-border">
                     {menuItems.map((item: MenuItem) => {
-                        const categoryName = categories.find((c: Category) => c.id === item.category)?.name || item.category;
+                        const categoryName = (categories || []).find((c: Category) => c.id === item.category)?.name || item.category;
                         return (
                             <tr key={item.id} className={selectedIds.has(item.id) ? 'bg-secondary' : ''}>
                                 <td className="px-4 py-3">

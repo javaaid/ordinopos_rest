@@ -46,7 +46,7 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ title, activeItem, onNavI
 
     const permissions = useMemo<PermissionSet | null>(() => {
         if (!currentEmployee || !roles) return null;
-        return roles.find((r: Role) => r.id === currentEmployee.roleId)?.permissions;
+        return (roles || []).find((r: Role) => r.id === currentEmployee.roleId)?.permissions;
     }, [currentEmployee, roles]);
     
     const navItems = useMemo(() => {

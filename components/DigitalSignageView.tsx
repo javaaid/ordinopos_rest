@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { SignageContentItem, SignagePlaylist, SignageDisplay, SignageScheduleEntry, MenuItem, SignageContentType, SignageSubView, AppSettings, TranslationKey } from '../types';
 import PhotoIcon from './icons/PhotoIcon';
@@ -113,7 +111,7 @@ const DigitalSignageView: React.FC = () => {
     const [activeTab, setActiveTab] = useState<SignageSubView>('displays');
     
     // Preview state
-    const [selectedDisplayId, setSelectedDisplayId] = useState<string>(signageDisplays[0]?.id || '');
+    const [selectedDisplayId, setSelectedDisplayId] = useState<string>((signageDisplays || [])[0]?.id || '');
     const [activeContentIndex, setActiveContentIndex] = useState(0);
 
     const currentPlaylist = useMemo(() => {
@@ -122,18 +120,18 @@ const DigitalSignageView: React.FC = () => {
         const dayOfWeek = now.getDay();
         const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         
-        const activeSchedule = signageSchedule.find((s: SignageScheduleEntry) => 
+        const activeSchedule = (signageSchedule || []).find((s: SignageScheduleEntry) => 
             s.displayId === selectedDisplayId &&
             s.dayOfWeek === dayOfWeek &&
             s.startTime <= currentTime &&
             s.endTime >= currentTime
         );
-        return activeSchedule ? signagePlaylists.find((p: SignagePlaylist) => p.id === activeSchedule.playlistId) : null;
+        return activeSchedule ? (signagePlaylists || []).find((p: SignagePlaylist) => p.id === activeSchedule.playlistId) : null;
     }, [selectedDisplayId, signageSchedule, signagePlaylists]);
 
     const playlistContent = useMemo(() => {
         if (!currentPlaylist) return [];
-        return currentPlaylist.items.map(itemId => signageContent.find((c: SignageContentItem) => c.id === itemId)).filter(Boolean) as SignageContentItem[];
+        return currentPlaylist.items.map(itemId => (signageContent || []).find((c: SignageContentItem) => c.id === itemId)).filter(Boolean) as SignageContentItem[];
     }, [currentPlaylist, signageContent]);
 
     useEffect(() => {
@@ -147,7 +145,7 @@ const DigitalSignageView: React.FC = () => {
     const currentContent = playlistContent[activeContentIndex];
     const currentMenuItems = useMemo(() => {
         if (currentContent?.type === 'menu_promo' && currentContent.menuItemIds) {
-            return currentContent.menuItemIds.map(id => menuItems.find((m: MenuItem) => m.id === id)).filter(Boolean) as MenuItem[];
+            return currentContent.menuItemIds.map(id => (menuItems || []).find((m: MenuItem) => m.id === id)).filter(Boolean) as MenuItem[];
         }
         return [];
     }, [currentContent, menuItems]);
@@ -188,8 +186,8 @@ const DigitalSignageView: React.FC = () => {
                     <table className="min-w-full bg-card rounded-lg"><TableHeader headers={[t('display'), t('playlist'), t('dayOfWeek'), t('time')]} />
                         <tbody className="divide-y divide-border">
                             {signageSchedule.map((s: SignageScheduleEntry) => <TableRow key={s.id} onEdit={() => openModal('signageScheduleEdit', { schedule: s, onSave: handleSaveSignageSchedule })} onDelete={() => handleDeleteSignageSchedule(s.id)}>
-                                <td className="p-3 font-semibold">{getDisplayDataName(signageDisplays.find((d:SignageDisplay)=>d.id===s.displayId)?.name || '')}</td>
-                                <td className="p-3">{getDisplayDataName(signagePlaylists.find((p:SignagePlaylist)=>p.id===s.playlistId)?.name || '')}</td>
+                                <td className="p-3 font-semibold">{getDisplayDataName((signageDisplays || []).find((d:SignageDisplay)=>d.id===s.displayId)?.name || '')}</td>
+                                <td className="p-3">{getDisplayDataName((signagePlaylists || []).find((p:SignagePlaylist)=>p.id===s.playlistId)?.name || '')}</td>
                                 <td className="p-3">{t(DAYS_OF_WEEK[s.dayOfWeek])}</td>
                                 <td className="p-3">{s.startTime} - {s.endTime}</td>
                             </TableRow>)}
@@ -219,7 +217,7 @@ const DigitalSignageView: React.FC = () => {
                          <h3 className="font-bold text-lg text-foreground mb-4">{t('livePreview')}</h3>
                          <SignagePreview content={currentContent} menuItems={currentMenuItems} onNext={handleNextContent} />
                          <div className="text-sm text-muted-foreground mt-2">
-                             <p>{t('display')}: <span className="font-semibold text-foreground">{getDisplayDataName(signageDisplays.find((d:SignageDisplay)=>d.id===selectedDisplayId)?.name || 'N/A')}</span></p>
+                             <p>{t('display')}: <span className="font-semibold text-foreground">{getDisplayDataName((signageDisplays || []).find((d:SignageDisplay)=>d.id===selectedDisplayId)?.name || 'N/A')}</span></p>
                              <p>{t('playlist')}: <span className="font-semibold text-foreground">{t(currentPlaylist?.name as TranslationKey) || 'None Scheduled'}</span></p>
                          </div>
                     </div>

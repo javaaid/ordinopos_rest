@@ -29,9 +29,9 @@ export const CFDModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ 
 
     const attractScreenContent = useMemo(() => {
         if (!settings?.cfd.attractScreenPlaylistId) return [];
-        const playlist = signagePlaylists.find((p: SignagePlaylist) => p.id === settings.cfd.attractScreenPlaylistId);
+        const playlist = (signagePlaylists || []).find((p: SignagePlaylist) => p.id === settings.cfd.attractScreenPlaylistId);
         if (!playlist) return [];
-        return playlist.items.map((itemId: string) => signageContent.find((c: SignageContentItem) => c.id === itemId)).filter(Boolean);
+        return playlist.items.map((itemId: string) => (signageContent || []).find((c: SignageContentItem) => c.id === itemId)).filter(Boolean);
     }, [settings?.cfd, signagePlaylists, signageContent]);
 
     const { subtotal, tax, total } = useMemo(() => {

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Employee, Role, Location } from '../types';
 import MegaphoneIcon from './icons/MegaphoneIcon';
@@ -56,7 +55,7 @@ const UserManagementView: React.FC = () => {
             {/* Mobile Card View */}
             <div className="md:hidden space-y-3 flex-grow overflow-y-auto">
                 {employees.map((user: Employee) => {
-                    const role = roles.find((r: Role) => r.id === user.roleId);
+                    const role = (roles || []).find((r: Role) => r.id === user.roleId);
                     return (
                         <div key={user.id} className="bg-card border border-border p-4 rounded-lg">
                             <div className="flex justify-between items-start">
@@ -90,8 +89,8 @@ const UserManagementView: React.FC = () => {
                     </thead>
                     <tbody className="bg-card divide-y divide-border">
                         {employees.map((user: Employee) => {
-                            const role = roles.find((r: Role) => r.id === user.roleId);
-                            const location = locations.find((l: Location) => l.id === user.locationId);
+                            const role = (roles || []).find((r: Role) => r.id === user.roleId);
+                            const location = (locations || []).find((l: Location) => l.id === user.locationId);
                             return (
                                 <tr key={user.id} className="hover:bg-muted/50">
                                     <td className="px-4 py-3 whitespace-nowrap text-foreground font-medium flex items-center gap-3">

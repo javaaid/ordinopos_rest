@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useMemo } from 'react';
 import { Order, Category, Ingredient, RecipeItem } from '../types';
 import { useAppContext } from '../contexts/AppContext';
@@ -34,7 +31,7 @@ const CategoryReport: React.FC<CategoryReportProps> = ({ orders, categories, ing
         const recipe = recipes[menuItemId];
         if (!recipe) return 0;
         return recipe.reduce((totalCost, recipeItem) => {
-          const ingredient = ingredients.find(i => i.id === recipeItem.ingredientId);
+          const ingredient = (ingredients || []).find(i => i.id === recipeItem.ingredientId);
           return totalCost + (ingredient ? ingredient.costPerUnit * recipeItem.quantity : 0);
         }, 0);
     };

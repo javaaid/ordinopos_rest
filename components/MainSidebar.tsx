@@ -42,7 +42,7 @@ export const MainSidebar = (): React.ReactElement | null => {
   const t = useTranslations(settings.language.staff);
 
   const role = useMemo(() => {
-    return currentUser ? roles.find((r: Role) => r.id === currentUser.roleId) : null;
+    return currentUser ? (roles || []).find((r: Role) => r.id === currentUser.roleId) : null;
   }, [currentUser, roles]);
   
   const permissions = role?.permissions;

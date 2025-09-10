@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo, useEffect } from 'react';
 // FIX: Added TranslationKey to the import list to resolve a type error.
 import { Order, MenuItem, Employee, Location, Category, Customer, Supplier, WastageEntry, Role, AppSettings, Ingredient, RecipeItem, PaymentType, AISettings, ReportGroup, ReportTab, TranslationKey } from '../types';
@@ -85,7 +83,7 @@ export const ReportsView: React.FC = () => {
     
     const availableGroups = useMemo((): Partial<Record<ReportGroup, { name: string; tabs: ReportTab[]; }>> => {
         if (!currentEmployee) return {};
-        const role = roles.find((r: Role) => r.id === currentEmployee.roleId);
+        const role = (roles || []).find((r: Role) => r.id === currentEmployee.roleId);
         if (!role) return {};
         const p = role.permissions;
 

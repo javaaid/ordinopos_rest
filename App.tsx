@@ -45,7 +45,6 @@ import UserManagementView from './components/UserManagementView';
 import RoleManagementView from './components/RoleManagementView';
 import PurchaseOrdersView from './components/PurchaseOrdersView';
 import IngredientsView from './components/IngredientsView';
-// FIX: Changed to a named import to fix "Module has no default export" error.
 import { ReportsView } from './components/ReportsView';
 import EmailReportingView from './components/EmailReportingView';
 import AccountingView from './components/AccountingView';
@@ -125,7 +124,7 @@ const App: React.FC = () => {
   
   const currentRole = useMemo(() => {
     if (!currentEmployee) return null;
-    return roles.find((r: Role) => r.id === currentEmployee.roleId);
+    return (roles || []).find((r: Role) => r.id === currentEmployee.roleId);
   }, [currentEmployee, roles]);
   
   const permissions = currentRole?.permissions;

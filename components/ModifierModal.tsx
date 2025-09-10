@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { MenuItem, ModifierGroup, ModifierOption, Language } from '../types';
 import { useTranslations } from '../hooks/useTranslations';
@@ -22,7 +20,7 @@ const ModifierModal: React.FC<ModifierModalProps> = ({ isOpen, onClose, item, on
 
   const itemModifierGroups = useMemo(() => {
     if (!item?.modifierGroupIds) return [];
-    return item.modifierGroupIds.map(id => modifierGroups.find((mg: ModifierGroup) => mg.id === id)).filter(Boolean) as ModifierGroup[];
+    return item.modifierGroupIds.map(id => (modifierGroups || []).find((mg: ModifierGroup) => mg.id === id)).filter(Boolean) as ModifierGroup[];
   }, [item, modifierGroups]);
 
   useEffect(() => {

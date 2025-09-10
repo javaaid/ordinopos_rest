@@ -12,7 +12,7 @@ const TimeClockView: React.FC = () => {
     const [selectedEmployeeId, setSelectedEmployeeId] = useState(currentEmployee?.id || '');
 
     const selectedEmployee = useMemo(() => {
-        return allEmployees.find((e: Employee) => e.id === selectedEmployeeId);
+        return (allEmployees || []).find((e: Employee) => e.id === selectedEmployeeId);
     }, [selectedEmployeeId, allEmployees]);
     
     if (!currentEmployee) return null;

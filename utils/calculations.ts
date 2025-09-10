@@ -1,6 +1,3 @@
-
-
-
 import { CartItem, Location, AppliedDiscount, Promotion, MenuItem, OrderType, AppSettings, RecipeItem, Ingredient, Customer, Surcharge } from '../types';
 
 export const getPriceForItem = (item: MenuItem, orderType: OrderType, customer?: Customer | null): number => {
@@ -161,7 +158,7 @@ export const calculateOrderTotals = (
             surchargeAmount = type === 'percentage' ? discountedSubtotal * (value / 100) : value;
             surchargeDetails = { name, amount: surchargeAmount };
         } else if (orderType === 'delivery' && settings.delivery.surcharge.enabled && settings.delivery.surcharge.surchargeId) {
-            const surcharge = surcharges.find(s => s.id === settings.delivery.surcharge.surchargeId);
+            const surcharge = (surcharges || []).find(s => s.id === settings.delivery.surcharge.surchargeId);
             if (surcharge) {
                 surchargeAmount = surcharge.type === 'percentage' ? discountedSubtotal * (surcharge.value / 100) : surcharge.value;
                 surchargeDetails = { name: surcharge.name, amount: surchargeAmount };
@@ -193,7 +190,7 @@ export const calculateMenuItemCost = (menuItemId: number, ingredients: Ingredien
     const recipe = recipes[menuItemId];
     if (!recipe) return 0;
     return recipe.reduce((totalCost, recipeItem) => {
-      const ingredient = ingredients.find(i => i.id === recipeItem.ingredientId);
+      const ingredient = (ingredients || []).find(i => i.id === recipeItem.ingredientId);
       return totalCost + (ingredient ? ingredient.costPerUnit * recipeItem.quantity : 0);
     }, 0);
 };
@@ -212,7 +209,7 @@ export const isItemOutOfStock = (
         // Recipe-based check: Can we make one more?
         // This is a comprehensive check that considers all items in the cart that use the same ingredients.
         const ingredientDemand = new Map<string, number>();
-        cart.forEach(cartItem => {
+        (cart || []).forEach(cartItem => {
             const cartItemRecipe = recipes[cartItem.menuItem.id];
             if (cartItemRecipe) {
                 cartItemRecipe.forEach(recipePart => {
@@ -224,7 +221,7 @@ export const isItemOutOfStock = (
         
         // Now check if adding one more of the current item is possible
         for (const recipePart of recipe) {
-            const ingredient = ingredients.find(i => i.id === recipePart.ingredientId);
+            const ingredient = (ingredients || []).find(i => i.id === recipePart.ingredientId);
             if (!ingredient) return true; // Ingredient definition missing, treat as out of stock
 
             const currentDemandForIngredient = ingredientDemand.get(recipePart.ingredientId) || 0;
@@ -236,7 +233,7 @@ export const isItemOutOfStock = (
         return false; // Enough ingredients for one more
     } else if (typeof item.stock === 'number') {
         // Direct stock check
-        const cartQuantity = cart.filter(ci => ci.menuItem.id === item.id)
+        const cartQuantity = (cart || []).filter(ci => ci.menuItem.id === item.id)
                                  .reduce((sum, ci) => sum + ci.quantity, 0);
         return item.stock <= cartQuantity;
     }

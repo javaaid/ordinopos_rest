@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Order, MenuItem, Employee, AIExecutiveSummary, AISettings } from '../types';
@@ -13,7 +14,7 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
     const [error, setError] = useState<string | null>(null);
 
     const dataSignature = useMemo(() => {
-        return `${orders.length}-${menuItems.length}-${employees.length}-${startDate.getTime()}-${endDate.getTime()}`;
+        return `${orders.length}-${menuItems.length}-${(employees || []).length}-${startDate.getTime()}-${endDate.getTime()}`;
     }, [orders, menuItems, employees, startDate, endDate]);
 
     useEffect(() => {
@@ -32,7 +33,6 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                 const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
                 const salesByDay = orders.reduce((acc, o) => {
                     const day = new Date(o.createdAt).toLocaleDateString();
-                    // FIX: Ensure arithmetic operation is on numbers (removed redundant Number() cast)
                     acc[day] = (acc[day] || 0) + o.total;
                     return acc;
                 }, {} as Record<string, number>);
@@ -40,7 +40,6 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                 const topDay = topDayArr.length > 0 ? topDayArr[0] : null;
                 
                 const menuPerformance = orders.flatMap(o => o.cart).reduce((acc, item) => {
-                    // FIX: Ensure arithmetic operation is on numbers (removed redundant Number() cast)
                     acc[item.menuItem.name] = (acc[item.menuItem.name] || 0) + (item.menuItem.price * item.quantity);
                     return acc;
                 }, {} as Record<string, number>);
@@ -48,13 +47,12 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                 
                 const staffPerformance = orders.reduce((acc, o) => {
                     if (o.employeeId) {
-                         // FIX: Ensure arithmetic operation is on numbers (removed redundant Number() cast)
                          acc[o.employeeId] = (acc[o.employeeId] || 0) + o.total;
                     }
                     return acc;
                 }, {} as Record<string, number>);
                 const topStaff = Object.entries(staffPerformance).sort((a,b)=>b[1]-a[1]).slice(0,1).map(([id, sales]) => ({
-                    name: employees.find(e => e.id === id)?.name.replace(/\s\(.*\)/, ''),
+                    name: (employees || []).find(e => e.id === id)?.name.replace(/\s\(.*\)/, ''),
                     sales
                 }));
 

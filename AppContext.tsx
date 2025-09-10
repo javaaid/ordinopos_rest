@@ -3,7 +3,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { LOCATIONS, CATEGORIES, MENU_ITEMS, CUSTOMERS, DRIVERS, EMPLOYEES, SUPPLIERS, WASTAGE_LOG, ROLES, AUDIT_LOG, PRINTERS, TABLES, SUBSCRIPTIONS, PURCHASE_ORDERS, PLUGINS, SCHEDULE, RESERVATIONS, INGREDIENTS, RECIPES, SIGNAGE_DISPLAYS, SIGNAGE_CONTENT, SIGNAGE_PLAYLISTS, SIGNAGE_SCHEDULE, ACTIVATION_CODES, PAYMENT_TYPES, PIZZA_OPTIONS, PROMOTIONS, MODIFIER_GROUPS, KITCHEN_DISPLAYS, KITCHEN_NOTES, VOID_REASONS, MANUAL_DISCOUNTS, SURCHARGES, CUSTOMER_DISPLAYS, SCALES, CALL_LOG, DEFAULT_KITCHEN_PRINT_SETTINGS, DEFAULT_RECEIPT_SETTINGS, KITCHEN_PROFILE_NAMES } from './constants';
 import { MenuItem, CartItem, ModifierOption, Customer, Order, Driver, OrderType, Employee, Location, PaymentMethod, Shift, AppliedDiscount, AIResponse, WastageEntry, Supplier, AIEstimatedWaitTime, Role, AIRoleSuggestion, AuditLogEntry, Notification, Language, ReportSchedule, Printer, ToastNotification, SimulationLogEntry, SimulationReport, Table, Subscription, PurchaseOrder, AppSettings, View, ManagementSubView, SettingsSubView, AppPlugin, ScheduleEntry, Reservation, Ingredient, RecipeItem, SignageDisplay, SignageContentItem, SignagePlaylist, SignageScheduleEntry, WaitlistEntry, WaitlistStatus, Theme, Payment, TableStatus, OrderStatus, PaymentType, PizzaConfiguration, BurgerConfiguration, Category, Promotion, HeldOrder, ModifierGroup, KitchenDisplay, KitchenNote, VoidReason, ManualDiscount, Surcharge, GenericDevice, CustomerDisplay, CallLogEntry, PrintJob, PrintJobStatus, CSVImportResult, ReceiptSettings, KitchenProfileType } from './types';
 import { calculateOrderTotals, isItemOutOfStock } from './utils/calculations';
-import { ordinoLogoBase64 } from './assets/logo';
+import { ordinoLogoBase64 } from './assets/logo.ts';
 
 const AppContext = createContext<any>(null);
 
@@ -85,6 +85,7 @@ const usePersistentState = <T,>(key: string, defaultValue: T): [T, React.Dispatc
 
 const channel = new BroadcastChannel('ordino_pos_sync');
 
+// FIX: The type 'React.FC' is redundant and can be removed.
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [activeView, setActiveView] = usePersistentState<View>('activeView', 'landing');
     const [managementSubView, setManagementSubView] = usePersistentState<ManagementSubView>('managementSubView', 'menu_products');
@@ -107,7 +108,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ai: { enableAIFeatures: true, enableUpsell: true, enableCFDSuggestions: true, enableReportAnalysis: true },
         cfd: { attractScreenPlaylistId: null, featuredItemIds: [] },
         notificationSettings: { duration: 5, position: 'top-right', theme: 'dark' },
-        dineIn: { enabled: true, defaultGuests: 2, maxGuests: 20, enableStaffSelection: false, surcharge: { enabled: false, name: 'Service Charge', type: 'percentage', value: 10 }, minCharge: { enabled: false, amount: 0 } },
+        // FIX: Added missing showGuestCountPrompt property to the dineIn settings object.
+        dineIn: { enabled: true, defaultGuests: 2, maxGuests: 20, enableStaffSelection: false, showGuestCountPrompt: true, surcharge: { enabled: false, name: 'Service Charge', type: 'percentage', value: 10 }, minCharge: { enabled: false, amount: 0 } },
         delivery: { enabled: true, surcharge: { enabled: false, surchargeId: null }, zones: [] },
         takeAway: { enabled: true, customName: 'Take Away', requireCustomerName: false, useHoldReason: false, surcharge: { enabled: false, name: 'Packaging Fee', type: 'fixed', value: 0.50 } },
         tab: { enabled: true, customName: 'Tab' },

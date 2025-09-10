@@ -127,7 +127,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, on
                             <label className="block text-sm font-medium text-muted-foreground mb-1">{t('tables')}</label>
                             <select value={tableId} onChange={e => setTableId(e.target.value)} className="w-full bg-input p-2 rounded-md border border-border text-foreground" required>
                                 <option value="" disabled>{t('selectAvailableTable')}</option>
-                                {/* FIX: Renamed 't' to 'table' to avoid shadowing the translation function. */}
                                 {(tables || []).filter(table => table.status === 'available' || (reservation && table.id === reservation.tableId)).map(table => (
                                     <option key={table.id} value={table.id}>{table.name} ({t('capacity')}: {table.capacity})</option>
                                 ))}

@@ -6,8 +6,8 @@ import DocumentArrowDownIcon from './icons/DocumentArrowDownIcon';
 import ReceiptRefundIcon from './icons/ReceiptRefundIcon';
 import PrinterIcon from './icons/PrinterIcon';
 import MapPinIcon from './icons/MapPinIcon';
-import { useAppContext } from '../contexts/AppContext';
-import { useTranslations } from '../hooks/useTranslations';
+import { useAppContext } from './contexts/AppContext';
+import { useTranslations } from './hooks/useTranslations';
 import ChevronDownIcon from './icons/ChevronDownIcon';
 
 const statusStyles: Record<OrderStatus, { text: string, bg: string, text_color: string }> = {
@@ -67,7 +67,7 @@ const OrderHistoryView: React.FC = () => {
     }, [sortedOrders, searchQuery, filterDate]);
 
     const handleViewOnFloor = (tableId: string) => {
-        const table = tables.find((t: Table) => t.id === tableId);
+        const table = (tables || []).find((t: Table) => t.id === tableId);
         if (table) {
             setView('tables');
         }
@@ -75,7 +75,7 @@ const OrderHistoryView: React.FC = () => {
 
     const currentRole = useMemo(() => {
         if (!currentEmployee) return null;
-        return roles.find((r: Role) => r.id === currentEmployee.roleId);
+        return (roles || []).find((r: Role) => r.id === currentEmployee.roleId);
     }, [currentEmployee, roles]);
     
     const renderActions = (order: Order) => {

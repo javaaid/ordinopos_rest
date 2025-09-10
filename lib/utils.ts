@@ -50,7 +50,6 @@ function escapeCsvCell(cell: any): string {
   if (cell === undefined || cell === null) {
     return '';
   }
-  // FIX: Changed String(cell) to cell.toString() to avoid potential "not callable" errors if String is shadowed.
   const str = cell.toString();
   if (str.includes(',') || str.includes('"') || str.includes('\n')) {
     return `"${str.replace(/"/g, '""')}"`;

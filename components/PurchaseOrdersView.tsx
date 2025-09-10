@@ -47,7 +47,7 @@ const PurchaseOrdersView: React.FC = () => {
                         </thead>
                         <tbody className="bg-card divide-y divide-border">
                             {purchaseOrders.map((po: PurchaseOrder) => {
-                                const supplier = suppliers.find((s: Supplier) => s.id === po.supplierId);
+                                const supplier = (suppliers || []).find((s: Supplier) => s.id === po.supplierId);
                                 const statusStyle = statusStyles[po.status];
                                 return (
                                     <tr key={po.id} className="hover:bg-muted/50">

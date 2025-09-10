@@ -165,7 +165,7 @@ export type TranslationKey =
   'burgerBuilderSettings' | 'burgerBuilderSettingsDescription' | 'buns' | 'patties' | 'extras' | 'saveBurgerSettings' |
   'dineInSettings' | 'dineInSettingsDescription' | 'general' | 'guestManagement' | 'minimumCharge' | 'surcharge' |
   'enableDineIn' | 'defaultGuests' | 'maxGuests' | 'chooseStaffStart' | 'enableMinimumCharge' |
-  'minimumAmount' | 'enableDineInSurcharge' | 'surchargeType' | 'saveDineInSettings' | 'deliverySettings' |
+  'minimumAmount' | 'enableDineInSurcharge' | 'surchargeType' | 'saveDineInSettings' | 'promptForGuestCount' | 'deliverySettings' |
   'deliverySettingsDescription' | 'deliveryZonesAndFees' | 'zoneName' | 'fee' | 'addDeliveryZone' |
   'enableDeliverySurcharge' | 'selectSurcharge' | 'saveDeliverySettings' | 'takeAwaySettings' |
   'takeAwaySettingsDescription' | 'customName' | 'requireCustomerName' | 'useHoldReasons' | 'saveTakeAwaySettings' |
@@ -1047,6 +1047,7 @@ export interface DineInSettings {
     defaultGuests: number;
     maxGuests: number;
     enableStaffSelection: boolean;
+    showGuestCountPrompt: boolean;
     surcharge: { enabled: boolean; name: string; type: 'percentage' | 'fixed'; value: number };
     minCharge: { enabled: boolean; amount: number };
 }

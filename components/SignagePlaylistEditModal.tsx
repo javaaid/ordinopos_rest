@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { SignagePlaylist, SignageContentItem, TranslationKey } from '../types';
 import { useDataContext, useAppContext } from '../contexts/AppContext';
@@ -31,11 +30,11 @@ const SignagePlaylistEditModal: React.FC<SignagePlaylistEditModalProps> = ({ isO
     }, [playlist, isOpen]);
 
     const availableContent = useMemo(() => {
-        return signageContent.filter((c: SignageContentItem) => !itemIds.includes(c.id));
+        return (signageContent || []).filter((c: SignageContentItem) => !itemIds.includes(c.id));
     }, [signageContent, itemIds]);
 
     const playlistItems = useMemo(() => {
-        return itemIds.map(id => signageContent.find((c: SignageContentItem) => c.id === id)).filter(Boolean);
+        return itemIds.map(id => (signageContent || []).find((c: SignageContentItem) => c.id === id)).filter(Boolean);
     }, [itemIds, signageContent]);
 
     const handleAddItem = (id: string) => {

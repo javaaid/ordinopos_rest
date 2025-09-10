@@ -57,7 +57,7 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
         if (isOpen) {
             const initialRecipe = product ? recipes[product.id] || [] : [];
             const cleanedRecipe = initialRecipe.filter(recipeItem =>
-                ingredients.find((ing: Ingredient) => ing.id === recipeItem.ingredientId)
+                (ingredients || []).find((ing: Ingredient) => ing.id === recipeItem.ingredientId)
             );
 
             if (product) {
@@ -292,14 +292,14 @@ const MenuItemEditModal: React.FC<MenuItemEditModalProps> = ({ isOpen, onClose, 
                     <label className="block text-sm font-medium text-muted-foreground mb-1">{t('addIngredientToRecipe')}</label>
                     <Select onChange={e => handleAddIngredient(e.target.value)} value="">
                         <option value="" disabled>{t('selectAnIngredient')}</option>
-                        {ingredients.map((ing: Ingredient) => (
+                        {(ingredients || []).map((ing: Ingredient) => (
                             <option key={ing.id} value={ing.id}>{ing.name} ({ing.unit})</option>
                         ))}
                     </Select>
                 </div>
                 <div className="space-y-2 max-h-60 overflow-y-auto p-2 bg-background rounded-md border">
                     {recipeItems.map(item => {
-                        const ingredient = ingredients.find((i: Ingredient) => i.id === item.ingredientId);
+                        const ingredient = (ingredients || []).find((i: Ingredient) => i.id === item.ingredientId);
                         if (!ingredient) return null;
                         return (
                             <div key={item.ingredientId} className="flex items-center gap-2 p-2 bg-secondary rounded">

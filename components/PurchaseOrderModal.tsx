@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { PurchaseOrder, PurchaseOrderItem, Supplier, Ingredient } from '../types';
 import TrashIcon from './icons/TrashIcon';
@@ -23,7 +22,7 @@ const PurchaseOrderModal: React.FC<PurchaseOrderModalProps> = ({ isOpen, onClose
             setItems(po.items);
             setStatus(po.status);
         } else {
-            setSupplierId(suppliers[0]?.id || '');
+            setSupplierId((suppliers || [])[0]?.id || '');
             setItems([]);
             setStatus('draft');
         }
@@ -31,7 +30,7 @@ const PurchaseOrderModal: React.FC<PurchaseOrderModalProps> = ({ isOpen, onClose
 
     const totalCost = useMemo(() => {
         return items.reduce((sum, item) => {
-            const ingredient = ingredients.find((i: Ingredient) => i.id === item.ingredientId);
+            const ingredient = (ingredients || []).find((i: Ingredient) => i.id === item.ingredientId);
             const cost = ingredient?.costPerUnit || item.costPerItem; // Use current ingredient cost if available
             return sum + cost * item.quantity;
         }, 0);
@@ -43,7 +42,7 @@ const PurchaseOrderModal: React.FC<PurchaseOrderModalProps> = ({ isOpen, onClose
         const ingredientId = e.target.value;
         if (!ingredientId) return;
 
-        const ingredient = ingredients.find((i: Ingredient) => i.id === ingredientId);
+        const ingredient = (ingredients || []).find((i: Ingredient) => i.id === ingredientId);
         if (ingredient && !items.some(i => i.ingredientId === ingredientId)) {
             const newItem: PurchaseOrderItem = {
                 ingredientId,
@@ -100,7 +99,7 @@ const PurchaseOrderModal: React.FC<PurchaseOrderModalProps> = ({ isOpen, onClose
                             <div>
                                 <label className="block text-sm font-medium text-muted-foreground mb-1">Supplier</label>
                                 <select value={supplierId} onChange={e => setSupplierId(e.target.value)} className="w-full bg-input p-2 rounded-md border border-border" disabled={isFulfilled}>
-                                    {suppliers.map((s: Supplier) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                    {(suppliers || []).map((s: Supplier) => <option key={s.id} value={s.id}>{s.name}</option>)}
                                 </select>
                             </div>
                             <div>
@@ -117,7 +116,7 @@ const PurchaseOrderModal: React.FC<PurchaseOrderModalProps> = ({ isOpen, onClose
                              <label className="block text-sm font-medium text-muted-foreground mb-2">Items</label>
                             <div className="space-y-2">
                                 {items.map(item => {
-                                    const ingredient = ingredients.find((i: Ingredient) => i.id === item.ingredientId);
+                                    const ingredient = (ingredients || []).find((i: Ingredient) => i.id === item.ingredientId);
                                     return (
                                         <div key={item.ingredientId} className="grid grid-cols-12 items-center gap-2 bg-secondary p-2 rounded-md">
                                             <span className="col-span-5 text-foreground">{ingredient?.name}</span>
@@ -132,7 +131,7 @@ const PurchaseOrderModal: React.FC<PurchaseOrderModalProps> = ({ isOpen, onClose
                             {!isFulfilled && (
                                 <select onChange={handleAddItem} className="mt-2 w-full bg-input p-2 rounded-md border border-border">
                                     <option value="">-- Add an ingredient --</option>
-                                    {ingredients.filter((i: Ingredient) => !items.some(pi => pi.ingredientId === i.id)).map((i: Ingredient) => <option key={i.id} value={i.id}>{i.name}</option>)}
+                                    {(ingredients || []).filter((i: Ingredient) => !items.some(pi => pi.ingredientId === i.id)).map((i: Ingredient) => <option key={i.id} value={i.id}>{i.name}</option>)}
                                 </select>
                             )}
                         </div>

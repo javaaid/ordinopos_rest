@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useDataContext, useAppContext } from '../contexts/AppContext';
 import { CallLogEntry, Customer } from '../types';
@@ -12,7 +11,7 @@ const CallLogView: React.FC = () => {
 
     const filteredLog = useMemo(() => {
         return (callLog || []).filter((entry: CallLogEntry) => {
-            const customer = entry.customerId ? customers.find((c: Customer) => c.id === entry.customerId) : null;
+            const customer = entry.customerId ? (customers || []).find((c: Customer) => c.id === entry.customerId) : null;
             const lowerSearch = searchTerm.toLowerCase();
             return (
                 entry.phoneNumber.includes(lowerSearch) ||
@@ -26,8 +25,7 @@ const CallLogView: React.FC = () => {
     return (
         <div className="p-6 h-full flex flex-col">
             <h2 className="text-2xl font-bold text-foreground mb-2 flex items-center gap-3 rtl:text-right rtl:flex-row-reverse">
-                <PhoneIcon className="w-6 h-6"/> {/* FIX: Corrected translation key from 'callLog' to 'call_log'. */}
-{t('call_log')}
+                <PhoneIcon className="w-6 h-6"/> {t('call_log')}
             </h2>
             <p className="text-sm text-muted-foreground mb-4 rtl:text-right">{t('callLogDescription')}</p>
             
@@ -54,8 +52,8 @@ const CallLogView: React.FC = () => {
                         </thead>
                         <tbody className="bg-card divide-y divide-border">
                             {filteredLog.map((entry: CallLogEntry) => {
-                                const customer = entry.customerId ? customers.find((c: Customer) => c.id === entry.customerId) : null;
-                                const order = entry.orderId ? orders.find((o: any) => o.id === entry.orderId) : null;
+                                const customer = entry.customerId ? (customers || []).find((c: Customer) => c.id === entry.customerId) : null;
+                                const order = entry.orderId ? (orders || []).find((o: any) => o.id === entry.orderId) : null;
                                 const status = order ? 'Order Placed' : 'No Order';
                                 
                                 return (

@@ -110,7 +110,7 @@ const ReservationsView: React.FC<ReservationsViewProps> = ({ reservations, custo
                         </thead>
                          <tbody className="bg-card divide-y divide-border">
                            {filteredReservations.map(res => {
-                               const customer = customers.find(c => c.id === res.customerId);
+                               const customer = (customers || []).find(c => c.id === res.customerId);
                                const statusStyle = statusStyles[res.status];
                                const isPast = res.reservationTime < Date.now() && res.status === 'pending';
                                return (

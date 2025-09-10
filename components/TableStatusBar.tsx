@@ -12,8 +12,8 @@ interface TableStatusBarProps {
 const TableStatusBar: React.FC<TableStatusBarProps> = ({ orders, tables, customers, onSelectTable }) => {
     const { handleSelectTab } = usePOSContext();
     
-    const activeTables = tables.filter(t => t.status === 'occupied');
-    const openTabs = orders.filter(o => o.status === 'partially-paid');
+    const activeTables = (tables || []).filter(t => t.status === 'occupied');
+    const openTabs = (orders || []).filter(o => o.status === 'partially-paid');
 
     if (activeTables.length === 0 && openTabs.length === 0) {
         return (
@@ -52,7 +52,7 @@ const TableStatusBar: React.FC<TableStatusBarProps> = ({ orders, tables, custome
                     <h4 className="text-xs font-bold uppercase text-muted-foreground mb-1 px-1">Active Tables</h4>
                     <div className="flex space-x-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
                         {activeTables.map(table => {
-                            const order = orders.find(o => o.tableId === table.id && (o.status === 'kitchen' || o.status === 'served'));
+                            const order = (orders || []).find(o => o.tableId === table.id && (o.status === 'kitchen' || o.status === 'served'));
                             const customerType = table.customerName ? table.customerName.split(' ')[0] : 'Walk-in';
                             const status = order?.status || 'Ordering';
                             

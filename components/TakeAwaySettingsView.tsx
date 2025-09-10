@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext, useToastContext } from '../contexts/AppContext';
 import { AppSettings, TakeAwaySettings } from '../types';
@@ -80,7 +81,6 @@ const TakeAwaySettingsView: React.FC = () => {
             <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2 rtl:flex-row-reverse">
                 <ShoppingBagIcon className="w-6 h-6" /> {t('takeAwaySettings')}
             </h3>
-            {/* FIX: Corrected translation key from 'takeAwayDescription' to 'takeAwaySettingsDescription' */}
             <p className="text-sm text-muted-foreground mb-6 rtl:text-end">{t('takeAwaySettingsDescription')}</p>
             
             <div className="space-y-6 max-w-2xl overflow-y-auto pr-4">
@@ -88,7 +88,6 @@ const TakeAwaySettingsView: React.FC = () => {
                     <ToggleRow label={t('enableTakeAway')} enabled={localSettings.enabled} onToggle={handleEnabledToggle} />
                     <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-1">{t('customName')}</label>
-                        {/* FIX: Corrected translation key from 'takeAway' to 'take_away' */}
                         <input name="customName" value={localSettings.customName} onChange={handleChange} className="w-full bg-input p-2 rounded-md border border-border" placeholder={t('take_away')} />
                         <p className="text-xs text-muted-foreground mt-1">{t('customNameUsage')}</p>
                     </div>

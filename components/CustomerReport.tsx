@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo } from 'react';
 import { Order, Customer, Location } from '../types';
 
@@ -125,7 +126,7 @@ const CustomerReport: React.FC<CustomerReportProps> = ({ orders, customers, loca
                         {sortedData.map(customer => (
                             <tr key={customer.id} className="hover:bg-muted/50 transition-colors">
                                 <td className="px-4 py-3 whitespace-nowrap text-foreground font-medium">{customer.name}</td>
-                                {isAllLocationsView && <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{locations.find(l => l.id === customer.locationId)?.name}</td>}
+                                {isAllLocationsView && <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{(locations || []).find(l => l.id === customer.locationId)?.name}</td>}
                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{customer.orderCount}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-green-500 dark:text-green-400 font-semibold">${customer.totalSpent.toFixed(2)}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">${customer.avgSpend.toFixed(2)}</td>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Customer, CartItem, MenuItem, Subscription } from '../types';
 
@@ -20,7 +19,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, onClose, 
     const handleAddItem = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const itemId = parseInt(e.target.value, 10);
         if (!itemId) return;
-        const menuItem = menuItems.find(mi => mi.id === itemId);
+        const menuItem = (menuItems || []).find(mi => mi.id === itemId);
         if (menuItem && !cart.some(ci => ci.menuItem.id === itemId)) {
             const newCartItem: CartItem = {
                 cartId: `sub-${Date.now()}`,
