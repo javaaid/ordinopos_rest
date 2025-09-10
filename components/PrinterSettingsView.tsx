@@ -174,7 +174,7 @@ const KitchenReceiptPreview: React.FC<{ settings: KitchenPrintSettings, paperWid
                         </div>
                         {settings.showKitchenNote && item.selectedModifiers.length > 0 && (
                             <p className="pl-4 text-xs whitespace-pre-wrap">
-                                {item.selectedModifiers.map(m => `+ ${m.name}`).join('\n')}
+                                {item.selectedModifiers.map(m => `* ${m.name}`).join('\n')}
                             </p>
                         )}
                     </div>

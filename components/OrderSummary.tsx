@@ -215,7 +215,7 @@ export default function OrderSummary() {
                       <option value="" disabled>{t('select_table')}</option>
                       {(Object.entries(availableTablesByFloor) as [string, Table[]][]).map(([floor, tablesInFloor]) => (
                           <optgroup key={floor} label={floor}>
-                              {tablesInFloor.map(table => (
+                              {(tablesInFloor as Table[]).map(table => (
                                   <option key={table.id} value={table.id}>{table.name} (seats {table.capacity})</option>
                               ))}
                           </optgroup>

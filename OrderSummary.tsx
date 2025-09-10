@@ -1,25 +1,25 @@
 
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { CartItem, Customer, OrderType, Employee, AppliedDiscount, Language, Table, Location, Order, AppSettings, AIResponse, AISettings, Promotion, ManualDiscount, Surcharge } from '../types';
-import OrderItem from './OrderItem';
-import UserCircleIcon from './icons/UserCircleIcon';
-import { calculateOrderTotals } from '../utils/calculations';
-import SparklesIcon from './icons/SparklesIcon';
-import AISuggestions from './AISuggestions';
-import { useAppContext } from '../contexts/AppContext';
-import { Button } from './ui/Button';
-import TrashIcon from './icons/TrashIcon';
-import PauseIcon from './icons/PauseIcon';
-import PlusCircleIcon from './icons/PlusCircleIcon';
-import ChefHatIcon from './icons/ChefHatIcon';
-import CreditCardIcon from './icons/CreditCardIcon';
-import CurrencyDollarIcon from './icons/CurrencyDollarIcon';
-import ClipboardDocumentListIcon from './icons/ClipboardDocumentListIcon';
-import UserIcon from './icons/UserIcon';
-import { useTranslations } from '../hooks/useTranslations';
-import ShoppingBagIcon from './icons/ShoppingBagIcon';
-import StarIcon from './icons/StarIcon';
+import { CartItem, Customer, OrderType, Employee, AppliedDiscount, Language, Table, Location, Order, AppSettings, AIResponse, AISettings, Promotion, ManualDiscount, Surcharge } from './types';
+import OrderItem from './components/OrderItem';
+import UserCircleIcon from './components/icons/UserCircleIcon';
+import { calculateOrderTotals } from './utils/calculations';
+import SparklesIcon from './components/icons/SparklesIcon';
+import AISuggestions from './components/AISuggestions';
+import { useAppContext } from './contexts/AppContext';
+import { Button } from './components/ui/Button';
+import TrashIcon from './components/icons/TrashIcon';
+import PauseIcon from './components/icons/PauseIcon';
+import PlusCircleIcon from './components/icons/PlusCircleIcon';
+import ChefHatIcon from './components/icons/ChefHatIcon';
+import CreditCardIcon from './components/icons/CreditCardIcon';
+import CurrencyDollarIcon from './components/icons/CurrencyDollarIcon';
+import ClipboardDocumentListIcon from './components/icons/ClipboardDocumentListIcon';
+import UserIcon from './components/icons/UserIcon';
+import { useTranslations } from './hooks/useTranslations';
+import ShoppingBagIcon from './components/icons/ShoppingBagIcon';
+import StarIcon from './components/icons/StarIcon';
 
 export default function OrderSummary() {
   const { 

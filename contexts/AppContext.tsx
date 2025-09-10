@@ -141,6 +141,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     const [signagePlaylists, setSignagePlaylists] = usePersistentState<SignagePlaylist[]>('signagePlaylists', SIGNAGE_PLAYLISTS);
     const [signageSchedule, setSignageSchedule] = usePersistentState<SignageScheduleEntry[]>('signageSchedule', SIGNAGE_SCHEDULE);
     const [paymentTypes, setPaymentTypes] = usePersistentState<PaymentType[]>('paymentTypes', PAYMENT_TYPES);
+    const [promotions, setPromotions] = usePersistentState<Promotion[]>('promotions', PROMOTIONS);
     const [modifierGroups, setModifierGroups] = usePersistentState<ModifierGroup[]>('modifierGroups', MODIFIER_GROUPS);
     const [kitchenDisplays, setKitchenDisplays] = usePersistentState<KitchenDisplay[]>('kitchenDisplays', KITCHEN_DISPLAYS);
     const [kitchenNotes, setKitchenNotes] = usePersistentState<KitchenNote[]>('kitchenNotes', KITCHEN_NOTES);
@@ -817,6 +818,51 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         return newOrder;
     };
 
+    const availablePromotions = useMemo(() => {
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        
+        return (promotions || []).filter(p => 
+            p.isActive &&
+            p.daysOfWeek.includes(dayOfWeek) &&
+            p.startTime <= currentTime &&
+            p.endTime >= currentTime
+        );
+    }, [promotions]);
+
+    const onSelectCustomer = useCallback((customer: Customer | null) => {
+        setSelectedCustomer(customer);
+        if (customer) {
+            const openTab = (orders || []).find((o: Order) => o.customer?.id === customer.id && o.status === 'partially-paid');
+            setActiveTab(openTab || null);
+        } else {
+            setActiveTab(null);
+        }
+    }, [orders, setSelectedCustomer, setActiveTab]);
+    
+    const handleApplyDiscountToItem = useCallback((cartId: string, discount: ManualDiscount | null) => {
+        setCart(prevCart => prevCart.map(item => {
+            if (item.cartId === cartId) {
+                return {
+                    ...item,
+                    appliedManualDiscount: discount,
+                };
+            }
+            return item;
+        }));
+        if (discount) {
+            addToast({ type: 'success', title: 'Discount Applied', message: `"${discount.name}" applied to item.` });
+        } else {
+            addToast({ type: 'info', title: 'Discount Removed', message: `Discount removed from item.` });
+        }
+    }, [addToast]);
+
+    const handleSettleTab = useCallback(() => {
+        if (!activeTab) return;
+        setActiveOrderToSettle(activeTab);
+    }, [activeTab]);
+
     // Broadcast Channel Logic for other windows (QR ordering, KDS/CFD/etc if they remain open)
     useEffect(() => {
         const broadcastState = () => {
@@ -982,6 +1028,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         cart, setCart,
         orderType, setOrderType,
         selectedCustomer, setSelectedCustomer,
+        onSelectCustomer,
         orders, setOrders,
         currentTable, setCurrentTable,
         searchQuery, onSearchChange: setSearchQuery,
@@ -995,6 +1042,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         activeOrderToSettle, setActiveOrderToSettle,
         selectedStaff, setSelectedStaff,
         activeTab, setActiveTab,
+        handleSettleTab,
         appliedLoyaltyPoints, setAppliedLoyaltyPoints,
         isSidebarHidden, onToggleSidebar,
         isSidebarCollapsed, onToggleSidebarCollapse: () => setIsSidebarCollapsed(p => !p),
@@ -1049,6 +1097,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         signagePlaylists,
         signageSchedule,
         paymentTypes,
+        promotions,
+        availablePromotions,
         modifierGroups,
         kitchenDisplays,
         kitchenNotes,
@@ -1065,6 +1115,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         notifications,
         isFullscreen, onToggleFullScreen, onLaunchView,
         // Core POS Handlers
+        onRemoveItem: (cartId: string) => setCart(prev => prev.filter(item => item.cartId !== cartId)),
+        onUpdateCartQuantity: (cartId: string, quantity: number) => setCart(prev => prev.map(item => item.cartId === cartId ? {...item, quantity} : item).filter(item => item.quantity > 0)),
         onNewSaleClick,
         handleSendToKitchen,
         handleInitiatePayment,
@@ -1079,10 +1131,14 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         onCompleteKdsOrder,
         onTogglePreparedItem,
         handleKioskOrderPlaced,
+        handleApplyManualDiscount: (d: ManualDiscount) => { setAppliedDiscount({ name: d.name, amount: d.percentage * 100 }); setAppliedPromotion(null); closeModal(); },
+        handleApplyPromotion: (p: Promotion) => { setAppliedPromotion(p); setAppliedDiscount(null); closeModal(); },
+        handleRemoveDiscount: () => { setAppliedDiscount(null); setAppliedPromotion(null); },
         lastCompletedOrder,
+        handleApplyDiscountToItem,
     }), [
         activeView, managementSubView, settingsSubView, currentEmployee, currentLocationId, locations, theme, settings, toasts, modal, cart, orderType, selectedCustomer, orders, currentTable, searchQuery, activeCategory, isSuggestingUpsell, aiUpsellSuggestions, heldOrders, onNewSaleClick, activeOrderToSettle, selectedStaff, activeTab, appliedLoyaltyPoints, isSidebarHidden, isSidebarCollapsed, plugins, isWaitlistPluginActive, isReservationPluginActive, isMultiStorePluginActive, isKsaPluginActive, isOrderNumberDisplayPluginActive, isQRCodePluginActive, onToggleClockStatus, waitlist, onUpdateWaitlistStatus, handlePinLogin, handleLogout, printQueue, notifications, isFullscreen, onToggleFullScreen, onLaunchView, updatePrintJobStatus, addPrintJobs, openModal, closeModal, addToast,
-        categories, categoriesWithCounts, menuItems, customers, drivers, employees, suppliers, wastageLog, roles, auditLog, printers, tables, subscriptions, purchaseOrders, schedule, reservations, ingredients, recipes, signageDisplays, signageContent, signagePlaylists, signageSchedule, paymentTypes, modifierGroups, kitchenDisplays, kitchenNotes, voidReasons, manualDiscounts, surcharges, customerDisplays, scales, callLog, handleSendToKitchen, handleInitiatePayment, handleSaveTab, handleVoidOrder, handleFinalizePayment, handleSettleBill, handleInitiateSettlePayment, handleSavePrinter, handleDeletePrinter, handleHoldOrder, handleReopenOrder, handleDeleteHeldOrder, onToggleTheme, handleGetUpsellSuggestions, onSelectItem, onSelectUpsellSuggestion, lastCompletedOrder
+        categories, categoriesWithCounts, menuItems, customers, drivers, employees, suppliers, wastageLog, roles, auditLog, printers, tables, subscriptions, purchaseOrders, schedule, reservations, ingredients, recipes, signageDisplays, signageContent, signagePlaylists, signageSchedule, paymentTypes, modifierGroups, kitchenDisplays, kitchenNotes, voidReasons, manualDiscounts, surcharges, customerDisplays, scales, callLog, handleSendToKitchen, handleInitiatePayment, handleSaveTab, handleVoidOrder, handleFinalizePayment, handleSettleBill, handleInitiateSettlePayment, handleSavePrinter, handleDeletePrinter, handleHoldOrder, handleReopenOrder, handleDeleteHeldOrder, onToggleTheme, handleGetUpsellSuggestions, onSelectItem, onSelectUpsellSuggestion, lastCompletedOrder, promotions, onSelectCustomer, handleSettleTab, handleApplyDiscountToItem, availablePromotions
     ]);
 
     return (

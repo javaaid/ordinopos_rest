@@ -6,8 +6,8 @@ import DocumentArrowDownIcon from './icons/DocumentArrowDownIcon';
 import ReceiptRefundIcon from './icons/ReceiptRefundIcon';
 import PrinterIcon from './icons/PrinterIcon';
 import MapPinIcon from './icons/MapPinIcon';
-import { useAppContext } from './contexts/AppContext';
-import { useTranslations } from './hooks/useTranslations';
+import { useAppContext } from '../contexts/AppContext';
+import { useTranslations } from '../hooks/useTranslations';
 import ChevronDownIcon from './icons/ChevronDownIcon';
 
 const statusStyles: Record<OrderStatus, { text: string, bg: string, text_color: string }> = {
