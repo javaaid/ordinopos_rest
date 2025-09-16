@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { AppSettings, AdvancedPOSSettings, TranslationKey } from '../types';
@@ -6,7 +7,8 @@ import { Card, CardContent } from './ui/Card';
 import { Button } from './ui/Button';
 import { useTranslations } from '../hooks/useTranslations';
 
-const AdvancedPOSSettingsView: React.FC = () => {
+// FIX: Changed to a named export to resolve module resolution errors.
+export const AdvancedPOSSettingsView: React.FC = () => {
     const { settings, setSettings, addToast } = useAppContext();
     const t = useTranslations(settings.language.staff);
 
@@ -57,7 +59,7 @@ const AdvancedPOSSettingsView: React.FC = () => {
                         onToggle();
                     }
                 }}
-                className="relative inline-flex items-center h-6 rounded-full w-11 transition-colors flex-shrink-0 ms-4"
+                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors flex-shrink-0 ms-4 ${enabled ? 'bg-primary' : 'bg-muted'}`}
             >
                 <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`}/>
             </button>
@@ -142,10 +144,10 @@ const AdvancedPOSSettingsView: React.FC = () => {
                         <ToggleRow labelKey="advpos_enableInventory_label" descKey="advpos_enableInventory_desc" enabled={localSettings.inventoryManagement} onToggle={() => handleToggle('inventoryManagement')} />
                         <ToggleRow labelKey="advpos_allowNegativeStock_label" descKey="advpos_allowNegativeStock_desc" enabled={localSettings.allowMinusQuantity} onToggle={() => handleToggle('allowMinusQuantity')} />
                         <ToggleRow labelKey="advpos_useInventoryPrint_label" descKey="advpos_useInventoryPrint_desc" enabled={localSettings.useInventoryPrint} onToggle={() => handleToggle('useInventoryPrint')} />
-                        <div className="py-3 text-start rtl:text-end">
+                        <div className="py-3">
                             <ToggleRow labelKey="advpos_sendLowStockEmails_label" descKey="advpos_sendLowStockEmails_desc" enabled={localSettings.sendLowStockEmails} onToggle={() => handleToggle('sendLowStockEmails')} />
                             {localSettings.sendLowStockEmails && (
-                                <div className="mt-2 ps-4">
+                                <div className="mt-2 ps-4 text-start rtl:text-end">
                                     <label className="block text-xs font-medium text-muted-foreground mb-1">{t('advpos_lowStockRecipients_label')}</label>
                                     <input 
                                         type="text" 
@@ -169,6 +171,12 @@ const AdvancedPOSSettingsView: React.FC = () => {
                         <ToggleRow labelKey="advpos_autoClockOut_label" descKey="advpos_autoClockOut_desc" enabled={localSettings.autoClockOut} onToggle={() => handleToggle('autoClockOut')} />
                         <ToggleRow labelKey="advpos_forcePinEntry_label" descKey="advpos_forcePinEntry_desc" enabled={localSettings.loginDoNotRememberPassword} onToggle={() => handleToggle('loginDoNotRememberPassword')} />
                     </SettingsGroup>
+
+                    {/* FIX: Add missing onToggle props to ToggleRow components. */}
+                    <SettingsGroup titleKey="delivery">
+                        <ToggleRow labelKey="advpos_enableDeliveryMaps_label" descKey="advpos_enableDeliveryMaps_desc" enabled={localSettings.enableDeliveryMaps} onToggle={() => handleToggle('enableDeliveryMaps')} />
+                        <ToggleRow labelKey="advpos_enableLiveDriverTracking_label" descKey="advpos_enableLiveDriverTracking_desc" enabled={localSettings.enableLiveDriverTracking} onToggle={() => handleToggle('enableLiveDriverTracking')} />
+                    </SettingsGroup>
                 </div>
             </main>
             
@@ -178,4 +186,3 @@ const AdvancedPOSSettingsView: React.FC = () => {
         </div>
     );
 };
-export default AdvancedPOSSettingsView;

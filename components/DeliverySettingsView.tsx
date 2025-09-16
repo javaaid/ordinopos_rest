@@ -52,14 +52,32 @@ const DeliverySettingsView: React.FC = () => {
         });
     };
 
-    const handleZoneChange = (index: number, field: 'name' | 'fee', value: string | number) => {
-        const newZones = [...(localSettings.zones || [])];
-        (newZones[index] as any)[field] = value;
-        setLocalSettings(prev => ({ ...prev, zones: newZones }));
+    const handleZoneChange = (index: number, field: 'name' | 'fee', value: string) => {
+        setLocalSettings(prev => {
+            const newZones = (prev.zones || []).map((zone, i) => {
+                if (i !== index) {
+                    return zone;
+                }
+    
+                if (field === 'name') {
+                    return { ...zone, name: value };
+                }
+    
+                if (field === 'fee') {
+                    // Ensure value is a number before setting. Handle empty string case.
+                    const newFee = parseFloat(value);
+                    return { ...zone, fee: isNaN(newFee) ? 0 : newFee };
+                }
+    
+                return zone;
+            });
+            return { ...prev, zones: newZones };
+        });
     };
 
     const addZone = () => {
-        const newZone: DeliveryZone = { id: `zone_${Date.now()}`, name: 'New Zone', fee: 0 };
+        // FIX: Added missing 'geojson' property to satisfy the DeliveryZone type.
+        const newZone: DeliveryZone = { id: `zone_${Date.now()}`, name: 'New Zone', fee: 0, geojson: null };
         setLocalSettings(prev => ({ ...prev, zones: [...(prev.zones || []), newZone] }));
     };
 
@@ -112,7 +130,7 @@ const DeliverySettingsView: React.FC = () => {
                                 {(localSettings.zones || []).map((zone, index) => (
                                     <div key={zone.id} className="grid grid-cols-12 gap-2 items-center">
                                         <input value={zone.name} onChange={(e) => handleZoneChange(index, 'name', e.target.value)} className="col-span-6 bg-input p-2 rounded-md border border-border" placeholder={t('zoneName')} />
-                                        <input type="number" value={zone.fee} onChange={(e) => handleZoneChange(index, 'fee', parseFloat(e.target.value))} className="col-span-4 bg-input p-2 rounded-md border border-border" placeholder={t('fee')} step="0.01" min="0" />
+                                        <input type="number" value={zone.fee} onChange={(e) => handleZoneChange(index, 'fee', e.target.value)} className="col-span-4 bg-input p-2 rounded-md border border-border" placeholder={t('fee')} step="0.01" min="0" />
                                         <div className="col-span-2 text-end rtl:text-start">
                                             <button onClick={() => removeZone(index)} className="p-2 text-destructive hover:opacity-80"><TrashIcon className="w-5 h-5"/></button>
                                         </div>

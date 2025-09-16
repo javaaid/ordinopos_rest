@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Order, Table } from '../types';
+import { Order, Table, Customer } from '../types';
 import { useDataContext, usePOSContext } from '../contexts/AppContext';
 
 interface ActiveTablesBarProps {

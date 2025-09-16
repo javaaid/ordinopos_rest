@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { LOCATIONS, CATEGORIES, MENU_ITEMS, CUSTOMERS, DRIVERS, EMPLOYEES, SUPPLIERS, WASTAGE_LOG, ROLES, AUDIT_LOG, PRINTERS, TABLES, SUBSCRIPTIONS, PURCHASE_ORDERS, PLUGINS, SCHEDULE, RESERVATIONS, INGREDIENTS, RECIPES, SIGNAGE_DISPLAYS, SIGNAGE_CONTENT, SIGNAGE_PLAYLISTS, SIGNAGE_SCHEDULE, ACTIVATION_CODES, PAYMENT_TYPES, PIZZA_OPTIONS, PROMOTIONS, MODIFIER_GROUPS, KITCHEN_DISPLAYS, KITCHEN_NOTES, VOID_REASONS, MANUAL_DISCOUNTS, SURCHARGES, CUSTOMER_DISPLAYS, SCALES, CALL_LOG, DEFAULT_KITCHEN_PRINT_SETTINGS, DEFAULT_RECEIPT_SETTINGS, KITCHEN_PROFILE_NAMES } from '../constants';
@@ -85,7 +86,7 @@ const usePersistentState = <T,>(key: string, defaultValue: T): [T, React.Dispatc
 
 const channel = new BroadcastChannel('ordino_pos_sync');
 
-export const AppProvider = ({ children }: { children: React.ReactNode }) => {
+export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [activeView, setActiveView] = usePersistentState<View>('activeView', 'landing');
     const [managementSubView, setManagementSubView] = usePersistentState<ManagementSubView>('managementSubView', 'menu_products');
     const [settingsSubView, setSettingsSubView] = usePersistentState<SettingsSubView>('settingsSubView', 'integrations');
@@ -107,13 +108,15 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         ai: { enableAIFeatures: true, enableUpsell: true, enableCFDSuggestions: true, enableReportAnalysis: true },
         cfd: { attractScreenPlaylistId: null, featuredItemIds: [] },
         notificationSettings: { duration: 5, position: 'top-right', theme: 'dark' },
+        // FIX: Added missing showGuestCountPrompt property to the dineIn settings object.
         dineIn: { enabled: true, defaultGuests: 2, maxGuests: 20, enableStaffSelection: false, showGuestCountPrompt: true, surcharge: { enabled: false, name: 'Service Charge', type: 'percentage', value: 10 }, minCharge: { enabled: false, amount: 0 } },
         delivery: { enabled: true, surcharge: { enabled: false, surchargeId: null }, zones: [] },
         takeAway: { enabled: true, customName: 'Take Away', requireCustomerName: false, useHoldReason: false, surcharge: { enabled: false, name: 'Packaging Fee', type: 'fixed', value: 0.50 } },
         tab: { enabled: true, customName: 'Tab' },
         qrOrdering: { enabled: true, baseUrl: '' },
         devices: { receiptPrinterId: 'p1', kitchenPrinterId: 'kp1', kioskPrinterId: null, barPrinterId: 'bp1', reportPrinterId: 'p4', customerDisplayId: 'cd1', kitchenDisplayId: 'kds_1', scaleId: 'sc1', printServerUrl: 'http://localhost:5000' },
-        advancedPOS: { enableItemNumber: false, separateSameItems: false, combineKitchenItems: true, kitchenPrintFooter: false, kitchenPrintReservedOrder: false, sortItemInKitchen: false, sortModifier: false, sortOrderInKDS: false, printVoidOrderItem: true, printOrderAfterSending: false, quickPay: true, useVoidReason: true, confirmPayment: true, printReceiptAfterPayment: true, combineReceiptItem: true, sortItemInReceipt: false, showItemDiscount: true, showVoidOrderItem: false, emailReceipt: true, showTaxOnReceipt: true, inventoryManagement: true, allowMinusQuantity: false, useInventoryPrint: false, useEndOfDayReport: true, useStaffSalary: false, useCashInOutPrint: true, useWorkTimePrint: true, autoClockOut: false, loginDoNotRememberPassword: false, dateFormat: 'MM/DD/YYYY', lockTillToLocation: false, enableTimeClock: true, defaultPrepTimeMinutes: 15, sendLowStockEmails: true, lowStockEmailRecipients: 'manager@example.com' },
+        // FIX: Added missing properties to the advancedPOS settings object.
+        advancedPOS: { enableItemNumber: false, separateSameItems: false, combineKitchenItems: true, kitchenPrintFooter: false, kitchenPrintReservedOrder: false, sortItemInKitchen: false, sortModifier: false, sortOrderInKDS: false, printVoidOrderItem: true, printOrderAfterSending: false, quickPay: true, useVoidReason: true, confirmPayment: true, printReceiptAfterPayment: true, combineReceiptItem: true, sortItemInReceipt: false, showItemDiscount: true, showVoidOrderItem: false, emailReceipt: true, showTaxOnReceipt: true, inventoryManagement: true, allowMinusQuantity: false, useInventoryPrint: false, useEndOfDayReport: true, useStaffSalary: false, useCashInOutPrint: true, useWorkTimePrint: true, autoClockOut: false, loginDoNotRememberPassword: false, dateFormat: 'MM/DD/YYYY', lockTillToLocation: false, enableTimeClock: true, defaultPrepTimeMinutes: 15, sendLowStockEmails: true, lowStockEmailRecipients: 'manager@example.com', enableDeliveryMaps: true, enableLiveDriverTracking: true },
         preferences: { actionAfterSendOrder: 'order', actionAfterPayment: 'order', defaultPaymentMethod: 'Cash', enableOrderNotes: true, enableKitchenPrint: true, defaultOrderType: 'dine-in', enableOrderHold: true, resetOrderNumberDaily: true, dashboardWidgetOrder: ['stats', 'chart', 'quickActions', 'topItems', 'lowStock', 'recentTransactions'] },
         loyalty: { enabled: true, pointsPerDollar: 10, redemptionRate: 100 },
         fontSettings: { baseSize: 16, menuItemName: 14, menuItemPrice: 14, orderSummaryItem: 14, orderSummaryTotal: 24, categoryTabs: 14 },
@@ -565,8 +568,85 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
     
-    const handleSettleBill = () => {};
-    const handleInitiateSettlePayment = () => {};
+    const handleSettleBill = useCallback(() => {
+        if (!currentTable) return;
+    
+        const pendingOrdersForTable = (orders || []).filter(
+            (o: Order) => o.tableId === currentTable.id && ['kitchen', 'served', 'partially-paid'].includes(o.status)
+        );
+        
+        const allCartItems = [...pendingOrdersForTable.flatMap(o => o.cart), ...cart];
+        
+        if (allCartItems.length === 0) {
+            addToast({ type: 'error', title: 'Empty Bill', message: 'There are no items to settle for this table.' });
+            return;
+        }
+    
+        const currentLocation = locations.find(l => l.id === currentLocationId)!;
+        const { subtotal, tax, total, taxDetails, finalAppliedDiscount, loyaltyDiscountAmount } = calculateOrderTotals(
+            allCartItems, currentLocation, appliedDiscount, appliedPromotion, 'dine-in', settings, selectedCustomer, surcharges, appliedLoyaltyPoints
+        );
+        
+        const settlementOrder: Order = {
+            id: `settle_${currentTable.id}_${Date.now()}`,
+            orderNumber: pendingOrdersForTable[0]?.orderNumber || String(settings.orderSettings.nextDailyOrderNumber).padStart(4, '0'),
+            invoiceNumber: pendingOrdersForTable[0]?.invoiceNumber || `${settings.orderSettings.invoicePrefix}${settings.orderSettings.nextInvoiceNumber}`,
+            createdAt: pendingOrdersForTable[0]?.createdAt || Date.now(),
+            cart: allCartItems,
+            customer: selectedCustomer || pendingOrdersForTable[0]?.customer,
+            employeeId: currentEmployee?.id,
+            subtotal, tax, total, taxDetails,
+            balanceDue: total,
+            orderType: 'dine-in',
+            status: 'pending',
+            source: 'in-store',
+            payments: [],
+            tableId: currentTable.id,
+            locationId: currentLocationId,
+            isTraining: false,
+            appliedDiscount: finalAppliedDiscount,
+            appliedPromotion: appliedPromotion || undefined,
+            appliedLoyaltyPoints: loyaltyDiscountAmount > 0 ? appliedLoyaltyPoints : undefined,
+            guestCount: currentTable.guestCount,
+            notes: '',
+            originalOrderIds: pendingOrdersForTable.map(o => o.id)
+        };
+    
+        setActiveOrderToSettle(settlementOrder);
+    
+    }, [currentTable, orders, cart, addToast, locations, currentLocationId, appliedDiscount, appliedPromotion, settings, selectedCustomer, surcharges, appliedLoyaltyPoints, currentEmployee, setActiveOrderToSettle]);
+
+    const handleInitiateSettlePayment = useCallback(() => {
+        if (!activeOrderToSettle) return;
+    
+        const currentLocation = locations.find(l => l.id === currentLocationId)!;
+        const cardPlugin = plugins.find(p => p.id === 'payment-terminal');
+        
+        if (!activeOrderToSettle.invoiceNumber) {
+            activeOrderToSettle.invoiceNumber = `${settings.orderSettings.invoicePrefix}${settings.orderSettings.nextInvoiceNumber}`;
+            setSettings(prev => ({
+                ...prev,
+                orderSettings: {
+                    ...prev.orderSettings,
+                    nextInvoiceNumber: prev.orderSettings.nextInvoiceNumber + 1
+                }
+            }));
+        }
+    
+        openModal('payment', {
+            orderToPay: [activeOrderToSettle],
+            onFinalize: (payments: Payment[]) => handleFinalizePayment(payments, activeOrderToSettle),
+            onDirectPrintReceipt,
+            onPrintA4: (order: Order) => addPrintJobs([{ component: 'A4Invoice', props: { order, location: currentLocation, settings, employees } }]),
+            cardPlugin,
+            allPaymentTypes: paymentTypes,
+            currency: currentLocation.currency,
+            settings,
+            setSettings,
+            addToast,
+        });
+    }, [activeOrderToSettle, locations, currentLocationId, plugins, settings, openModal, handleFinalizePayment, onDirectPrintReceipt, addPrintJobs, employees, paymentTypes, addToast, setSettings]);
+
 
     const handleInitiatePayment = () => {
         if (cart.length === 0) {
@@ -757,6 +837,41 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         setHeldOrders(prev => prev.filter(o => o.id !== id));
     }, [setHeldOrders]);
     
+// FIX: Implement handleSaveCategory to fix missing property error.
+const handleSaveCategory = useCallback((category: Category, isNew: boolean) => {
+    setCategories(prev => {
+        if (isNew) {
+            const newCategoryWithId = { ...category, id: category.id || category.name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w-]+/g, '') };
+            addToast({ type: 'success', title: 'Category Added', message: `Category "${newCategoryWithId.name}" has been created.` });
+            setJustAddedCategoryId(newCategoryWithId.id); // For product modal to auto-select
+            return [...prev, newCategoryWithId];
+        } else {
+            addToast({ type: 'success', title: 'Category Updated', message: `Category "${category.name}" has been updated.` });
+            return prev.map(c => c.id === category.id ? category : c);
+        }
+    });
+    closeModal();
+}, [setCategories, addToast, closeModal]);
+
+// FIX: Implement handleDeleteCategory to fix missing property error.
+const handleDeleteCategory = useCallback((categoryId: string) => {
+    const itemsInCategory = menuItems.filter((item: MenuItem) => item.category === categoryId).length;
+    if (itemsInCategory > 0) {
+        addToast({ type: 'error', title: 'Deletion Failed', message: `Cannot delete category as it contains ${itemsInCategory} product(s).` });
+        return;
+    }
+    openModal('confirm', {
+        title: 'Delete Category',
+        message: 'Are you sure you want to delete this category? This action cannot be undone.',
+        confirmText: 'Delete',
+        onConfirm: () => {
+            setCategories(prev => prev.filter((c: Category) => c.id !== categoryId));
+            addToast({ type: 'info', title: 'Category Deleted', message: 'The category has been removed.' });
+            closeModal();
+        }
+    });
+}, [setCategories, menuItems, addToast, openModal, closeModal]);
+
     // KDS & Kiosk Actions (previously via BroadcastChannel)
     const onCompleteKdsOrder = (orderId: string) => {
         setOrders(prev => prev.map(o => {
@@ -818,19 +933,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         return newOrder;
     };
 
-    const availablePromotions = useMemo(() => {
-        const now = new Date();
-        const dayOfWeek = now.getDay();
-        const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        
-        return (promotions || []).filter(p => 
-            p.isActive &&
-            p.daysOfWeek.includes(dayOfWeek) &&
-            p.startTime <= currentTime &&
-            p.endTime >= currentTime
-        );
-    }, [promotions]);
-
     const onSelectCustomer = useCallback((customer: Customer | null) => {
         setSelectedCustomer(customer);
         if (customer) {
@@ -841,28 +943,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, [orders, setSelectedCustomer, setActiveTab]);
     
-    const handleApplyDiscountToItem = useCallback((cartId: string, discount: ManualDiscount | null) => {
-        setCart(prevCart => prevCart.map(item => {
-            if (item.cartId === cartId) {
-                return {
-                    ...item,
-                    appliedManualDiscount: discount,
-                };
-            }
-            return item;
-        }));
-        if (discount) {
-            addToast({ type: 'success', title: 'Discount Applied', message: `"${discount.name}" applied to item.` });
-        } else {
-            addToast({ type: 'info', title: 'Discount Removed', message: `Discount removed from item.` });
-        }
-    }, [addToast]);
-
-    const handleSettleTab = useCallback(() => {
-        if (!activeTab) return;
-        setActiveOrderToSettle(activeTab);
-    }, [activeTab]);
-
     // Broadcast Channel Logic for other windows (QR ordering, KDS/CFD/etc if they remain open)
     useEffect(() => {
         const broadcastState = () => {
@@ -1011,6 +1091,40 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         setAiUpsellSuggestions(null); // Hide suggestions after one is selected
     }, [menuItems, onSelectItem, addToast]);
 
+    const availablePromotions = useMemo(() => {
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        
+        return (PROMOTIONS || []).filter(p => 
+            p.isActive &&
+            p.daysOfWeek.includes(dayOfWeek) &&
+            p.startTime <= currentTime &&
+            p.endTime >= currentTime
+        );
+    }, []);
+
+    const handleApplyDiscountToItem = useCallback((cartId: string, discount: ManualDiscount | null) => {
+        setCart(prevCart => prevCart.map(item => {
+            if (item.cartId === cartId) {
+                return {
+                    ...item,
+                    appliedManualDiscount: discount,
+                };
+            }
+            return item;
+        }));
+        if (discount) {
+            addToast({ type: 'success', title: 'Discount Applied', message: `"${discount.name}" applied to item.` });
+        } else {
+            addToast({ type: 'info', title: 'Discount Removed', message: `Discount removed from item.` });
+        }
+    }, [addToast]);
+
+    const handleSettleTab = useCallback(() => {
+        if (!activeTab) return;
+        setActiveOrderToSettle(activeTab);
+    }, [activeTab]);
 
     const contextValue = useMemo(() => ({
         activeView, setView: setActiveView,
@@ -1039,6 +1153,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         handleHoldOrder,
         handleReopenOrder,
         handleDeleteHeldOrder,
+        handleSaveCategory,
+        handleDeleteCategory,
         activeOrderToSettle, setActiveOrderToSettle,
         selectedStaff, setSelectedStaff,
         activeTab, setActiveTab,
@@ -1136,9 +1252,11 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         handleRemoveDiscount: () => { setAppliedDiscount(null); setAppliedPromotion(null); },
         lastCompletedOrder,
         handleApplyDiscountToItem,
+        calledOrderNumber,
     }), [
         activeView, managementSubView, settingsSubView, currentEmployee, currentLocationId, locations, theme, settings, toasts, modal, cart, orderType, selectedCustomer, orders, currentTable, searchQuery, activeCategory, isSuggestingUpsell, aiUpsellSuggestions, heldOrders, onNewSaleClick, activeOrderToSettle, selectedStaff, activeTab, appliedLoyaltyPoints, isSidebarHidden, isSidebarCollapsed, plugins, isWaitlistPluginActive, isReservationPluginActive, isMultiStorePluginActive, isKsaPluginActive, isOrderNumberDisplayPluginActive, isQRCodePluginActive, onToggleClockStatus, waitlist, onUpdateWaitlistStatus, handlePinLogin, handleLogout, printQueue, notifications, isFullscreen, onToggleFullScreen, onLaunchView, updatePrintJobStatus, addPrintJobs, openModal, closeModal, addToast,
-        categories, categoriesWithCounts, menuItems, customers, drivers, employees, suppliers, wastageLog, roles, auditLog, printers, tables, subscriptions, purchaseOrders, schedule, reservations, ingredients, recipes, signageDisplays, signageContent, signagePlaylists, signageSchedule, paymentTypes, modifierGroups, kitchenDisplays, kitchenNotes, voidReasons, manualDiscounts, surcharges, customerDisplays, scales, callLog, handleSendToKitchen, handleInitiatePayment, handleSaveTab, handleVoidOrder, handleFinalizePayment, handleSettleBill, handleInitiateSettlePayment, handleSavePrinter, handleDeletePrinter, handleHoldOrder, handleReopenOrder, handleDeleteHeldOrder, onToggleTheme, handleGetUpsellSuggestions, onSelectItem, onSelectUpsellSuggestion, lastCompletedOrder, promotions, onSelectCustomer, handleSettleTab, handleApplyDiscountToItem, availablePromotions
+        categories, categoriesWithCounts, menuItems, customers, drivers, employees, suppliers, wastageLog, roles, auditLog, printers, tables, subscriptions, purchaseOrders, schedule, reservations, ingredients, recipes, signageDisplays, signageContent, signagePlaylists, signageSchedule, paymentTypes, modifierGroups, kitchenDisplays, kitchenNotes, voidReasons, manualDiscounts, surcharges, customerDisplays, scales, callLog, handleSendToKitchen, handleInitiatePayment, handleSaveTab, handleVoidOrder, handleFinalizePayment, handleSettleBill, handleInitiateSettlePayment, handleSavePrinter, handleDeletePrinter, handleHoldOrder, handleReopenOrder, handleDeleteHeldOrder, onToggleTheme, handleGetUpsellSuggestions, onSelectItem, onSelectUpsellSuggestion, lastCompletedOrder, promotions, onSelectCustomer, handleSettleTab, handleApplyDiscountToItem, availablePromotions,
+        calledOrderNumber, handleSaveCategory, handleDeleteCategory
     ]);
 
     return (

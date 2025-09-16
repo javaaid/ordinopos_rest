@@ -61,7 +61,8 @@ import CustomizationSettings from './components/CustomizationSettings';
 import FontSettingsView from './components/FontSettingsView';
 import NumberingSettingsView from './components/NumberingSettingsView';
 import PreferencesSettingsView from './components/PreferencesSettingsView';
-import AdvancedPOSSettingsView from './components/AdvancedPOSSettingsView';
+// FIX: Changed to a named import to resolve module resolution error.
+import { AdvancedPOSSettingsView } from './components/AdvancedPOSSettingsView';
 import DeviceSettingsView from './components/DeviceSettingsView';
 import PrintersView from './components/PrintersView';
 import ZatcaSettingsView from './components/ZatcaSettingsView';

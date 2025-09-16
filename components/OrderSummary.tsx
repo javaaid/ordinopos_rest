@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import OrderItem from './OrderItem';
 import UserCircleIcon from './icons/UserCircleIcon';
@@ -32,7 +33,7 @@ export default function OrderSummary() {
     orderType, setOrderType, handleApplyManualDiscount, handleRemoveDiscount, handleApplyPromotion,
     selectedStaff, setSelectedStaff,
     activeTab, handleSettleTab, handleSaveTab,
-    handleInitiatePayment, appliedLoyaltyPoints, setAppliedLoyaltyPoints,
+    handlePlaceOrder, appliedLoyaltyPoints, setAppliedLoyaltyPoints,
     openModal, handleApplyDiscountToItem
   } = useAppContext();
   
@@ -142,7 +143,7 @@ export default function OrderSummary() {
         case 'delivery':
             const needsCustomer = orderType === 'delivery' && !selectedCustomer;
             return (
-                <Button onClick={handleInitiatePayment} disabled={isCartEmpty || needsCustomer} title={needsCustomer ? t('delivery_needs_customer') : ''} className={`${buttonBaseClass}`}>
+                <Button onClick={handlePlaceOrder} disabled={isCartEmpty || needsCustomer} title={needsCustomer ? t('delivery_needs_customer') : ''} className={`${buttonBaseClass}`}>
                     <ShoppingBagIcon className="w-5 h-5" /> {t('place_order')}
                 </Button>
             );

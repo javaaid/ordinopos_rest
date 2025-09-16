@@ -117,7 +117,7 @@ const PrintJobProcessor: React.FC<{ isPaused: boolean }> = ({ isPaused }) => {
                         printerName: printer.name,
                         url: settings.devices.printServerUrl
                     });
-                    addToast({type: 'error', title: 'Print Server job failed', message: getErrorMessage(error)});
+                    addToast({type: 'error', title: 'Print Server job failed', message: message});
                     updatePrintJobStatus(currentlyPrintingJob.id, 'error');
                 } finally {
                     setCurrentlyPrintingJob(null);

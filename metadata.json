@@ -1,5 +1,5 @@
 {
-  "name": "ordino Pos - Modern POS System_front_back_office",
+  "name": "Ordino POS_",
   "description": "A modern, efficient Point of Sale (POS) system designed for restaurants, coffee shops, and pizza shops. It features intuitive order and menu management, kitchen and delivery systems, employee and role management, training mode, multi-location support, CRM, and reporting with accounting export to streamline operations.",
   "requestFramePermissions": [
     "camera"

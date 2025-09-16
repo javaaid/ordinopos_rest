@@ -85,7 +85,6 @@ const usePersistentState = <T,>(key: string, defaultValue: T): [T, React.Dispatc
 
 const channel = new BroadcastChannel('ordino_pos_sync');
 
-// FIX: The type 'React.FC' is redundant and can be removed.
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [activeView, setActiveView] = usePersistentState<View>('activeView', 'landing');
     const [managementSubView, setManagementSubView] = usePersistentState<ManagementSubView>('managementSubView', 'menu_products');
@@ -115,7 +114,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         tab: { enabled: true, customName: 'Tab' },
         qrOrdering: { enabled: true, baseUrl: '' },
         devices: { receiptPrinterId: 'p1', kitchenPrinterId: 'kp1', kioskPrinterId: null, barPrinterId: 'bp1', reportPrinterId: 'p4', customerDisplayId: 'cd1', kitchenDisplayId: 'kds_1', scaleId: 'sc1', printServerUrl: 'http://localhost:5000' },
-        advancedPOS: { enableItemNumber: false, separateSameItems: false, combineKitchenItems: true, kitchenPrintFooter: false, kitchenPrintReservedOrder: false, sortItemInKitchen: false, sortModifier: false, sortOrderInKDS: false, printVoidOrderItem: true, printOrderAfterSending: false, quickPay: true, useVoidReason: true, confirmPayment: true, printReceiptAfterPayment: true, combineReceiptItem: true, sortItemInReceipt: false, showItemDiscount: true, showVoidOrderItem: false, emailReceipt: true, showTaxOnReceipt: true, inventoryManagement: true, allowMinusQuantity: false, useInventoryPrint: false, useEndOfDayReport: true, useStaffSalary: false, useCashInOutPrint: true, useWorkTimePrint: true, autoClockOut: false, loginDoNotRememberPassword: false, dateFormat: 'MM/DD/YYYY', lockTillToLocation: false, enableTimeClock: true, defaultPrepTimeMinutes: 15, sendLowStockEmails: true, lowStockEmailRecipients: 'manager@example.com' },
+        // FIX: Added missing properties to the advancedPOS settings object.
+        advancedPOS: { enableItemNumber: false, separateSameItems: false, combineKitchenItems: true, kitchenPrintFooter: false, kitchenPrintReservedOrder: false, sortItemInKitchen: false, sortModifier: false, sortOrderInKDS: false, printVoidOrderItem: true, printOrderAfterSending: false, quickPay: true, useVoidReason: true, confirmPayment: true, printReceiptAfterPayment: true, combineReceiptItem: true, sortItemInReceipt: false, showItemDiscount: true, showVoidOrderItem: false, emailReceipt: true, showTaxOnReceipt: true, inventoryManagement: true, allowMinusQuantity: false, useInventoryPrint: false, useEndOfDayReport: true, useStaffSalary: false, useCashInOutPrint: true, useWorkTimePrint: true, autoClockOut: false, loginDoNotRememberPassword: false, dateFormat: 'MM/DD/YYYY', lockTillToLocation: false, enableTimeClock: true, defaultPrepTimeMinutes: 15, sendLowStockEmails: true, lowStockEmailRecipients: 'manager@example.com', enableDeliveryMaps: true, enableLiveDriverTracking: true },
         preferences: { actionAfterSendOrder: 'order', actionAfterPayment: 'order', defaultPaymentMethod: 'Cash', enableOrderNotes: true, enableKitchenPrint: true, defaultOrderType: 'dine-in', enableOrderHold: true, resetOrderNumberDaily: true, dashboardWidgetOrder: ['stats', 'chart', 'quickActions', 'topItems', 'lowStock', 'recentTransactions'] },
         loyalty: { enabled: true, pointsPerDollar: 10, redemptionRate: 100 },
         fontSettings: { baseSize: 16, menuItemName: 14, menuItemPrice: 14, orderSummaryItem: 14, orderSummaryTotal: 24, categoryTabs: 14 },
@@ -143,6 +143,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [signagePlaylists, setSignagePlaylists] = usePersistentState<SignagePlaylist[]>('signagePlaylists', SIGNAGE_PLAYLISTS);
     const [signageSchedule, setSignageSchedule] = usePersistentState<SignageScheduleEntry[]>('signageSchedule', SIGNAGE_SCHEDULE);
     const [paymentTypes, setPaymentTypes] = usePersistentState<PaymentType[]>('paymentTypes', PAYMENT_TYPES);
+    const [promotions, setPromotions] = usePersistentState<Promotion[]>('promotions', PROMOTIONS);
     const [modifierGroups, setModifierGroups] = usePersistentState<ModifierGroup[]>('modifierGroups', MODIFIER_GROUPS);
     const [kitchenDisplays, setKitchenDisplays] = usePersistentState<KitchenDisplay[]>('kitchenDisplays', KITCHEN_DISPLAYS);
     const [kitchenNotes, setKitchenNotes] = usePersistentState<KitchenNote[]>('kitchenNotes', KITCHEN_NOTES);
@@ -819,6 +820,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return newOrder;
     };
 
+    const onSelectCustomer = useCallback((customer: Customer | null) => {
+        setSelectedCustomer(customer);
+        if (customer) {
+            const openTab = (orders || []).find((o: Order) => o.customer?.id === customer.id && o.status === 'partially-paid');
+            setActiveTab(openTab || null);
+        } else {
+            setActiveTab(null);
+        }
+    }, [orders, setSelectedCustomer, setActiveTab]);
+    
     // Broadcast Channel Logic for other windows (QR ordering, KDS/CFD/etc if they remain open)
     useEffect(() => {
         const broadcastState = () => {
@@ -967,6 +978,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setAiUpsellSuggestions(null); // Hide suggestions after one is selected
     }, [menuItems, onSelectItem, addToast]);
 
+    const availablePromotions = useMemo(() => {
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        
+        return (PROMOTIONS || []).filter(p => 
+            p.isActive &&
+            p.daysOfWeek.includes(dayOfWeek) &&
+            p.startTime <= currentTime &&
+            p.endTime >= currentTime
+        );
+    }, []);
+
+    const handleApplyDiscountToItem = useCallback((cartId: string, discount: ManualDiscount | null) => {
+        setCart(prevCart => prevCart.map(item => {
+            if (item.cartId === cartId) {
+                return {
+                    ...item,
+                    appliedManualDiscount: discount,
+                };
+            }
+            return item;
+        }));
+        if (discount) {
+            addToast({ type: 'success', title: 'Discount Applied', message: `"${discount.name}" applied to item.` });
+        } else {
+            addToast({ type: 'info', title: 'Discount Removed', message: `Discount removed from item.` });
+        }
+    }, [addToast]);
+
+    const handleSettleTab = useCallback(() => {
+        if (!activeTab) return;
+        setActiveOrderToSettle(activeTab);
+    }, [activeTab]);
 
     const contextValue = useMemo(() => ({
         activeView, setView: setActiveView,
@@ -984,6 +1029,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         cart, setCart,
         orderType, setOrderType,
         selectedCustomer, setSelectedCustomer,
+        onSelectCustomer,
         orders, setOrders,
         currentTable, setCurrentTable,
         searchQuery, onSearchChange: setSearchQuery,
@@ -997,6 +1043,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activeOrderToSettle, setActiveOrderToSettle,
         selectedStaff, setSelectedStaff,
         activeTab, setActiveTab,
+        handleSettleTab,
         appliedLoyaltyPoints, setAppliedLoyaltyPoints,
         isSidebarHidden, onToggleSidebar,
         isSidebarCollapsed, onToggleSidebarCollapse: () => setIsSidebarCollapsed(p => !p),
@@ -1051,6 +1098,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         signagePlaylists,
         signageSchedule,
         paymentTypes,
+        promotions,
+        availablePromotions,
         modifierGroups,
         kitchenDisplays,
         kitchenNotes,
@@ -1067,6 +1116,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         notifications,
         isFullscreen, onToggleFullScreen, onLaunchView,
         // Core POS Handlers
+        onRemoveItem: (cartId: string) => setCart(prev => prev.filter(item => item.cartId !== cartId)),
+        onUpdateCartQuantity: (cartId: string, quantity: number) => setCart(prev => prev.map(item => item.cartId === cartId ? {...item, quantity} : item).filter(item => item.quantity > 0)),
         onNewSaleClick,
         handleSendToKitchen,
         handleInitiatePayment,
@@ -1081,10 +1132,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         onCompleteKdsOrder,
         onTogglePreparedItem,
         handleKioskOrderPlaced,
+        handleApplyManualDiscount: (d: ManualDiscount) => { setAppliedDiscount({ name: d.name, amount: d.percentage * 100 }); setAppliedPromotion(null); closeModal(); },
+        handleApplyPromotion: (p: Promotion) => { setAppliedPromotion(p); setAppliedDiscount(null); closeModal(); },
+        handleRemoveDiscount: () => { setAppliedDiscount(null); setAppliedPromotion(null); },
         lastCompletedOrder,
+        handleApplyDiscountToItem,
+        calledOrderNumber,
     }), [
         activeView, managementSubView, settingsSubView, currentEmployee, currentLocationId, locations, theme, settings, toasts, modal, cart, orderType, selectedCustomer, orders, currentTable, searchQuery, activeCategory, isSuggestingUpsell, aiUpsellSuggestions, heldOrders, onNewSaleClick, activeOrderToSettle, selectedStaff, activeTab, appliedLoyaltyPoints, isSidebarHidden, isSidebarCollapsed, plugins, isWaitlistPluginActive, isReservationPluginActive, isMultiStorePluginActive, isKsaPluginActive, isOrderNumberDisplayPluginActive, isQRCodePluginActive, onToggleClockStatus, waitlist, onUpdateWaitlistStatus, handlePinLogin, handleLogout, printQueue, notifications, isFullscreen, onToggleFullScreen, onLaunchView, updatePrintJobStatus, addPrintJobs, openModal, closeModal, addToast,
-        categories, categoriesWithCounts, menuItems, customers, drivers, employees, suppliers, wastageLog, roles, auditLog, printers, tables, subscriptions, purchaseOrders, schedule, reservations, ingredients, recipes, signageDisplays, signageContent, signagePlaylists, signageSchedule, paymentTypes, modifierGroups, kitchenDisplays, kitchenNotes, voidReasons, manualDiscounts, surcharges, customerDisplays, scales, callLog, handleSendToKitchen, handleInitiatePayment, handleSaveTab, handleVoidOrder, handleFinalizePayment, handleSettleBill, handleInitiateSettlePayment, handleSavePrinter, handleDeletePrinter, handleHoldOrder, handleReopenOrder, handleDeleteHeldOrder, onToggleTheme, handleGetUpsellSuggestions, onSelectItem, onSelectUpsellSuggestion, lastCompletedOrder
+        categories, categoriesWithCounts, menuItems, customers, drivers, employees, suppliers, wastageLog, roles, auditLog, printers, tables, subscriptions, purchaseOrders, schedule, reservations, ingredients, recipes, signageDisplays, signageContent, signagePlaylists, signageSchedule, paymentTypes, modifierGroups, kitchenDisplays, kitchenNotes, voidReasons, manualDiscounts, surcharges, customerDisplays, scales, callLog, handleSendToKitchen, handleInitiatePayment, handleSaveTab, handleVoidOrder, handleFinalizePayment, handleSettleBill, handleInitiateSettlePayment, handleSavePrinter, handleDeletePrinter, handleHoldOrder, handleReopenOrder, handleDeleteHeldOrder, onToggleTheme, handleGetUpsellSuggestions, onSelectItem, onSelectUpsellSuggestion, lastCompletedOrder, promotions, onSelectCustomer, handleSettleTab, handleApplyDiscountToItem, availablePromotions,
+        calledOrderNumber
     ]);
 
     return (

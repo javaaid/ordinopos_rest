@@ -230,6 +230,7 @@ export type TranslationKey =
   'devices_title' | 'devices_description' | 'devices_printers_group' | 'devices_defaultReceiptPrinter_label' | 'devices_defaultKitchenPrinter_label' | 'devices_kioskReceiptPrinter_label' | 'devices_defaultBarPrinter_label' | 'devices_defaultReportPrinter_label' | 'devices_displaysHardware_group' | 'devices_cfd_label' | 'devices_kds_label' | 'devices_scale_label' | 'devices_printServer_group' | 'devices_printServerUrl_label' | 'devices_printServerUrl_desc' |
   // AdvancedPOSSettingsView
   'advpos_title' | 'advpos_description' | 'advpos_ordering_group' | 'advpos_paymentReceipt_group' | 'advpos_inventoryNotifications_group' | 'advpos_staffEndOfDay_group' | 'advpos_enableItemNumber_label' | 'advpos_enableItemNumber_desc' | 'advpos_separateSameItems_label' | 'advpos_separateSameItems_desc' | 'advpos_combineKitchenItems_label' | 'advpos_combineKitchenItems_desc' | 'advpos_kitchenPrintFooter_label' | 'advpos_kitchenPrintFooter_desc' | 'advpos_printReservedOrder_label' | 'advpos_printReservedOrder_desc' | 'advpos_sortItemsInKitchen_label' | 'advpos_sortItemsInKitchen_desc' | 'advpos_sortModifiers_label' | 'advpos_sortModifiers_desc' | 'advpos_sortOrderInKDS_label' | 'advpos_sortOrderInKDS_desc' | 'advpos_printVoidedItems_label' | 'advpos_printVoidedItems_desc' | 'advpos_printAfterSending_label' | 'advpos_printAfterSending_desc' | 'advpos_quickPay_label' | 'advpos_quickPay_desc' | 'advpos_useVoidReason_label' | 'advpos_useVoidReason_desc' | 'advpos_defaultPrepTime_label' | 'advpos_defaultPrepTime_desc' | 'advpos_confirmPayment_label' | 'advpos_confirmPayment_desc' | 'advpos_printReceiptAfterPayment_label' | 'advpos_printReceiptAfterPayment_desc' | 'advpos_combineReceiptItems_label' | 'advpos_combineReceiptItems_desc' | 'advpos_sortItemsOnReceipt_label' | 'advpos_sortItemsOnReceipt_desc' | 'advpos_showItemDiscount_label' | 'advpos_showItemDiscount_desc' | 'advpos_showVoidedItems_label' | 'advpos_showVoidedItems_desc' | 'advpos_emailReceipt_label' | 'advpos_emailReceipt_desc' | 'advpos_showTaxOnReceipt_label' | 'advpos_showTaxOnReceipt_desc' | 'advpos_enableInventory_label' | 'advpos_enableInventory_desc' | 'advpos_allowNegativeStock_label' | 'advpos_allowNegativeStock_desc' | 'advpos_useInventoryPrint_label' | 'advpos_useInventoryPrint_desc' | 'advpos_sendLowStockEmails_label' | 'advpos_sendLowStockEmails_desc' | 'advpos_lowStockRecipients_label' | 'advpos_eodReport_label' | 'advpos_eodReport_desc' | 'advpos_staffSalary_label' | 'advpos_staffSalary_desc' | 'advpos_printCashInOut_label' | 'advpos_printCashInOut_desc' | 'advpos_printWorkTime_label' | 'advpos_printWorkTime_desc' | 'advpos_enableTimeClock_label' | 'advpos_enableTimeClock_desc' | 'advpos_autoClockOut_label' | 'advpos_autoClockOut_desc' | 'advpos_forcePinEntry_label' | 'advpos_forcePinEntry_desc' |
+  'advpos_enableDeliveryMaps_label' | 'advpos_enableDeliveryMaps_desc' | 'advpos_enableLiveDriverTracking_label' | 'advpos_enableLiveDriverTracking_desc' |
   // PreferencesSettingsView
   'prefs_title' | 'prefs_description' | 'prefs_actionAfterSend_label' | 'prefs_actionAfterSend_desc' | 'prefs_actionAfterPayment_label' | 'prefs_actionAfterPayment_desc' | 'prefs_defaultPayment_label' | 'prefs_defaultOrderType_label' | 'prefs_enableOrderNotes_label' | 'prefs_enableKitchenPrint_label' | 'prefs_enableOrderHold_label' | 'prefs_resetOrderNumberDaily_label' | 'prefs_action_option_order' | 'prefs_action_option_tables' | 'prefs_action_option_login' |
   // ZatcaSettingsView
@@ -1055,6 +1056,7 @@ export interface DeliveryZone {
     id: string;
     name: string;
     fee: number;
+    geojson: any;
 }
 export interface DeliverySettings {
     enabled: boolean;
@@ -1123,6 +1125,8 @@ export interface AdvancedPOSSettings {
     defaultPrepTimeMinutes: number;
     sendLowStockEmails: boolean;
     lowStockEmailRecipients: string;
+    enableDeliveryMaps: boolean;
+    enableLiveDriverTracking: boolean;
 }
 export interface POSPreferences {
     actionAfterSendOrder: 'order' | 'tables' | 'login';

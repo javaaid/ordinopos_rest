@@ -636,7 +636,7 @@ export const TABLES: Table[] = [
     // Main Floor - 10 tables
     { id: 't1', name: 'T1', capacity: 4, status: 'available', locationId: 'loc_1', shape: 'square', x: 10, y: 10, floor: 'Main Floor' },
     { id: 't2', name: 'T2', capacity: 2, status: 'available', locationId: 'loc_1', shape: 'round', x: 28, y: 10, floor: 'Main Floor' },
-    { id: 't3', name: 'T3', capacity: 4, status: 'available', locationId: 'loc_1', shape: 'square', x: 46, y: 10, floor: 'Main Floor' },
+    { id: 't3', name: 'T3', capacity: 4, status: 'occupied', locationId: 'loc_1', shape: 'square', x: 46, y: 10, floor: 'Main Floor', occupiedSince: Date.now() },
     { id: 't4', name: 'T4', capacity: 2, status: 'available', locationId: 'loc_1', shape: 'round', x: 64, y: 10, floor: 'Main Floor' },
     { id: 't5', name: 'T5', capacity: 4, status: 'available', locationId: 'loc_1', shape: 'square', x: 82, y: 10, floor: 'Main Floor' },
     { id: 't6', name: 'T6', capacity: 6, status: 'available', locationId: 'loc_1', shape: 'rectangle-h', x: 10, y: 35, floor: 'Main Floor' },
