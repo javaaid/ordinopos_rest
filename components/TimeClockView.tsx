@@ -3,10 +3,11 @@ import { Employee, Shift, ScheduleEntry } from '../types';
 import ClockIcon from './icons/ClockIcon';
 import { useDataContext, useAppContext } from '../contexts/AppContext';
 import { useTranslations } from '../hooks/useTranslations';
+import { Button } from './ui/Button';
 
 const TimeClockView: React.FC = () => {
     const { currentEmployee, settings } = useAppContext();
-    const { employees: allEmployees, schedule, onToggleClockStatus, onSaveScheduleEntry, onDeleteScheduleEntry } = useDataContext();
+    const { employees: allEmployees, schedule, handleClockIn, handleClockOut, handleStartBreak, handleEndBreak, onSaveScheduleEntry, onDeleteScheduleEntry } = useDataContext();
     const t = useTranslations(settings.language.staff);
 
     const [selectedEmployeeId, setSelectedEmployeeId] = useState(currentEmployee?.id || '');
@@ -18,25 +19,55 @@ const TimeClockView: React.FC = () => {
     if (!currentEmployee) return null;
 
     const renderPersonalTimeClock = () => {
-        const lastShift = currentEmployee.shifts[currentEmployee.shifts.length - 1];
-        const isClockedIn = currentEmployee.shiftStatus === 'clocked-in';
+        const { shiftStatus, shifts } = currentEmployee;
+        const lastShift = shifts?.[shifts.length - 1];
+        const lastBreak = lastShift?.breaks?.[lastShift.breaks.length - 1];
+
+        let statusText;
+        let statusColor;
+
+        switch (shiftStatus) {
+            case 'clocked-in':
+                statusText = `${t('clockedInSince')} ${new Date(lastShift.clockIn).toLocaleTimeString()}`;
+                statusColor = "text-green-500";
+                break;
+            case 'on-break':
+                statusText = `On Break since ${new Date(lastBreak!.start).toLocaleTimeString()}`;
+                statusColor = "text-yellow-500";
+                break;
+            default:
+                statusText = "Clocked Out";
+                statusColor = "text-red-500";
+                break;
+        }
 
         return (
             <div className="bg-card p-6 rounded-lg text-center border border-border">
-                <h3 className="text-xl font-bold text-foreground mb-4">{t('myTimeClock')}</h3>
-                <button
-                    onClick={() => onToggleClockStatus(currentEmployee.id)}
-                    className={`px-8 py-4 rounded-lg font-bold text-lg transition-colors ${
-                        isClockedIn ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground' : 'bg-primary hover:bg-primary/90 text-primary-foreground'
-                    }`}
-                >
-                    {isClockedIn ? t('clockOut') : t('clockIn')}
-                </button>
-                 {isClockedIn && lastShift && (
-                     <p className="text-muted-foreground text-sm mt-4">
-                         {t('clockedInSince')} {new Date(lastShift.clockIn).toLocaleTimeString()}
-                    </p>
-                 )}
+                <h3 className="text-xl font-bold text-foreground mb-2">{t('myTimeClock')}</h3>
+                <p className={`font-semibold mb-4 ${statusColor}`}>{statusText}</p>
+
+                <div className="grid grid-cols-2 gap-3">
+                    {shiftStatus === 'clocked-out' && (
+                        <Button onClick={() => handleClockIn(currentEmployee.id)} className="col-span-2">
+                            {t('clockIn')}
+                        </Button>
+                    )}
+                    {shiftStatus === 'clocked-in' && (
+                        <>
+                            <Button onClick={() => handleStartBreak(currentEmployee.id)} variant="secondary">
+                                Start Break
+                            </Button>
+                            <Button onClick={() => handleClockOut(currentEmployee.id)} variant="destructive">
+                                {t('clockOut')}
+                            </Button>
+                        </>
+                    )}
+                    {shiftStatus === 'on-break' && (
+                        <Button onClick={() => handleEndBreak(currentEmployee.id)} className="col-span-2">
+                            End Break
+                        </Button>
+                    )}
+                </div>
             </div>
         )
     };

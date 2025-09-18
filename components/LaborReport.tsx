@@ -14,8 +14,8 @@ const LaborReport: React.FC<LaborReportProps> = ({ employees }) => {
 
     const allShifts = useMemo<ShiftRow[]>(() => {
         const shifts: ShiftRow[] = [];
-        employees.forEach(emp => {
-            emp.shifts.forEach(shift => {
+        (employees || []).forEach(emp => {
+            (emp.shifts || []).forEach(shift => {
                 shifts.push({
                     employeeName: emp.name,
                     shift: shift
@@ -34,11 +34,24 @@ const LaborReport: React.FC<LaborReportProps> = ({ employees }) => {
         return new Date(timestamp).toLocaleDateString();
     }
     
+    const calculateBreakDuration = (shift: Shift): number => {
+        if (!shift.breaks || shift.breaks.length === 0) {
+            return 0;
+        }
+        return shift.breaks.reduce((total, br) => {
+            if (br.end) {
+                return total + (br.end - br.start);
+            }
+            return total;
+        }, 0);
+    };
+
     const calculateDuration = (shift: Shift) => {
         if (!shift.clockOut) {
             return "Ongoing";
         }
-        const durationMs = shift.clockOut - shift.clockIn;
+        const breakDurationMs = calculateBreakDuration(shift);
+        const durationMs = shift.clockOut - shift.clockIn - breakDurationMs;
         const hours = durationMs / (1000 * 60 * 60);
         return `${hours.toFixed(2)} hrs`;
     }
@@ -56,24 +69,29 @@ const LaborReport: React.FC<LaborReportProps> = ({ employees }) => {
                             <th className={thClass}>Date</th>
                             <th className={thClass}>Clock In</th>
                             <th className={thClass}>Clock Out</th>
+                            <th className={thClass}>Breaks (min)</th>
                             <th className={thClass}>Duration</th>
                         </tr>
                     </thead>
                     <tbody className="bg-card divide-y divide-border">
-                        {allShifts.map((row, index) => (
-                            <tr key={`${row.employeeName}-${row.shift.clockIn}-${index}`} className="hover:bg-muted/50 transition-colors">
-                                <td className="px-4 py-3 whitespace-nowrap text-foreground font-medium">{row.employeeName}</td>
-                                <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{formatDate(row.shift.clockIn)}</td>
-                                <td className="px-4 py-3 whitespace-nowrap text-green-500 font-mono">{formatTime(row.shift.clockIn)}</td>
-                                <td className="px-4 py-3 whitespace-nowrap text-red-500 font-mono">
-                                    {row.shift.clockOut ? formatTime(row.shift.clockOut) : <span className="text-yellow-500">Clocked In</span>}
-                                </td>
-                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground font-semibold">{calculateDuration(row.shift)}</td>
-                            </tr>
-                        ))}
+                        {allShifts.map((row, index) => {
+                            const breakMinutes = (calculateBreakDuration(row.shift) / (1000 * 60)).toFixed(0);
+                            return (
+                                <tr key={`${row.employeeName}-${row.shift.clockIn}-${index}`} className="hover:bg-muted/50 transition-colors">
+                                    <td className="px-4 py-3 whitespace-nowrap text-foreground font-medium">{row.employeeName}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{formatDate(row.shift.clockIn)}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-green-500 font-mono">{formatTime(row.shift.clockIn)}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-red-500 font-mono">
+                                        {row.shift.clockOut ? formatTime(row.shift.clockOut) : <span className="text-yellow-500">Clocked In</span>}
+                                    </td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{breakMinutes} min</td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-muted-foreground font-semibold">{calculateDuration(row.shift)}</td>
+                                </tr>
+                            )
+                        })}
                         {allShifts.length === 0 && (
                             <tr>
-                                <td colSpan={5} className="text-center text-muted-foreground p-10">
+                                <td colSpan={6} className="text-center text-muted-foreground p-10">
                                     No shift data has been recorded yet.
                                 </td>
                             </tr>

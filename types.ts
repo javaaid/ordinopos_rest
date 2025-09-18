@@ -567,9 +567,15 @@ export interface Driver {
   locationId: string;
 }
 
+export interface Break {
+  start: number;
+  end?: number;
+}
+
 export interface Shift {
   clockIn: number;
   clockOut?: number;
+  breaks?: Break[];
 }
 
 export interface Employee {

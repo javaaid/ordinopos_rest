@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { LOCATIONS, CATEGORIES, MENU_ITEMS, CUSTOMERS, DRIVERS, EMPLOYEES, SUPPLIERS, WASTAGE_LOG, ROLES, AUDIT_LOG, PRINTERS, TABLES, SUBSCRIPTIONS, PURCHASE_ORDERS, PLUGINS, SCHEDULE, RESERVATIONS, INGREDIENTS, RECIPES, SIGNAGE_DISPLAYS, SIGNAGE_CONTENT, SIGNAGE_PLAYLISTS, SIGNAGE_SCHEDULE, ACTIVATION_CODES, PAYMENT_TYPES, PIZZA_OPTIONS, PROMOTIONS, MODIFIER_GROUPS, KITCHEN_DISPLAYS, KITCHEN_NOTES, VOID_REASONS, MANUAL_DISCOUNTS, SURCHARGES, CUSTOMER_DISPLAYS, SCALES, CALL_LOG, DEFAULT_KITCHEN_PRINT_SETTINGS, DEFAULT_RECEIPT_SETTINGS, KITCHEN_PROFILE_NAMES } from '../constants';
@@ -273,31 +272,102 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const onToggleTheme = () => setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
 
-    const onToggleClockStatus = useCallback((employeeId: string) => {
+    const handleClockIn = useCallback((employeeId: string) => {
         setEmployees(prev => {
-            const employeeIndex = prev.findIndex(e => e.id === employeeId);
-            if (employeeIndex === -1) return prev;
-
             const newEmployees = [...prev];
+            const employeeIndex = newEmployees.findIndex(e => e.id === employeeId);
+            if (employeeIndex === -1) return prev;
+    
             const employee = { ...newEmployees[employeeIndex] };
-            const now = Date.now();
-            const shifts = [...employee.shifts];
-
-            if (employee.shiftStatus === 'clocked-out' || !employee.shiftStatus) {
-                employee.shiftStatus = 'clocked-in';
-                shifts.push({ clockIn: now });
-                addToast({ type: 'success', title: 'Clocked In', message: `${employee.name} has clocked in.` });
-            } else {
-                employee.shiftStatus = 'clocked-out';
-                const lastShift = shifts[shifts.length - 1];
-                if (lastShift && !lastShift.clockOut) {
-                    lastShift.clockOut = now;
-                }
-                addToast({ type: 'info', title: 'Clocked Out', message: `${employee.name} has clocked out.` });
+            if (employee.shiftStatus === 'clocked-in' || employee.shiftStatus === 'on-break') {
+                addToast({ type: 'error', title: 'Action Failed', message: `${employee.name} is already on shift.` });
+                return prev;
             }
-            
-            employee.shifts = shifts;
+    
+            employee.shiftStatus = 'clocked-in';
+            employee.shifts = [...employee.shifts, { clockIn: Date.now(), breaks: [] }];
             newEmployees[employeeIndex] = employee;
+            
+            addToast({ type: 'success', title: 'Clocked In', message: `${employee.name} has clocked in.` });
+            return newEmployees;
+        });
+    }, [setEmployees, addToast]);
+    
+    const handleClockOut = useCallback((employeeId: string) => {
+        setEmployees(prev => {
+            const newEmployees = [...prev];
+            const employeeIndex = newEmployees.findIndex(e => e.id === employeeId);
+            if (employeeIndex === -1) return prev;
+    
+            const employee = { ...newEmployees[employeeIndex] };
+            if (employee.shiftStatus === 'clocked-out') {
+                addToast({ type: 'error', title: 'Action Failed', message: `${employee.name} is not clocked in.` });
+                return prev;
+            }
+            if (employee.shiftStatus === 'on-break') {
+                addToast({ type: 'error', title: 'Action Failed', message: `${employee.name} must end their break before clocking out.` });
+                return prev;
+            }
+    
+            employee.shiftStatus = 'clocked-out';
+            const lastShift = employee.shifts[employee.shifts.length - 1];
+            if (lastShift && !lastShift.clockOut) {
+                lastShift.clockOut = Date.now();
+            }
+            newEmployees[employeeIndex] = employee;
+            
+            addToast({ type: 'info', title: 'Clocked Out', message: `${employee.name} has clocked out.` });
+            return newEmployees;
+        });
+    }, [setEmployees, addToast]);
+    
+    const handleStartBreak = useCallback((employeeId: string) => {
+        setEmployees(prev => {
+            const newEmployees = [...prev];
+            const employeeIndex = newEmployees.findIndex(e => e.id === employeeId);
+            if (employeeIndex === -1) return prev;
+    
+            const employee = { ...newEmployees[employeeIndex] };
+            if (employee.shiftStatus !== 'clocked-in') {
+                addToast({ type: 'error', title: 'Action Failed', message: `${employee.name} must be clocked in to start a break.` });
+                return prev;
+            }
+    
+            employee.shiftStatus = 'on-break';
+            const lastShift = employee.shifts[employee.shifts.length - 1];
+            if (lastShift && !lastShift.clockOut) {
+                lastShift.breaks = [...(lastShift.breaks || []), { start: Date.now() }];
+            }
+            newEmployees[employeeIndex] = employee;
+            
+            addToast({ type: 'info', title: 'Break Started', message: `${employee.name} is now on break.` });
+            return newEmployees;
+        });
+    }, [setEmployees, addToast]);
+    
+    const handleEndBreak = useCallback((employeeId: string) => {
+        setEmployees(prev => {
+            const newEmployees = [...prev];
+            const employeeIndex = newEmployees.findIndex(e => e.id === employeeId);
+            if (employeeIndex === -1) return prev;
+    
+            const employee = { ...newEmployees[employeeIndex] };
+            if (employee.shiftStatus !== 'on-break') {
+                addToast({ type: 'error', title: 'Action Failed', message: `${employee.name} is not on a break.` });
+                return prev;
+            }
+    
+            employee.shiftStatus = 'clocked-in';
+            const lastShift = employee.shifts[employee.shifts.length - 1];
+            if (lastShift && !lastShift.clockOut && lastShift.breaks && lastShift.breaks.length > 0) {
+                const lastBreak = lastShift.breaks[lastShift.breaks.length - 1];
+                if (!lastBreak.end) {
+                    lastBreak.end = Date.now();
+                }
+            }
+            newEmployees[employeeIndex] = employee;
+            
+            addToast({ type: 'success', title: 'Break Ended', message: `${employee.name} is back from break.` });
             return newEmployees;
         });
     }, [setEmployees, addToast]);
@@ -1180,7 +1250,7 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
         isKsaPluginActive,
         isOrderNumberDisplayPluginActive,
         isQRCodePluginActive,
-        onToggleClockStatus,
+        handleClockIn, handleClockOut, handleStartBreak, handleEndBreak,
         onSelectItem,
         waitlist, setWaitlist,
         onUpdateWaitlistStatus,
@@ -1265,7 +1335,7 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
         handleApplyDiscountToItem,
         calledOrderNumber,
     }), [
-        activeView, managementSubView, settingsSubView, currentEmployee, currentLocationId, locations, theme, settings, toasts, modal, cart, orderType, selectedCustomer, orders, currentTable, searchQuery, activeCategory, isSuggestingUpsell, aiUpsellSuggestions, heldOrders, onNewSaleClick, activeOrderToSettle, selectedStaff, activeTab, appliedLoyaltyPoints, isSidebarHidden, isSidebarCollapsed, plugins, isWaitlistPluginActive, isReservationPluginActive, isMultiStorePluginActive, isKsaPluginActive, isOrderNumberDisplayPluginActive, isQRCodePluginActive, onToggleClockStatus, waitlist, onUpdateWaitlistStatus, handlePinLogin, handleLogout, printQueue, notifications, isFullscreen, onToggleFullScreen, onLaunchView, updatePrintJobStatus, addPrintJobs, openModal, closeModal, addToast,
+        activeView, managementSubView, settingsSubView, currentEmployee, currentLocationId, locations, theme, settings, toasts, modal, cart, orderType, selectedCustomer, orders, currentTable, searchQuery, activeCategory, isSuggestingUpsell, aiUpsellSuggestions, heldOrders, onNewSaleClick, activeOrderToSettle, selectedStaff, activeTab, appliedLoyaltyPoints, isSidebarHidden, isSidebarCollapsed, plugins, isWaitlistPluginActive, isReservationPluginActive, isMultiStorePluginActive, isKsaPluginActive, isOrderNumberDisplayPluginActive, isQRCodePluginActive, handleClockIn, handleClockOut, handleStartBreak, handleEndBreak, waitlist, onUpdateWaitlistStatus, handlePinLogin, handleLogout, printQueue, notifications, isFullscreen, onToggleFullScreen, onLaunchView, updatePrintJobStatus, addPrintJobs, openModal, closeModal, addToast,
         categories, categoriesWithCounts, menuItems, customers, drivers, employees, suppliers, wastageLog, roles, auditLog, printers, tables, subscriptions, purchaseOrders, schedule, reservations, ingredients, recipes, signageDisplays, signageContent, signagePlaylists, signageSchedule, paymentTypes, modifierGroups, kitchenDisplays, kitchenNotes, voidReasons, manualDiscounts, surcharges, customerDisplays, scales, callLog, handleSendToKitchen, handleInitiatePayment, handleSaveTab, handleVoidOrder, handleFinalizePayment, handleSettleBill, handleInitiateSettlePayment, handleSavePrinter, handleDeletePrinter, handleHoldOrder, handleReopenOrder, handleDeleteHeldOrder, onToggleTheme, handleGetUpsellSuggestions, onSelectItem, onSelectUpsellSuggestion, lastCompletedOrder, promotions, onSelectCustomer, handleSettleTab, handleApplyDiscountToItem, availablePromotions,
         calledOrderNumber, handleSaveCategory, handleDeleteCategory
     ]);
