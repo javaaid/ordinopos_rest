@@ -24,7 +24,7 @@ const TableServicesView: React.FC = () => {
     const { openModal } = useAppContext();
 
 
-    const [activeTab, setActiveTab] = useState<TableViewTab>('waitlist');
+    const [activeTab, setActiveTab] = useState<TableViewTab>('floor');
     const [activeFloor, setActiveFloor] = useState((floors && floors.length > 0) ? floors[0] : 'Main Floor');
     const [isEditMode, setIsEditMode] = useState(false);
     

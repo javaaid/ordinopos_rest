@@ -1,31 +1,61 @@
-import React, { useMemo, useEffect } from 'react';
-import { CartItem, Order, MenuItem, AppSettings, SignagePlaylist, SignageContentItem, Location, OrderType } from '../types';
+
+import React, { useState, useMemo, useEffect } from 'react';
+import { CartItem, Order, MenuItem, AppSettings, SignagePlaylist, SignageContentItem, Location, OrderType, Surcharge } from '../types';
 import SparklesIcon from './icons/SparklesIcon';
 import CheckCircleIcon from './icons/CheckCircleIcon';
 import { useTranslations } from '../hooks/useTranslations';
 import CFDAttractScreen from './CFDAttractScreen';
 import { calculateOrderTotals } from '../utils/calculations';
 import { ordinoLogoBase64 } from '../assets/logo';
-import { useAppContext } from '../contexts/AppContext';
 import { Modal } from './ui/Modal';
 
+const channel = new BroadcastChannel('ordino_pos_sync');
+
 export const CFDModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ isOpen, onClose }) => {
-    const { 
-        cart, orderType, settings, lastCompletedOrder, setLastCompletedOrder, menuItems, signagePlaylists, 
-        signageContent, currentLocation, surcharges
-    } = useAppContext();
+    // Local state for all synced data
+    const [cart, setCart] = useState<CartItem[]>([]);
+    const [orderType, setOrderType] = useState<OrderType>('dine-in');
+    const [settings, setSettings] = useState<AppSettings | null>(null);
+    const [lastCompletedOrder, setLastCompletedOrder] = useState<Order | null>(null);
+    const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+    const [signagePlaylists, setSignagePlaylists] = useState<SignagePlaylist[]>([]);
+    const [signageContent, setSignageContent] = useState<SignageContentItem[]>([]);
+    const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
+    const [surcharges, setSurcharges] = useState<Surcharge[]>([]);
 
     const language = settings?.language.customer || 'en';
     const t = useTranslations(language);
 
     useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data.type === 'STATE_SYNC') {
+                const { payload } = event.data;
+                setCart(payload.currentCart || []);
+                setOrderType(payload.currentOrderType || 'dine-in');
+                setSettings(payload.allSettings || null);
+                setLastCompletedOrder(payload.lastCompletedOrder || null);
+                setMenuItems(payload.allMenuItems || []);
+                setSignagePlaylists(payload.allSignagePlaylists || []);
+                setSignageContent(payload.allSignageContent || []);
+                const loc = (payload.allLocations || []).find((l: Location) => l.id === payload.currentLocationId);
+                setCurrentLocation(loc || null);
+                setSurcharges(payload.surcharges || []);
+            }
+        };
+        channel.addEventListener('message', handleMessage);
+        channel.postMessage({ type: 'REQUEST_STATE' });
+
+        return () => channel.removeEventListener('message', handleMessage);
+    }, []);
+
+    useEffect(() => {
         if (lastCompletedOrder) {
             const timer = setTimeout(() => {
-                setLastCompletedOrder(null);
+                setLastCompletedOrder(null); // This will clear the confirmation screen locally
             }, 10000); // clear after 10 seconds
             return () => clearTimeout(timer);
         }
-    }, [lastCompletedOrder, setLastCompletedOrder]);
+    }, [lastCompletedOrder]);
 
     const attractScreenContent = useMemo(() => {
         if (!settings?.cfd.attractScreenPlaylistId) return [];
@@ -35,10 +65,19 @@ export const CFDModal: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ 
     }, [settings?.cfd, signagePlaylists, signageContent]);
 
     const { subtotal, tax, total } = useMemo(() => {
-        if (!currentLocation) return { subtotal: 0, tax: 0, total: 0 };
+        if (!currentLocation || !settings) return { subtotal: 0, tax: 0, total: 0 };
         return calculateOrderTotals(cart, currentLocation, null, null, orderType, settings, null, surcharges);
     }, [cart, currentLocation, settings, orderType, surcharges]);
 
+    if (!settings || !currentLocation) {
+        return (
+            <Modal isOpen={isOpen} onClose={onClose} className="max-w-full h-full !rounded-none">
+                <div className="w-full h-full flex flex-col items-center justify-center bg-background text-foreground">
+                    <p className="animate-pulse">Waiting for POS connection...</p>
+                </div>
+            </Modal>
+        );
+    }
 
     const renderContent = () => {
         if (lastCompletedOrder) {

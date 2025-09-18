@@ -959,6 +959,7 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
                 currentOrderType: orderType,
                 allSignagePlaylists: signagePlaylists,
                 allSignageContent: signageContent,
+                surcharges: surcharges,
             };
             try { channel.postMessage({ type: 'STATE_SYNC', payload: fullState }); } 
             catch (error) { console.error("BroadcastChannel postMessage failed:", error); }
@@ -994,13 +995,22 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
                     channel.postMessage({ type: 'QR_ORDER_CONFIRMED', payload: { orderNumber: newOrder.orderNumber } });
                     break;
                 }
+                case 'KDS_ORDER_COMPLETE': {
+                    const { orderId } = payload;
+                    onCompleteKdsOrder(orderId);
+                    break;
+                }
+                case 'KDS_ITEM_TOGGLE_PREPARED': {
+                    const { orderId, cartId } = payload;
+                    onTogglePreparedItem(orderId, cartId);
+                    break;
+                }
             }
         };
         channel.addEventListener('message', handleMessage);
-        broadcastState(); // Initial broadcast
         
-        // Also broadcast on any significant state change
-        const intervalId = setInterval(broadcastState, 2000); // Broadcast every 2 seconds
+        // Broadcast on any significant state change
+        const intervalId = setInterval(broadcastState, 500); // Broadcast every 0.5 seconds for responsiveness
 
         return () => {
             channel.removeEventListener('message', handleMessage);
@@ -1010,7 +1020,8 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
         settings, lastCompletedOrder, menuItems, signagePlaylists, signageContent,
         currentLocationId, locations, tables, orders, calledOrderNumber, customers,
         cart, orderType,
-        setOrders, addToast, setSettings, surcharges, currentEmployee, setCustomers, setTables
+        setOrders, addToast, setSettings, surcharges, currentEmployee, setCustomers, setTables,
+        onCompleteKdsOrder, onTogglePreparedItem
     ]);
 
 

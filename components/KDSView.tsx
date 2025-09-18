@@ -1,14 +1,44 @@
-import React, { useMemo } from 'react';
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { Order, Table } from '../types';
 import OrderTicket from './OrderTicket';
-import { useAppContext } from '../contexts/AppContext';
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/Modal';
 import { Button } from './ui/Button';
 import { ordinoLogoBase64 } from '../assets/logo';
 import ChefHatIcon from './icons/ChefHatIcon';
 
+const channel = new BroadcastChannel('ordino_pos_sync');
+
 export const KDSModal: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpen, onClose }) => {
-    const { orders, tables, currentLocationId, onCompleteKdsOrder, onTogglePreparedItem } = useAppContext();
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [tables, setTables] = useState<Table[]>([]);
+    const [currentLocationId, setCurrentLocationId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data.type === 'STATE_SYNC') {
+                const { payload } = event.data;
+                setOrders(payload.allOrders || []);
+                setTables(payload.allTables || []);
+                setCurrentLocationId(payload.currentLocationId);
+            }
+        };
+        channel.addEventListener('message', handleMessage);
+        
+        // Request initial state when component mounts
+        channel.postMessage({ type: 'REQUEST_STATE' });
+
+        // Cleanup listener on unmount
+        return () => channel.removeEventListener('message', handleMessage);
+    }, []);
+
+    const onCompleteKdsOrder = (orderId: string) => {
+        channel.postMessage({ type: 'KDS_ORDER_COMPLETE', payload: { orderId } });
+    };
+
+    const onTogglePreparedItem = (orderId: string, cartId: string) => {
+        channel.postMessage({ type: 'KDS_ITEM_TOGGLE_PREPARED', payload: { orderId, cartId } });
+    };
 
     const pendingOrders = useMemo(() => {
         return (orders || []).filter((o: Order) => o && o.status === 'kitchen' && o.locationId === currentLocationId);
