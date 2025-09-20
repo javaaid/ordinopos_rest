@@ -513,6 +513,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const onNewSaleClick = useCallback(() => resetPosState(true), [resetPosState]);
 
+    const handleSaveProduct = useCallback((product: MenuItem, isNew: boolean, recipeItems: RecipeItem[] | null = null) => {
+        setMenuItems(prev => {
+            if (isNew) {
+                const newProduct = { ...product, id: Date.now() };
+                addToast({ type: 'success', title: 'Product Added', message: `Product "${newProduct.name}" has been created.` });
+                
+                if (recipeItems) {
+                    setRecipes(prevRecipes => ({ ...prevRecipes, [newProduct.id]: recipeItems }));
+                }
+
+                return [...prev, newProduct];
+            } else {
+                addToast({ type: 'success', title: 'Product Updated', message: `Product "${product.name}" has been updated.` });
+
+                if (recipeItems !== null) { // allow passing null to not change the recipe
+                    setRecipes(prevRecipes => ({ ...prevRecipes, [product.id]: recipeItems }));
+                }
+
+                return prev.map(p => p.id === product.id ? product : p);
+            }
+        });
+    }, [setMenuItems, addToast, setRecipes]);
+
+    const handleDeleteProduct = useCallback((productId: number) => {
+        openModal('confirm', {
+            title: 'Delete Product',
+            message: 'Are you sure you want to delete this product? This will remove it from all locations. This action cannot be undone.',
+            confirmText: 'Delete',
+            onConfirm: () => {
+                setMenuItems(prev => prev.filter(p => p.id !== productId));
+                setRecipes(prev => {
+                    const newRecipes = { ...prev };
+                    delete newRecipes[productId];
+                    return newRecipes;
+                });
+                addToast({ type: 'info', title: 'Product Deleted', message: 'The product has been removed.' });
+                closeModal();
+            }
+        });
+    }, [setMenuItems, setRecipes, addToast, openModal, closeModal]);
+
     const handleSendToKitchen = useCallback(() => {
         if (cart.length === 0) {
             addToast({ type: 'error', title: 'Empty Cart', message: 'Cannot send an empty order to the kitchen.' });
@@ -543,7 +584,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             
             const newOrder: Order = {
                 id: `ord_${Date.now()}`,
-                orderNumber: String(settings.orderSettings.nextDailyOrderNumber).padStart(4, '0'),
+                orderNumber: (settings.orderSettings.nextDailyOrderNumber).toString().padStart(4, '0'),
                 invoiceNumber: '', createdAt: Date.now(), cart, customer: selectedCustomer || undefined, employeeId: currentEmployee?.id,
                 subtotal, tax, total, taxDetails, balanceDue: total, orderType, status: 'kitchen', source: 'in-store', payments: [],
                 tableId: currentTable?.id, locationId: currentLocationId, isTraining: false, appliedDiscount: finalAppliedDiscount, appliedPromotion: appliedPromotion || undefined,
@@ -659,7 +700,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         
         const settlementOrder: Order = {
             id: `settle_${currentTable.id}_${Date.now()}`,
-            orderNumber: pendingOrdersForTable[0]?.orderNumber || String(settings.orderSettings.nextDailyOrderNumber).padStart(4, '0'),
+            orderNumber: pendingOrdersForTable[0]?.orderNumber || (settings.orderSettings.nextDailyOrderNumber).toString().padStart(4, '0'),
             invoiceNumber: pendingOrdersForTable[0]?.invoiceNumber || `${settings.orderSettings.invoicePrefix}${settings.orderSettings.nextInvoiceNumber}`,
             createdAt: pendingOrdersForTable[0]?.createdAt || Date.now(),
             cart: allCartItems,
@@ -734,7 +775,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             
             const orderToPay: Order = {
                 id: `ord_${Date.now()}`,
-                orderNumber: String(settings.orderSettings.nextDailyOrderNumber).padStart(4, '0'),
+                orderNumber: (settings.orderSettings.nextDailyOrderNumber).toString().padStart(4, '0'),
                 invoiceNumber: `${settings.orderSettings.invoicePrefix}${settings.orderSettings.nextInvoiceNumber}`,
                 createdAt: Date.now(),
                 cart: cart,
@@ -817,7 +858,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               const { subtotal, tax, total, taxDetails } = calculateOrderTotals(cart, locations.find(l => l.id === currentLocationId)!, null, null, 'tab', settings, selectedCustomer, surcharges);
               const newTab: Order = {
                 id: `ord_tab_${Date.now()}`,
-                orderNumber: 'T-' + String(settings.orderSettings.nextDailyOrderNumber).padStart(4, '0'),
+                orderNumber: 'T-' + (settings.orderSettings.nextDailyOrderNumber).toString().padStart(4, '0'),
                 invoiceNumber: '', createdAt: Date.now(), cart, customer: selectedCustomer, employeeId: currentEmployee?.id,
                 subtotal, tax, total, taxDetails, balanceDue: total, orderType: 'tab', status: 'partially-paid', source: 'in-store', payments: [], locationId: currentLocationId, isTraining: false, appliedDiscount: null
               };
@@ -907,8 +948,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setHeldOrders(prev => prev.filter(o => o.id !== id));
     }, [setHeldOrders]);
     
-// FIX: Implement handleSaveCategory to fix missing property error.
-const handleSaveCategory = useCallback((category: Category, isNew: boolean) => {
+    const handleSaveCategory = useCallback((category: Category, isNew: boolean) => {
     setCategories(prev => {
         if (isNew) {
             const newCategoryWithId = { ...category, id: category.id || category.name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w-]+/g, '') };
@@ -923,7 +963,6 @@ const handleSaveCategory = useCallback((category: Category, isNew: boolean) => {
     closeModal();
 }, [setCategories, addToast, closeModal]);
 
-// FIX: Implement handleDeleteCategory to fix missing property error.
 const handleDeleteCategory = useCallback((categoryId: string) => {
     const itemsInCategory = menuItems.filter((item: MenuItem) => item.category === categoryId).length;
     if (itemsInCategory > 0) {
@@ -973,7 +1012,7 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
         if (!kioskCart || kioskCart.length === 0) return null;
         const currentLocation = locations.find(l => l.id === currentLocationId)!;
         const { subtotal, tax, total, taxDetails } = calculateOrderTotals(kioskCart, currentLocation, null, null, 'kiosk', settings, null, surcharges);
-        const newOrderNumber = 'K-' + String(settings.orderSettings.nextDailyOrderNumber).padStart(4, '0');
+        const newOrderNumber = 'K-' + (settings.orderSettings.nextDailyOrderNumber).toString().padStart(4, '0');
         const newOrder: Order = {
             id: `ord_kiosk_${Date.now()}`,
             orderNumber: newOrderNumber,
@@ -1051,7 +1090,7 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
                     }
                     const currentLocation = locations.find(l => l.id === qrLocationId)!;
                     const { subtotal, tax, total, taxDetails } = calculateOrderTotals(qrCart, currentLocation, null, null, 'dine-in', settings, customerRecord, surcharges);
-                    const newOrderNumber = String(settings.orderSettings.nextDailyOrderNumber).padStart(4, '0');
+                    const newOrderNumber = (settings.orderSettings.nextDailyOrderNumber).toString().padStart(4, '0');
                     const newOrder: Order = {
                         id: `ord_${Date.now()}`, orderNumber: newOrderNumber, invoiceNumber: '', createdAt: Date.now(), cart: qrCart,
                         customer: customerRecord, employeeId: 'qr_system', subtotal, tax, total, taxDetails, balanceDue: 0,
@@ -1236,6 +1275,8 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
         handleDeleteHeldOrder,
         handleSaveCategory,
         handleDeleteCategory,
+        handleSaveProduct,
+        handleDeleteProduct,
         activeOrderToSettle, setActiveOrderToSettle,
         selectedStaff, setSelectedStaff,
         activeTab, setActiveTab,
@@ -1335,9 +1376,9 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
         handleApplyDiscountToItem,
         calledOrderNumber,
     }), [
-        activeView, managementSubView, settingsSubView, currentEmployee, currentLocationId, locations, theme, settings, toasts, modal, cart, orderType, selectedCustomer, orders, currentTable, searchQuery, activeCategory, isSuggestingUpsell, aiUpsellSuggestions, heldOrders, onNewSaleClick, activeOrderToSettle, selectedStaff, activeTab, appliedLoyaltyPoints, isSidebarHidden, isSidebarCollapsed, plugins, isWaitlistPluginActive, isReservationPluginActive, isMultiStorePluginActive, isKsaPluginActive, isOrderNumberDisplayPluginActive, isQRCodePluginActive, handleClockIn, handleClockOut, handleStartBreak, handleEndBreak, waitlist, onUpdateWaitlistStatus, handlePinLogin, handleLogout, printQueue, notifications, isFullscreen, onToggleFullScreen, onLaunchView, updatePrintJobStatus, addPrintJobs, openModal, closeModal, addToast,
-        categories, categoriesWithCounts, menuItems, customers, drivers, employees, suppliers, wastageLog, roles, auditLog, printers, tables, subscriptions, purchaseOrders, schedule, reservations, ingredients, recipes, signageDisplays, signageContent, signagePlaylists, signageSchedule, paymentTypes, modifierGroups, kitchenDisplays, kitchenNotes, voidReasons, manualDiscounts, surcharges, customerDisplays, scales, callLog, handleSendToKitchen, handleInitiatePayment, handleSaveTab, handleVoidOrder, handleFinalizePayment, handleSettleBill, handleInitiateSettlePayment, handleSavePrinter, handleDeletePrinter, handleHoldOrder, handleReopenOrder, handleDeleteHeldOrder, onToggleTheme, handleGetUpsellSuggestions, onSelectItem, onSelectUpsellSuggestion, lastCompletedOrder, promotions, onSelectCustomer, handleSettleTab, handleApplyDiscountToItem, availablePromotions,
-        calledOrderNumber, handleSaveCategory, handleDeleteCategory
+        activeView, managementSubView, settingsSubView, currentEmployee, currentLocationId, locations, theme, settings, toasts, modal, cart, orderType, selectedCustomer, orders, currentTable, searchQuery, activeCategory, isSuggestingUpsell, aiUpsellSuggestions, heldOrders, onNewSaleClick, activeOrderToSettle, selectedStaff, activeTab, appliedLoyaltyPoints, isSidebarHidden, isSidebarCollapsed, plugins, isWaitlistPluginActive, isReservationPluginActive, isMultiStorePluginActive, isKsaPluginActive, isOrderNumberDisplayPluginActive, isQRCodePluginActive, handleClockIn, handleClockOut, handleStartBreak, handleEndBreak, onSelectItem, waitlist, onUpdateWaitlistStatus, handlePinLogin, handleLogout, printQueue, notifications, isFullscreen, onToggleFullScreen, onLaunchView, updatePrintJobStatus, addPrintJobs, openModal, closeModal, addToast,
+        categories, categoriesWithCounts, menuItems, customers, drivers, employees, suppliers, wastageLog, roles, auditLog, printers, tables, subscriptions, purchaseOrders, schedule, reservations, ingredients, recipes, signageDisplays, signageContent, signagePlaylists, signageSchedule, paymentTypes, modifierGroups, kitchenDisplays, kitchenNotes, voidReasons, manualDiscounts, surcharges, customerDisplays, scales, callLog, handleSendToKitchen, handleInitiatePayment, handleSaveTab, handleVoidOrder, handleFinalizePayment, handleSettleBill, handleInitiateSettlePayment, handleSavePrinter, handleDeletePrinter, handleHoldOrder, handleReopenOrder, handleDeleteHeldOrder, onToggleTheme, handleGetUpsellSuggestions, onSelectUpsellSuggestion, lastCompletedOrder, promotions, onSelectCustomer, handleSettleTab, handleApplyDiscountToItem, availablePromotions,
+        calledOrderNumber, handleSaveCategory, handleDeleteCategory, handleSaveProduct, handleDeleteProduct
     ]);
 
     return (

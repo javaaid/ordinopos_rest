@@ -78,34 +78,23 @@ export function exportToCsv(headers: string[], rows: (string|number|boolean|unde
   downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
 }
 
-export function getErrorMessage(error: any): string {
+export function getErrorMessage(error: unknown): string {
     if (error instanceof Error) {
         return error.message;
     }
-    if (error && typeof error === 'object' && error.message) {
-        const message = error.message;
-        if (typeof message === 'string') {
-            return message;
-        }
-        try {
-            return JSON.stringify(message);
-        } catch (e) {
-            return 'Could not stringify error message object.';
-        }
+    if (error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string') {
+        return (error as { message: string }).message;
     }
-    if (typeof error === 'string' && error) {
+    if (typeof error === 'string' && error.length > 0) {
         return error;
-    }
-    if (error && typeof error === 'object' && error.error && typeof error.error === 'string') {
-        return error.error;
     }
     try {
         const stringified = JSON.stringify(error);
         if (stringified !== '{}' && stringified !== '[]') {
             return stringified;
         }
-    } catch (e) {
-        // Can't stringify
+    } catch {
+        // Fall through
     }
-    return 'An unexpected error occurred. Check the browser developer console for details.';
-};
+    return 'An unexpected error occurred. Check the browser console for details.';
+}
