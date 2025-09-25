@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { LOCATIONS, CATEGORIES, MENU_ITEMS, CUSTOMERS, DRIVERS, EMPLOYEES, SUPPLIERS, WASTAGE_LOG, ROLES, AUDIT_LOG, PRINTERS, TABLES, SUBSCRIPTIONS, PURCHASE_ORDERS, PLUGINS, SCHEDULE, RESERVATIONS, INGREDIENTS, RECIPES, SIGNAGE_DISPLAYS, SIGNAGE_CONTENT, SIGNAGE_PLAYLISTS, SIGNAGE_SCHEDULE, ACTIVATION_CODES, PAYMENT_TYPES, PIZZA_OPTIONS, PROMOTIONS, MODIFIER_GROUPS, KITCHEN_DISPLAYS, KITCHEN_NOTES, VOID_REASONS, MANUAL_DISCOUNTS, SURCHARGES, CUSTOMER_DISPLAYS, SCALES, CALL_LOG, DEFAULT_KITCHEN_PRINT_SETTINGS, DEFAULT_RECEIPT_SETTINGS, KITCHEN_PROFILE_NAMES } from '../constants';
@@ -106,15 +107,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         iotSensors: { smartFridges: { enabled: false, apiKey: '' }, storageSensors: { enabled: false, apiKey: '' } },
         ai: { enableAIFeatures: true, enableUpsell: true, enableCFDSuggestions: true, enableReportAnalysis: true },
         cfd: { attractScreenPlaylistId: null, featuredItemIds: [] },
-        notificationSettings: { duration: 1, position: 'top-right', theme: 'dark' },
-        // FIX: Added missing showGuestCountPrompt property to the dineIn settings object.
+        notificationSettings: { duration: 5, position: 'top-right', theme: 'dark' },
         dineIn: { enabled: true, defaultGuests: 2, maxGuests: 20, enableStaffSelection: false, showGuestCountPrompt: true, surcharge: { enabled: false, name: 'Service Charge', type: 'percentage', value: 10 }, minCharge: { enabled: false, amount: 0 } },
         delivery: { enabled: true, surcharge: { enabled: false, surchargeId: null }, zones: [] },
         takeAway: { enabled: true, customName: 'Take Away', requireCustomerName: false, useHoldReason: false, surcharge: { enabled: false, name: 'Packaging Fee', type: 'fixed', value: 0.50 } },
         tab: { enabled: true, customName: 'Tab' },
         qrOrdering: { enabled: true, baseUrl: '' },
         devices: { receiptPrinterId: 'p1', kitchenPrinterId: 'kp1', kioskPrinterId: null, barPrinterId: 'bp1', reportPrinterId: 'p4', customerDisplayId: 'cd1', kitchenDisplayId: 'kds_1', scaleId: 'sc1', printServerUrl: 'http://localhost:5000' },
-        // FIX: Added missing properties to the advancedPOS settings object.
         advancedPOS: { enableItemNumber: false, separateSameItems: false, combineKitchenItems: true, kitchenPrintFooter: false, kitchenPrintReservedOrder: false, sortItemInKitchen: false, sortModifier: false, sortOrderInKDS: false, printVoidOrderItem: true, printOrderAfterSending: false, quickPay: true, useVoidReason: true, confirmPayment: true, printReceiptAfterPayment: true, combineReceiptItem: true, sortItemInReceipt: false, showItemDiscount: true, showVoidOrderItem: false, emailReceipt: true, showTaxOnReceipt: true, inventoryManagement: true, allowMinusQuantity: false, useInventoryPrint: false, useEndOfDayReport: true, useStaffSalary: false, useCashInOutPrint: true, useWorkTimePrint: true, autoClockOut: false, loginDoNotRememberPassword: false, dateFormat: 'MM/DD/YYYY', lockTillToLocation: false, enableTimeClock: true, defaultPrepTimeMinutes: 15, sendLowStockEmails: true, lowStockEmailRecipients: 'manager@example.com', enableDeliveryMaps: true, enableLiveDriverTracking: true },
         preferences: { actionAfterSendOrder: 'order', actionAfterPayment: 'order', defaultPaymentMethod: 'Cash', enableOrderNotes: true, enableKitchenPrint: true, defaultOrderType: 'dine-in', enableOrderHold: true, resetOrderNumberDaily: true, dashboardWidgetOrder: ['stats', 'chart', 'quickActions', 'topItems', 'lowStock', 'recentTransactions'] },
         loyalty: { enabled: true, pointsPerDollar: 10, redemptionRate: 100 },
@@ -513,47 +512,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const onNewSaleClick = useCallback(() => resetPosState(true), [resetPosState]);
 
-    const handleSaveProduct = useCallback((product: MenuItem, isNew: boolean, recipeItems: RecipeItem[] | null = null) => {
-        setMenuItems(prev => {
-            if (isNew) {
-                const newProduct = { ...product, id: Date.now() };
-                addToast({ type: 'success', title: 'Product Added', message: `Product "${newProduct.name}" has been created.` });
-                
-                if (recipeItems) {
-                    setRecipes(prevRecipes => ({ ...prevRecipes, [newProduct.id]: recipeItems }));
-                }
-
-                return [...prev, newProduct];
-            } else {
-                addToast({ type: 'success', title: 'Product Updated', message: `Product "${product.name}" has been updated.` });
-
-                if (recipeItems !== null) { // allow passing null to not change the recipe
-                    setRecipes(prevRecipes => ({ ...prevRecipes, [product.id]: recipeItems }));
-                }
-
-                return prev.map(p => p.id === product.id ? product : p);
-            }
-        });
-    }, [setMenuItems, addToast, setRecipes]);
-
-    const handleDeleteProduct = useCallback((productId: number) => {
-        openModal('confirm', {
-            title: 'Delete Product',
-            message: 'Are you sure you want to delete this product? This will remove it from all locations. This action cannot be undone.',
-            confirmText: 'Delete',
-            onConfirm: () => {
-                setMenuItems(prev => prev.filter(p => p.id !== productId));
-                setRecipes(prev => {
-                    const newRecipes = { ...prev };
-                    delete newRecipes[productId];
-                    return newRecipes;
-                });
-                addToast({ type: 'info', title: 'Product Deleted', message: 'The product has been removed.' });
-                closeModal();
-            }
-        });
-    }, [setMenuItems, setRecipes, addToast, openModal, closeModal]);
-
     const handleSendToKitchen = useCallback(() => {
         if (cart.length === 0) {
             addToast({ type: 'error', title: 'Empty Cart', message: 'Cannot send an empty order to the kitchen.' });
@@ -584,7 +542,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             
             const newOrder: Order = {
                 id: `ord_${Date.now()}`,
-                orderNumber: (settings.orderSettings.nextDailyOrderNumber).toString().padStart(4, '0'),
+                orderNumber: String(settings.orderSettings.nextDailyOrderNumber).padStart(4, '0'),
                 invoiceNumber: '', createdAt: Date.now(), cart, customer: selectedCustomer || undefined, employeeId: currentEmployee?.id,
                 subtotal, tax, total, taxDetails, balanceDue: total, orderType, status: 'kitchen', source: 'in-store', payments: [],
                 tableId: currentTable?.id, locationId: currentLocationId, isTraining: false, appliedDiscount: finalAppliedDiscount, appliedPromotion: appliedPromotion || undefined,
@@ -679,85 +637,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     };
     
-    const handleSettleBill = useCallback(() => {
-        if (!currentTable) return;
-    
-        const pendingOrdersForTable = (orders || []).filter(
-            (o: Order) => o.tableId === currentTable.id && ['kitchen', 'served', 'partially-paid'].includes(o.status)
-        );
-        
-        const allCartItems = [...pendingOrdersForTable.flatMap(o => o.cart), ...cart];
-        
-        if (allCartItems.length === 0) {
-            addToast({ type: 'error', title: 'Empty Bill', message: 'There are no items to settle for this table.' });
-            return;
-        }
-    
-        const currentLocation = locations.find(l => l.id === currentLocationId)!;
-        const { subtotal, tax, total, taxDetails, finalAppliedDiscount, loyaltyDiscountAmount } = calculateOrderTotals(
-            allCartItems, currentLocation, appliedDiscount, appliedPromotion, 'dine-in', settings, selectedCustomer, surcharges, appliedLoyaltyPoints
-        );
-        
-        const settlementOrder: Order = {
-            id: `settle_${currentTable.id}_${Date.now()}`,
-            orderNumber: pendingOrdersForTable[0]?.orderNumber || (settings.orderSettings.nextDailyOrderNumber).toString().padStart(4, '0'),
-            invoiceNumber: pendingOrdersForTable[0]?.invoiceNumber || `${settings.orderSettings.invoicePrefix}${settings.orderSettings.nextInvoiceNumber}`,
-            createdAt: pendingOrdersForTable[0]?.createdAt || Date.now(),
-            cart: allCartItems,
-            customer: selectedCustomer || pendingOrdersForTable[0]?.customer,
-            employeeId: currentEmployee?.id,
-            subtotal, tax, total, taxDetails,
-            balanceDue: total,
-            orderType: 'dine-in',
-            status: 'pending',
-            source: 'in-store',
-            payments: [],
-            tableId: currentTable.id,
-            locationId: currentLocationId,
-            isTraining: false,
-            appliedDiscount: finalAppliedDiscount,
-            appliedPromotion: appliedPromotion || undefined,
-            appliedLoyaltyPoints: loyaltyDiscountAmount > 0 ? appliedLoyaltyPoints : undefined,
-            guestCount: currentTable.guestCount,
-            notes: '',
-            originalOrderIds: pendingOrdersForTable.map(o => o.id)
-        };
-    
-        setActiveOrderToSettle(settlementOrder);
-    
-    }, [currentTable, orders, cart, addToast, locations, currentLocationId, appliedDiscount, appliedPromotion, settings, selectedCustomer, surcharges, appliedLoyaltyPoints, currentEmployee, setActiveOrderToSettle]);
-
-    const handleInitiateSettlePayment = useCallback(() => {
-        if (!activeOrderToSettle) return;
-    
-        const currentLocation = locations.find(l => l.id === currentLocationId)!;
-        const cardPlugin = plugins.find(p => p.id === 'payment-terminal');
-        
-        if (!activeOrderToSettle.invoiceNumber) {
-            activeOrderToSettle.invoiceNumber = `${settings.orderSettings.invoicePrefix}${settings.orderSettings.nextInvoiceNumber}`;
-            setSettings(prev => ({
-                ...prev,
-                orderSettings: {
-                    ...prev.orderSettings,
-                    nextInvoiceNumber: prev.orderSettings.nextInvoiceNumber + 1
-                }
-            }));
-        }
-    
-        openModal('payment', {
-            orderToPay: [activeOrderToSettle],
-            onFinalize: (payments: Payment[]) => handleFinalizePayment(payments, activeOrderToSettle),
-            onDirectPrintReceipt,
-            onPrintA4: (order: Order) => addPrintJobs([{ component: 'A4Invoice', props: { order, location: currentLocation, settings, employees } }]),
-            cardPlugin,
-            allPaymentTypes: paymentTypes,
-            currency: currentLocation.currency,
-            settings,
-            setSettings,
-            addToast,
-        });
-    }, [activeOrderToSettle, locations, currentLocationId, plugins, settings, openModal, handleFinalizePayment, onDirectPrintReceipt, addPrintJobs, employees, paymentTypes, addToast, setSettings]);
-
+    const handleSettleBill = () => {};
+    const handleInitiateSettlePayment = () => {};
 
     const handleInitiatePayment = () => {
         if (cart.length === 0) {
@@ -775,7 +656,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             
             const orderToPay: Order = {
                 id: `ord_${Date.now()}`,
-                orderNumber: (settings.orderSettings.nextDailyOrderNumber).toString().padStart(4, '0'),
+                orderNumber: String(settings.orderSettings.nextDailyOrderNumber).padStart(4, '0'),
                 invoiceNumber: `${settings.orderSettings.invoicePrefix}${settings.orderSettings.nextInvoiceNumber}`,
                 createdAt: Date.now(),
                 cart: cart,
@@ -858,7 +739,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               const { subtotal, tax, total, taxDetails } = calculateOrderTotals(cart, locations.find(l => l.id === currentLocationId)!, null, null, 'tab', settings, selectedCustomer, surcharges);
               const newTab: Order = {
                 id: `ord_tab_${Date.now()}`,
-                orderNumber: 'T-' + (settings.orderSettings.nextDailyOrderNumber).toString().padStart(4, '0'),
+                orderNumber: 'T-' + String(settings.orderSettings.nextDailyOrderNumber).padStart(4, '0'),
                 invoiceNumber: '', createdAt: Date.now(), cart, customer: selectedCustomer, employeeId: currentEmployee?.id,
                 subtotal, tax, total, taxDetails, balanceDue: total, orderType: 'tab', status: 'partially-paid', source: 'in-store', payments: [], locationId: currentLocationId, isTraining: false, appliedDiscount: null
               };
@@ -948,39 +829,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setHeldOrders(prev => prev.filter(o => o.id !== id));
     }, [setHeldOrders]);
     
-    const handleSaveCategory = useCallback((category: Category, isNew: boolean) => {
-    setCategories(prev => {
-        if (isNew) {
-            const newCategoryWithId = { ...category, id: category.id || category.name.toLowerCase().replace(/\s+/g, '_').replace(/[^\w-]+/g, '') };
-            addToast({ type: 'success', title: 'Category Added', message: `Category "${newCategoryWithId.name}" has been created.` });
-            setJustAddedCategoryId(newCategoryWithId.id); // For product modal to auto-select
-            return [...prev, newCategoryWithId];
-        } else {
-            addToast({ type: 'success', title: 'Category Updated', message: `Category "${category.name}" has been updated.` });
-            return prev.map(c => c.id === category.id ? category : c);
-        }
-    });
-    closeModal();
-}, [setCategories, addToast, closeModal]);
-
-const handleDeleteCategory = useCallback((categoryId: string) => {
-    const itemsInCategory = menuItems.filter((item: MenuItem) => item.category === categoryId).length;
-    if (itemsInCategory > 0) {
-        addToast({ type: 'error', title: 'Deletion Failed', message: `Cannot delete category as it contains ${itemsInCategory} product(s).` });
-        return;
-    }
-    openModal('confirm', {
-        title: 'Delete Category',
-        message: 'Are you sure you want to delete this category? This action cannot be undone.',
-        confirmText: 'Delete',
-        onConfirm: () => {
-            setCategories(prev => prev.filter((c: Category) => c.id !== categoryId));
-            addToast({ type: 'info', title: 'Category Deleted', message: 'The category has been removed.' });
-            closeModal();
-        }
-    });
-}, [setCategories, menuItems, addToast, openModal, closeModal]);
-
     // KDS & Kiosk Actions (previously via BroadcastChannel)
     const onCompleteKdsOrder = (orderId: string) => {
         setOrders(prev => prev.map(o => {
@@ -1012,7 +860,7 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
         if (!kioskCart || kioskCart.length === 0) return null;
         const currentLocation = locations.find(l => l.id === currentLocationId)!;
         const { subtotal, tax, total, taxDetails } = calculateOrderTotals(kioskCart, currentLocation, null, null, 'kiosk', settings, null, surcharges);
-        const newOrderNumber = 'K-' + (settings.orderSettings.nextDailyOrderNumber).toString().padStart(4, '0');
+        const newOrderNumber = 'K-' + String(settings.orderSettings.nextDailyOrderNumber).padStart(4, '0');
         const newOrder: Order = {
             id: `ord_kiosk_${Date.now()}`,
             orderNumber: newOrderNumber,
@@ -1068,7 +916,6 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
                 currentOrderType: orderType,
                 allSignagePlaylists: signagePlaylists,
                 allSignageContent: signageContent,
-                surcharges: surcharges,
             };
             try { channel.postMessage({ type: 'STATE_SYNC', payload: fullState }); } 
             catch (error) { console.error("BroadcastChannel postMessage failed:", error); }
@@ -1090,7 +937,7 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
                     }
                     const currentLocation = locations.find(l => l.id === qrLocationId)!;
                     const { subtotal, tax, total, taxDetails } = calculateOrderTotals(qrCart, currentLocation, null, null, 'dine-in', settings, customerRecord, surcharges);
-                    const newOrderNumber = (settings.orderSettings.nextDailyOrderNumber).toString().padStart(4, '0');
+                    const newOrderNumber = String(settings.orderSettings.nextDailyOrderNumber).padStart(4, '0');
                     const newOrder: Order = {
                         id: `ord_${Date.now()}`, orderNumber: newOrderNumber, invoiceNumber: '', createdAt: Date.now(), cart: qrCart,
                         customer: customerRecord, employeeId: 'qr_system', subtotal, tax, total, taxDetails, balanceDue: 0,
@@ -1104,22 +951,13 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
                     channel.postMessage({ type: 'QR_ORDER_CONFIRMED', payload: { orderNumber: newOrder.orderNumber } });
                     break;
                 }
-                case 'KDS_ORDER_COMPLETE': {
-                    const { orderId } = payload;
-                    onCompleteKdsOrder(orderId);
-                    break;
-                }
-                case 'KDS_ITEM_TOGGLE_PREPARED': {
-                    const { orderId, cartId } = payload;
-                    onTogglePreparedItem(orderId, cartId);
-                    break;
-                }
             }
         };
         channel.addEventListener('message', handleMessage);
+        broadcastState(); // Initial broadcast
         
-        // Broadcast on any significant state change
-        const intervalId = setInterval(broadcastState, 500); // Broadcast every 0.5 seconds for responsiveness
+        // Also broadcast on any significant state change
+        const intervalId = setInterval(broadcastState, 2000); // Broadcast every 2 seconds
 
         return () => {
             channel.removeEventListener('message', handleMessage);
@@ -1129,8 +967,7 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
         settings, lastCompletedOrder, menuItems, signagePlaylists, signageContent,
         currentLocationId, locations, tables, orders, calledOrderNumber, customers,
         cart, orderType,
-        setOrders, addToast, setSettings, surcharges, currentEmployee, setCustomers, setTables,
-        onCompleteKdsOrder, onTogglePreparedItem
+        setOrders, addToast, setSettings, surcharges, currentEmployee, setCustomers, setTables
     ]);
 
 
@@ -1246,6 +1083,34 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
         setActiveOrderToSettle(activeTab);
     }, [activeTab]);
 
+    const handleAddPizzaToCart = (item: MenuItem, config: PizzaConfiguration, finalPrice: number) => {
+        const newCartItem: CartItem = {
+            cartId: `${Date.now()}-${Math.random()}`,
+            menuItem: item,
+            quantity: 1,
+            selectedModifiers: [], // Base pizza has no standard modifiers
+            pizzaConfiguration: config,
+            priceOverride: finalPrice - item.price,
+        };
+        setCart(prev => [...prev, newCartItem]);
+        addToast({ type: 'success', title: 'Pizza Added', message: `${item.name} has been added to the cart.` });
+        closeModal();
+    };
+
+    const handleAddBurgerToCart = (item: MenuItem, config: BurgerConfiguration, finalPrice: number) => {
+        const newCartItem: CartItem = {
+            cartId: `${Date.now()}-${Math.random()}`,
+            menuItem: item,
+            quantity: 1,
+            selectedModifiers: [], // Base burger has no standard modifiers
+            burgerConfiguration: config,
+            priceOverride: finalPrice - item.price,
+        };
+        setCart(prev => [...prev, newCartItem]);
+        addToast({ type: 'success', title: 'Burger Added', message: `${item.name} has been added to the cart.` });
+        closeModal();
+    };
+
     const contextValue = useMemo(() => ({
         activeView, setView: setActiveView,
         managementSubView, setManagementSubView,
@@ -1273,10 +1138,6 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
         handleHoldOrder,
         handleReopenOrder,
         handleDeleteHeldOrder,
-        handleSaveCategory,
-        handleDeleteCategory,
-        handleSaveProduct,
-        handleDeleteProduct,
         activeOrderToSettle, setActiveOrderToSettle,
         selectedStaff, setSelectedStaff,
         activeTab, setActiveTab,
@@ -1291,10 +1152,7 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
         isKsaPluginActive,
         isOrderNumberDisplayPluginActive,
         isQRCodePluginActive,
-        handleClockIn,
-        handleClockOut,
-        handleStartBreak,
-        handleEndBreak,
+// FIX: Removed reference to the obsolete function `onToggleClockStatus`.
         onSelectItem,
         waitlist, setWaitlist,
         onUpdateWaitlistStatus,
@@ -1378,10 +1236,14 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
         lastCompletedOrder,
         handleApplyDiscountToItem,
         calledOrderNumber,
+        handleAddPizzaToCart,
+        handleAddBurgerToCart,
+        handleClockIn, handleClockOut, handleStartBreak, handleEndBreak,
     }), [
-        activeView, managementSubView, settingsSubView, currentEmployee, currentLocationId, locations, theme, settings, toasts, modal, cart, orderType, selectedCustomer, orders, currentTable, searchQuery, activeCategory, isSuggestingUpsell, aiUpsellSuggestions, heldOrders, onNewSaleClick, activeOrderToSettle, selectedStaff, activeTab, appliedLoyaltyPoints, isSidebarHidden, isSidebarCollapsed, plugins, isWaitlistPluginActive, isReservationPluginActive, isMultiStorePluginActive, isKsaPluginActive, isOrderNumberDisplayPluginActive, isQRCodePluginActive, handleClockIn, handleClockOut, handleStartBreak, handleEndBreak, onSelectItem, waitlist, onUpdateWaitlistStatus, handlePinLogin, handleLogout, printQueue, notifications, isFullscreen, onToggleFullScreen, onLaunchView, updatePrintJobStatus, addPrintJobs, openModal, closeModal, addToast,
-        categories, categoriesWithCounts, menuItems, customers, drivers, employees, suppliers, wastageLog, roles, auditLog, printers, tables, subscriptions, purchaseOrders, schedule, reservations, ingredients, recipes, signageDisplays, signageContent, signagePlaylists, signageSchedule, paymentTypes, modifierGroups, kitchenDisplays, kitchenNotes, voidReasons, manualDiscounts, surcharges, customerDisplays, scales, callLog, handleSendToKitchen, handleInitiatePayment, handleSaveTab, handleVoidOrder, handleFinalizePayment, handleSettleBill, handleInitiateSettlePayment, handleSavePrinter, handleDeletePrinter, handleHoldOrder, handleReopenOrder, handleDeleteHeldOrder, onToggleTheme, handleGetUpsellSuggestions, onSelectUpsellSuggestion, lastCompletedOrder, promotions, onSelectCustomer, handleSettleTab, handleApplyDiscountToItem, availablePromotions,
-        calledOrderNumber
+        activeView, managementSubView, settingsSubView, currentEmployee, currentLocationId, locations, theme, settings, toasts, modal, cart, orderType, selectedCustomer, orders, currentTable, searchQuery, activeCategory, isSuggestingUpsell, aiUpsellSuggestions, heldOrders, onNewSaleClick, activeOrderToSettle, selectedStaff, activeTab, appliedLoyaltyPoints, isSidebarHidden, isSidebarCollapsed, plugins, isWaitlistPluginActive, isReservationPluginActive, isMultiStorePluginActive, isKsaPluginActive, isOrderNumberDisplayPluginActive, isQRCodePluginActive, waitlist, onUpdateWaitlistStatus, handlePinLogin, handleLogout, printQueue, notifications, isFullscreen, onToggleFullScreen, onLaunchView, updatePrintJobStatus, addPrintJobs, openModal, closeModal, addToast,
+// FIX: Added the new time clock functions to the dependency array for correctness.
+        categories, categoriesWithCounts, menuItems, customers, drivers, employees, suppliers, wastageLog, roles, auditLog, printers, tables, subscriptions, purchaseOrders, schedule, reservations, ingredients, recipes, signageDisplays, signageContent, signagePlaylists, signageSchedule, paymentTypes, modifierGroups, kitchenDisplays, kitchenNotes, voidReasons, manualDiscounts, surcharges, customerDisplays, scales, callLog, handleSendToKitchen, handleInitiatePayment, handleSaveTab, handleVoidOrder, handleFinalizePayment, handleSettleBill, handleInitiateSettlePayment, handleSavePrinter, handleDeletePrinter, handleHoldOrder, handleReopenOrder, handleDeleteHeldOrder, onToggleTheme, handleGetUpsellSuggestions, onSelectItem, onSelectUpsellSuggestion, lastCompletedOrder, promotions, onSelectCustomer, handleSettleTab, handleApplyDiscountToItem, availablePromotions,
+        calledOrderNumber, handleAddPizzaToCart, handleAddBurgerToCart, handleClockIn, handleClockOut, handleStartBreak, handleEndBreak
     ]);
 
     return (

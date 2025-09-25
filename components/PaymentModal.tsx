@@ -1,6 +1,4 @@
-
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Order, PaymentMethod, AppPlugin, PaymentType, AppSettings, ToastNotification, Payment } from '../types';
 import CurrencyDollarIcon from './icons/CurrencyDollarIcon';
 import CreditCardIcon from './icons/CreditCardIcon';
@@ -42,309 +40,229 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay
   const [email, setEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
   const [payments, setPayments] = useState<Payment[]>([]);
+  // FIX: Changed NodeJS.Timeout to number for browser compatibility.
+  const successTimeoutRef = useRef<number | null>(null);
   
   const isCardConfigured = useMemo(() => {
-    return (cardPlugin?.status === 'enabled' || cardPlugin?.status === 'trial') 
-        && !!settings.paymentProvider && settings.paymentProvider !== 'none'
-        && !!settings.paymentTerminalSecretKey
-        && !!settings.terminalId;
+    return (cardPlugin?.status === 'enabled' || cardPlugin?.status === 'trial') && !!settings.paymentTerminalSecretKey && !!settings.terminalId;
   }, [cardPlugin, settings]);
-  
-  const enabledPaymentTypes = useMemo(() => {
-    if (!Array.isArray(allPaymentTypes)) return [];
-    return allPaymentTypes.filter(pt => pt?.isEnabled);
-  }, [allPaymentTypes]);
 
-  const totalDue = useMemo(() => orderToPay?.reduce((sum, o) => sum + o.total, 0) || 0, [orderToPay]);
-  const totalPaid = useMemo(() => payments.reduce((sum, p) => sum + p.amount, 0), [payments]);
-  const remainingDue = useMemo(() => totalDue - totalPaid, [totalDue, totalPaid]);
-  
+  const totalAmount = useMemo(() => {
+    if (!orderToPay) return 0;
+    return orderToPay.reduce((sum, order) => sum + order.balanceDue, 0);
+  }, [orderToPay]);
+
+  const totalPaid = useMemo(() => payments.reduce((acc, p) => acc + p.amount, 0), [payments]);
+  const remainingDue = totalAmount - totalPaid;
+
   useEffect(() => {
     if (isOpen) {
-      setPayments([]);
-      setCardStatus('idle');
-      setPaymentStatus('paying');
-      setFinalizedOrder(null);
-      setEmail(orderToPay?.[0]?.customer?.email || '');
-      setEmailSent(false);
-      
-      if (enabledPaymentTypes.length > 0) {
-        const firstMethod = enabledPaymentTypes[0];
-        setActiveMethod(firstMethod?.name?.toLowerCase() || '');
-      } else {
+        setPayments([]);
+        setPaymentStatus('paying');
+        setFinalizedOrder(null);
         setActiveMethod('');
-      }
-    }
-  }, [isOpen, orderToPay, enabledPaymentTypes]);
-  
-  useEffect(() => {
-    setTenderedAmount(remainingDue > 0 ? remainingDue.toFixed(2) : '0.00');
-  }, [remainingDue]);
-
-  useEffect(() => {
-    if (remainingDue <= 0.001 && payments.length > 0 && paymentStatus === 'paying' && isOpen) {
-      const finalOrder = onFinalize(payments);
-      setFinalizedOrder(finalOrder);
-      setPaymentStatus('success');
-    }
-  }, [remainingDue, payments, paymentStatus, onFinalize, orderToPay, isOpen]);
-  
-  useEffect(() => {
-    if (finalizedOrder && settings?.advancedPOS?.printReceiptAfterPayment) {
-        const timer = setTimeout(() => {
-            onDirectPrintReceipt(finalizedOrder);
-        }, 500);
-        return () => clearTimeout(timer);
-    }
-  }, [finalizedOrder, settings?.advancedPOS?.printReceiptAfterPayment, onDirectPrintReceipt]);
-
-
-  if (!isOpen || !orderToPay) return null;
-
-  const handleSendEmail = () => {
-    if (email && email.includes('@')) {
-        console.log(`Simulating sending email receipt to ${email}`);
-        addToast({ type: 'success', title: 'Email Sent', message: `Receipt sent to ${email}` });
-        setEmailSent(true);
-    } else {
-        addToast({ type: 'error', title: 'Invalid Email', message: 'Please enter a valid email address.' });
-    }
-  };
-  
-  const handleGoToCardSettings = () => {
-    onClose(); // Close the payment modal first
-    openModal('paymentTerminalSettings', {
-        settings: settings,
-        onSave: (newTerminalSettings: Partial<AppSettings>) => {
-            setSettings(prev => ({ ...prev, ...newTerminalSettings }));
-            addToast({ type: 'success', title: 'Settings Saved', message: 'Payment terminal has been configured.' });
+        setTenderedAmount('');
+        setEmailSent(false);
+        const customerEmail = (orderToPay && orderToPay.length > 0 && orderToPay[0].customer?.email) ? orderToPay[0].customer.email : '';
+        setEmail(customerEmail);
+        if (successTimeoutRef.current) {
+            clearTimeout(successTimeoutRef.current);
+            successTimeoutRef.current = null;
         }
-    });
-  };
-  
-  const handleAddPayment = (method: PaymentMethod, amount: number) => {
+    }
+    return () => {
+        if (successTimeoutRef.current) {
+            clearTimeout(successTimeoutRef.current);
+        }
+    };
+  }, [isOpen, orderToPay]);
+
+  useEffect(() => {
+    if (totalPaid >= totalAmount && totalAmount > 0 && !successTimeoutRef.current && paymentStatus === 'paying') {
+      successTimeoutRef.current = window.setTimeout(() => {
+        const finalOrder = onFinalize(payments);
+        setFinalizedOrder(finalOrder);
+        setPaymentStatus('success');
+        successTimeoutRef.current = null;
+      }, 1000); // Delay to show $0.00 balance
+    }
+  }, [totalPaid, totalAmount, onFinalize, payments, paymentStatus]);
+
+  const addCashPayment = (amount: number) => {
     if (amount <= 0) return;
-    const newPayment: Payment = { method, amount, timestamp: Date.now() };
+    const newPayment: Payment = {
+        method: 'Cash',
+        amount: amount,
+        timestamp: Date.now(),
+    };
     setPayments(prev => [...prev, newPayment]);
+    setTenderedAmount('');
+    setActiveMethod('');
+  };
+
+  const addCardPayment = (amount: number, method: string = 'Card') => {
+      const newPayment: Payment = { method, amount, timestamp: Date.now() };
+      setPayments(prev => [...prev, newPayment]);
+  };
+
+  const handleTenderedAmountClick = (amount: number) => {
+      setTenderedAmount(String(amount));
+      addCashPayment(amount);
   };
   
-  const handleProcessCashPayment = () => {
-    const tendered = parseFloat(tenderedAmount) || 0;
-    if (tendered < remainingDue) {
-      handleAddPayment('Cash', tendered);
-    } else {
-      const change = tendered - remainingDue;
-      if (change > 0) {
-        addToast({ type: 'info', title: 'Change Due', message: `${currency}${change.toFixed(2)}`});
+  const handleCustomAmount = () => {
+    const amount = parseFloat(tenderedAmount);
+    if (!isNaN(amount) && amount > 0) {
+      if (activeMethod === 'cash') {
+          addCashPayment(amount);
+      } else if (activeMethod === 'card') {
+          handleCardPayment(amount);
       }
-      handleAddPayment('Cash', remainingDue);
     }
   };
 
-  const handleProcessCardPayment = () => {
-    const amountToCharge = parseFloat(tenderedAmount);
-    if (isNaN(amountToCharge) || amountToCharge <= 0) return;
-
-    setCardStatus('processing');
-    openModal('livePayment', {
-      amount: amountToCharge,
-      provider: settings.paymentProvider,
-      terminalId: settings.terminalId,
-      onApprove: () => {
-        closeModal(); // Close simulation modal
-        setCardStatus('approved');
-        setTimeout(() => {
-          handleAddPayment('Card', amountToCharge);
-          setCardStatus('idle');
-        }, 1000);
-      },
-      onDecline: () => {
-        closeModal(); // Close simulation modal
-        setCardStatus('declined');
+  const handleCardPayment = (amount: number) => {
+    if (isCardConfigured) {
+        openModal('livePayment', { 
+            amount, 
+            provider: settings.paymentProvider,
+            terminalId: settings.terminalId,
+            onApprove: () => {
+                addCardPayment(amount, 'Card');
+                closeModal();
+            },
+            onDecline: () => {
+                addToast({ type: 'error', title: 'Payment Declined', message: 'The card payment was declined by the terminal.' });
+                closeModal();
+            }
+        });
+    } else {
+         openModal('cardPaymentSimulation', { amount, onApprove: () => { addCardPayment(amount, 'Card'); closeModal() }, onDecline: () => { closeModal() } });
+    }
+  };
+  
+  const handlePaymentMethodClick = (method: string) => {
+      if(method.toLowerCase() === 'cash') {
+          setActiveMethod('cash');
+          setTenderedAmount('');
+      } else if (method.toLowerCase() === 'card') {
+          handleCardPayment(remainingDue);
+      } else {
+          addCardPayment(remainingDue, method);
       }
-    });
   };
   
-  const paymentMethodIcons: Record<string, React.FC<any>> = {
-    cash: CurrencyDollarIcon,
-    card: CreditCardIcon
+  const handleExactAmount = () => {
+    if (remainingDue > 0) {
+      addCashPayment(remainingDue);
+    }
   };
   
-  if (paymentStatus === 'success') {
-    const completedOrder = finalizedOrder;
+  const renderPayingContent = () => {
+    const cashDenominations = [5, 10, 20, 50, 100];
+    const nextBillUp = Math.ceil(remainingDue / 5) * 5;
+
     return (
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalContent className="p-8 text-center">
-          <CheckCircleIcon className="w-24 h-24 text-primary mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-foreground">Payment Successful</h3>
-          <p className="text-muted-foreground mb-6">
-            {completedOrder ? `Order #${completedOrder.orderNumber} is complete.` : 'Order is complete.'}
-          </p>
-
-          <div className="grid grid-cols-2 gap-3 mb-6">
-              <Button onClick={() => completedOrder && onDirectPrintReceipt(completedOrder)} disabled={!completedOrder} variant="outline" className="w-full flex items-center justify-center gap-2">
-                  <PrinterIcon className="w-5 h-5"/> Print Receipt
-              </Button>
-              <Button onClick={() => completedOrder && onPrintA4(completedOrder)} disabled={!completedOrder} variant="outline" className="w-full flex items-center justify-center gap-2">
-                  <DocumentArrowDownIcon className="w-5 h-5"/> Print/Save PDF
-              </Button>
+      <>
+        <ModalHeader>
+          <div className="text-center w-full">
+            <ModalTitle>Total Due</ModalTitle>
+            <p className="text-4xl font-bold text-primary mt-1">{currency}{totalAmount.toFixed(2)}</p>
           </div>
-
-          {settings?.advancedPOS?.emailReceipt && (
-            <div className="space-y-2 text-left">
-                <label className="text-sm font-medium text-muted-foreground">Send Email Receipt</label>
-                <div className="flex gap-2">
-                    <Input 
-                      type="email" 
-                      placeholder="customer@example.com" 
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      disabled={emailSent}
-                    />
-                    <Button onClick={handleSendEmail} disabled={!email || emailSent}>
-                       <EnvelopeIcon className="w-5 h-5"/>
-                    </Button>
+        </ModalHeader>
+        <ModalContent>
+          <div className="flex flex-col gap-4">
+             {totalPaid > 0 && (
+                <div className="flex justify-between items-center bg-accent p-2 rounded-lg text-lg">
+                    <span className="font-semibold text-muted-foreground">Total Paid</span>
+                    <span className="font-bold text-foreground">{currency}{totalPaid.toFixed(2)}</span>
                 </div>
-                 {emailSent && <p className="text-xs text-green-400 text-center">Receipt sent to {email}</p>}
+            )}
+            <div className="text-center bg-card p-4 rounded-lg relative">
+              <h3 className="text-lg font-semibold text-muted-foreground">Remaining Due</h3>
+              <div
+                className={cn(
+                  'text-5xl font-bold transition-all duration-300',
+                  remainingDue > 0 ? 'text-red-500 animated-gradient-border animate-blink' : 'text-green-500'
+                )}
+              >
+                {currency}{Math.max(0, remainingDue).toFixed(2)}
+              </div>
             </div>
-          )}
-          
-          <div className="mt-8">
-              <Button onClick={onClose} className="w-full">
-                  New Order
-              </Button>
+            
+            <div className="grid grid-cols-3 gap-3">
+              {(allPaymentTypes || []).map(pt => (
+                <Button key={pt.id} variant="outline" className="h-16 text-lg" onClick={() => handlePaymentMethodClick(pt.name)}>
+                    {pt.name === 'Cash' && <CurrencyDollarIcon className="w-6 h-6 mr-2" />}
+                    {pt.name === 'Card' && <CreditCardIcon className="w-6 h-6 mr-2" />}
+                    {pt.name}
+                </Button>
+              ))}
+            </div>
+            {activeMethod === 'cash' && (
+              <div className="space-y-3 animate-fade-in-down">
+                <div className="grid grid-cols-3 gap-3">
+                    <Button variant="secondary" className="h-14" onClick={handleExactAmount}>Exact</Button>
+                    {cashDenominations.map(amount => (
+                      remainingDue < amount && <Button key={amount} variant="secondary" className="h-14" onClick={() => handleTenderedAmountClick(amount)}>${amount}</Button>
+                    ))}
+                    {remainingDue > nextBillUp && <Button variant="secondary" className="h-14" onClick={() => handleTenderedAmountClick(nextBillUp)}>${nextBillUp}</Button>}
+                </div>
+                <div className="flex gap-2">
+                    <Input type="number" placeholder="Custom amount..." value={tenderedAmount} onChange={e => setTenderedAmount(e.target.value)} className="h-14 text-center text-lg" />
+                    <Button onClick={handleCustomAmount} className="h-14">Pay</Button>
+                </div>
+              </div>
+            )}
           </div>
         </ModalContent>
-      </Modal>
+      </>
     );
-  }
+  };
+  
+  const renderSuccessContent = () => {
+    if (!finalizedOrder) return null;
+    
+    const paidAmount = finalizedOrder.payments.reduce((sum, p) => sum + p.amount, 0);
+    const totalAmount = finalizedOrder.total;
+    const changeDue = paidAmount - totalAmount;
 
-  if (enabledPaymentTypes.length === 0) {
     return (
-        <Modal isOpen={isOpen} onClose={onClose}>
-            <ModalHeader>
-                <ModalTitle>Payment Error</ModalTitle>
-            </ModalHeader>
-            <ModalContent>
-                <p className="text-destructive text-center">
-                    No payment methods are enabled. Please ask a manager to enable payment types in Management &gt; Payment Types.
-                </p>
-            </ModalContent>
-            <ModalFooter>
-                <Button onClick={onClose}>Close</Button>
-            </ModalFooter>
-        </Modal>
+        <div className="text-center p-8">
+            <CheckCircleIcon className="w-24 h-24 text-primary mx-auto mb-4" />
+            <h2 className="text-3xl font-bold text-foreground">Payment Successful</h2>
+            
+            {changeDue > 0.005 && (
+                <div className="mt-6 bg-blue-500/10 p-4 rounded-lg">
+                    <p className="text-lg font-semibold text-blue-800 dark:text-blue-300">Change Due</p>
+                    <p className="text-5xl font-bold text-blue-500 animate-blink">
+                        {currency}{changeDue.toFixed(2)}
+                    </p>
+                </div>
+            )}
+            
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                <Button variant="outline" onClick={() => onDirectPrintReceipt(finalizedOrder)} className="flex-grow flex items-center justify-center gap-2">
+                    <PrinterIcon className="w-5 h-5"/> Print Receipt
+                </Button>
+                <Button variant="outline" onClick={() => onPrintA4(finalizedOrder)} className="flex-grow flex items-center justify-center gap-2">
+                    <DocumentArrowDownIcon className="w-5 h-5"/> A4 Invoice
+                </Button>
+            </div>
+            {settings.advancedPOS.emailReceipt && (
+                <form onSubmit={(e) => { e.preventDefault(); setEmailSent(true); }} className="mt-4 flex gap-2">
+                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Customer email..." className="flex-grow" />
+                    <Button type="submit" disabled={emailSent}>{emailSent ? 'Sent' : 'Email'}</Button>
+                </form>
+            )}
+            <Button onClick={onClose} size="lg" className="w-full mt-6">Done</Button>
+        </div>
     );
-  }
+  };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-3xl">
-        <div className="flex flex-col h-full">
-            <div className="p-4 border-b border-border text-center">
-                <h2 className="text-lg font-bold text-foreground">Payment</h2>
-                <div className="text-center">
-                    <p className="text-2xl font-mono text-muted-foreground">Total Due</p>
-                    <p className="text-6xl font-mono font-bold text-primary mt-1">{currency}{totalDue.toFixed(2)}</p>
-                </div>
-            </div>
-            <div className="p-6 flex gap-6">
-              <div className="w-1/3 space-y-3">
-                {enabledPaymentTypes.map(pt => {
-                    if (!pt?.name) return null;
-                    const Icon = paymentMethodIcons[pt.name.toLowerCase()] || CurrencyDollarIcon;
-                    const isActive = activeMethod === pt.name.toLowerCase();
-                    return (
-                        <button 
-                            key={pt.id} 
-                            onClick={() => setActiveMethod(pt.name.toLowerCase())}
-                            className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${isActive ? 'bg-primary/10 border-primary' : 'bg-secondary border-border hover:border-muted-foreground'}`}
-                        >
-                            <Icon className={`w-8 h-8 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
-                            <span className="font-bold text-lg text-foreground">{pt.name}</span>
-                        </button>
-                    )
-                })}
-              </div>
-              <div className="w-2/3">
-                 {activeMethod === 'cash' && (
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-1">Tendered Amount</label>
-                            <Input 
-                                type="number" 
-                                value={tenderedAmount}
-                                onChange={e => setTenderedAmount(e.target.value)}
-                                className="p-3 text-2xl font-mono text-center h-auto"
-                            />
-                        </div>
-                         <div className="grid grid-cols-3 gap-2">
-                             {[5,10,20,50,100,200].map(val => (
-                                 <Button key={val} type="button" variant="outline" onClick={() => setTenderedAmount(val.toFixed(2))}>{currency}{val}</Button>
-                             ))}
-                         </div>
-                         <Button onClick={handleProcessCashPayment} className="w-full mt-4 h-auto py-4 text-xl">
-                            Pay With Cash
-                         </Button>
-                    </div>
-                )}
-                 {activeMethod === 'card' && (
-                    <>
-                    {isCardConfigured ? (
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-muted-foreground mb-1">Amount to Charge</label>
-                                <Input 
-                                    type="number" 
-                                    value={tenderedAmount}
-                                    onChange={e => setTenderedAmount(e.target.value)}
-                                    className="p-3 text-2xl font-mono text-center h-auto"
-                                />
-                            </div>
-                            <Button onClick={handleProcessCardPayment} disabled={cardStatus !== 'idle'} className="w-full mt-4 h-auto py-4 text-xl">
-                                {cardStatus === 'idle' && 'Charge Card'}
-                                {cardStatus === 'processing' && 'Processing...'}
-                                {cardStatus === 'approved' && 'Approved!'}
-                                {cardStatus === 'declined' && 'Declined'}
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="text-center flex flex-col items-center justify-center h-full bg-secondary rounded-lg p-6">
-                            <h4 className="text-lg font-bold text-foreground mb-2">Card Payments Not Configured</h4>
-                            <p className="text-muted-foreground mb-6">The 'Advanced Card Payments' plugin must be configured.</p>
-                            <Button onClick={handleGoToCardSettings} className="w-full text-lg">
-                                Go to Settings
-                            </Button>
-                        </div>
-                    )}
-                    </>
-                )}
-              </div>
-            </div>
-            <div className="p-4 border-t border-border bg-card mt-auto space-y-2">
-                <div className="flex justify-between items-center text-xl font-bold">
-                    <span>Paid:</span>
-                    <span>{currency}{totalPaid.toFixed(2)}</span>
-                </div>
-                <div className={cn(
-                    "flex justify-between items-center text-5xl font-bold text-destructive",
-                    remainingDue > 0.001 && "animate-pulse"
-                )}>
-                    <span>Remaining Due:</span>
-                    <span>{currency}{remainingDue.toFixed(2)}</span>
-                </div>
-                {payments.length > 0 && (
-                    <div className="pt-2 border-t border-border mt-2">
-                        <h4 className="text-xs font-semibold uppercase text-muted-foreground">Applied Payments</h4>
-                        {payments.map((p, i) => (
-                            <div key={i} className="flex justify-between text-sm">
-                                <span>{p.method}</span>
-                                <span>{currency}{p.amount.toFixed(2)}</span>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
+    <Modal isOpen={isOpen} onClose={onClose}>
+        {paymentStatus === 'paying' ? renderPayingContent() : renderSuccessContent()}
     </Modal>
   );
 };

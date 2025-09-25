@@ -1,4 +1,6 @@
 
+
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Order, MenuItem, Employee, AIExecutiveSummary, AISettings } from '../types';
@@ -41,7 +43,7 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                 
                 const menuPerformance = orders.flatMap(o => o.cart).reduce((acc, item) => {
                     // FIX: Ensure price is treated as a number during calculation
-                    acc[item.menuItem.name] = (acc[item.menuItem.name] || 0) + (Number(item.menuItem.price) * item.quantity);
+                    acc[item.menuItem.name] = (acc[item.menuItem.name] || 0) + (Number(item.menuItem.price) * Number(item.quantity));
                     return acc;
                 }, {} as Record<string, number>);
                 const topItems = Object.entries(menuPerformance).sort((a, b) => b[1] - a[1]).slice(0, 3);
@@ -62,7 +64,9 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                     period: `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`,
                     totalRevenue: totalRevenue.toFixed(2),
                     totalOrders: orders.length,
+                    // FIX: Cast to Number before calling toFixed to prevent type errors.
                     topSaleDay: topDay ? { day: topDay[0], amount: Number(topDay[1]).toFixed(2) } : null,
+                    // FIX: Cast to Number before calling toFixed to prevent type errors.
                     bestSellingItems: topItems.map(([name, revenue]) => ({ name, revenue: Number(revenue).toFixed(2) })),
                     topPerformingStaff: topStaff,
                 };

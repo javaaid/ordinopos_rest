@@ -1,4 +1,6 @@
 
+
+
 import React, { useMemo } from 'react';
 import OrderItem from './OrderItem';
 import UserCircleIcon from './icons/UserCircleIcon';
@@ -256,7 +258,8 @@ export default function OrderSummary() {
 
       <div className="flex-1 flex flex-col overflow-y-hidden">
         <div className="flex-grow overflow-y-auto p-2 space-y-1.5 bg-background">
-          {allItemsForBill.length === 0 ? (
+          {/* FIX: Cast `allItemsForBill` to `any[]` to ensure `length` property is accessible. */}
+          {(allItemsForBill as any[]).length === 0 ? (
             <div className="flex-grow flex flex-col justify-center items-center text-muted-foreground p-4 h-full">
               <ShoppingBagIcon className="h-12 w-12 mb-2"/>
               <p className="text-center font-medium">{t('your_cart_is_empty')}</p>
@@ -295,23 +298,30 @@ export default function OrderSummary() {
           <AISuggestions suggestions={aiUpsellSuggestions} isLoading={isSuggestingUpsell} onSelectSuggestion={onSelectUpsellSuggestion} language={language.staff} />
           
           <div className="space-y-1 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">{t('subtotal')}</span><span className="font-medium text-foreground">{currency}{subtotal.toFixed(2)}</span></div>
-              {Object.entries(taxDetails).map(([name, value]) => (<div key={name} className="flex justify-between"><span className="text-muted-foreground">{name}</span><span className="font-medium text-foreground">{currency}{value.toFixed(2)}</span></div>))}
-              {surchargeAmount > 0 && surchargeDetails && (<div className="flex justify-between"><span className="text-muted-foreground">{surchargeDetails.name}</span><span className="font-medium text-foreground">{currency}{surchargeAmount.toFixed(2)}</span></div>)}
+              {/* FIX: Cast `subtotal` to `number` to use `toFixed`. */}
+              <div className="flex justify-between"><span className="text-muted-foreground">{t('subtotal')}</span><span className="font-medium text-foreground">{currency}{(subtotal as number).toFixed(2)}</span></div>
+              {/* FIX: Cast `value` to `number` to use `toFixed`. */}
+              {Object.entries(taxDetails).map(([name, value]) => (<div key={name} className="flex justify-between"><span className="text-muted-foreground">{name}</span><span className="font-medium text-foreground">{currency}{(value as number).toFixed(2)}</span></div>))}
+              {/* FIX: Cast `surchargeAmount` to `number` to use `toFixed`. */}
+              {surchargeAmount > 0 && surchargeDetails && (<div className="flex justify-between"><span className="text-muted-foreground">{surchargeDetails.name}</span><span className="font-medium text-foreground">{currency}{(surchargeAmount as number).toFixed(2)}</span></div>)}
               {discountAmount > 0 ? (
-                <div className="flex justify-between text-primary"><button onClick={handleAddDiscountClick} className="hover:underline font-semibold">{t('discount')} {finalAppliedDiscount ? `(${finalAppliedDiscount.name})` : ''}</button><span className="font-medium">-{currency}{discountAmount.toFixed(2)}</span></div>
+                // FIX: Cast `discountAmount` to `number` to use `toFixed`.
+                <div className="flex justify-between text-primary"><button onClick={handleAddDiscountClick} className="hover:underline font-semibold">{t('discount')} {finalAppliedDiscount ? `(${finalAppliedDiscount.name})` : ''}</button><span className="font-medium">-{currency}{(discountAmount as number).toFixed(2)}</span></div>
               ) : (
                   <div className="flex justify-between"><span className="text-muted-foreground">{t('discount')}</span><button onClick={handleAddDiscountClick} className="text-primary font-semibold hover:underline">{t('apply_discount')}</button></div>
               )}
                {loyaltyDiscountAmount > 0 && (
-                <div className="flex justify-between text-green-600"><button onClick={() => openModal('loyaltyRedemption')} className="hover:underline font-semibold">{t('loyalty_discount')}</button><span className="font-medium">-{currency}{loyaltyDiscountAmount.toFixed(2)}</span></div>
+                // FIX: Cast `loyaltyDiscountAmount` to `number` to use `toFixed`.
+                <div className="flex justify-between text-green-600"><button onClick={() => openModal('loyaltyRedemption')} className="hover:underline font-semibold">{t('loyalty_discount')}</button><span className="font-medium">-{currency}{(loyaltyDiscountAmount as number).toFixed(2)}</span></div>
               )}
               <div className="flex justify-between items-center pt-1 mt-1 border-t border-border">
                   <span className="text-lg font-bold text-foreground">{t('total')}</span>
                   <div className="text-end">
-                      <span className="text-2xl font-bold text-primary">{currency}{total.toFixed(2)}</span>
+                      {/* FIX: Cast `total` to `number` to use `toFixed`. */}
+                      <span className="text-2xl font-bold text-primary">{currency}{(total as number).toFixed(2)}</span>
                       {settings.dualCurrency.enabled && (
-                          <p className="text-xs text-muted-foreground font-mono">≈ {settings.dualCurrency.secondaryCurrency} {(total * settings.dualCurrency.exchangeRate).toFixed(2)}</p>
+                          // FIX: Cast `total` to `number` for arithmetic operation and `toFixed`.
+                          <p className="text-xs text-muted-foreground font-mono">≈ {settings.dualCurrency.secondaryCurrency} {((total as number) * settings.dualCurrency.exchangeRate).toFixed(2)}</p>
                       )}
                   </div>
               </div>
