@@ -40,14 +40,16 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                 const topDay = topDayArr.length > 0 ? topDayArr[0] : null;
                 
                 const menuPerformance = orders.flatMap(o => o.cart).reduce((acc, item) => {
-                    acc[item.menuItem.name] = (acc[item.menuItem.name] || 0) + (item.menuItem.price * item.quantity);
+                    // FIX: Ensure price is treated as a number during calculation
+                    acc[item.menuItem.name] = (acc[item.menuItem.name] || 0) + (Number(item.menuItem.price) * item.quantity);
                     return acc;
                 }, {} as Record<string, number>);
                 const topItems = Object.entries(menuPerformance).sort((a, b) => b[1] - a[1]).slice(0, 3);
                 
                 const staffPerformance = orders.reduce((acc, o) => {
                     if (o.employeeId) {
-                         acc[o.employeeId] = (acc[o.employeeId] || 0) + o.total;
+                         // FIX: Ensure total is treated as a number during calculation
+                         acc[o.employeeId] = (acc[o.employeeId] || 0) + Number(o.total);
                     }
                     return acc;
                 }, {} as Record<string, number>);

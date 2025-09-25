@@ -73,17 +73,18 @@ const ModifierModal: React.FC<ModifierModalProps> = ({ isOpen, onClose, item, on
   
   // FIX: Refactored to be more explicit for TypeScript, resolving potential overload resolution issues with `reduce` and `concat` on union types.
   const getFlatModifiers = (): ModifierOption[] => {
-    const modifiers: ModifierOption[] = [];
-    for (const val of Object.values(selectedModifiers)) {
-        if (val) {
-            if (Array.isArray(val)) {
-                modifiers.push(...val);
-            } else {
-                modifiers.push(val);
-            }
+    return Object.values(selectedModifiers).reduce<ModifierOption[]>((acc, val) => {
+      if (val) {
+        if (Array.isArray(val)) {
+          return acc.concat(val);
         }
-    }
-    return modifiers;
+        // Check if it is a valid ModifierOption and not just an empty object or something else
+        if (typeof val === 'object' && val !== null && 'name' in val && 'price' in val) {
+          return acc.concat(val as ModifierOption);
+        }
+      }
+      return acc;
+    }, []);
   };
 
   const handleConfirm = () => {

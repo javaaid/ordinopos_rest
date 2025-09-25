@@ -46,6 +46,7 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({ suggestions, isLoading, o
             onClick={() => onSelectSuggestion(suggestion.itemName)}
             className="w-full text-left p-2 bg-secondary hover:bg-muted rounded-md transition-colors"
           >
+            {/* FIX: Use translation key for "Add" */}
             <p className="font-semibold text-foreground">{t('add')}: {suggestion.itemName}</p>
             <p className="text-xs text-muted-foreground">{suggestion.reason}</p>
           </button>

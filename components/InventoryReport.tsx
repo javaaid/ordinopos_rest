@@ -1,6 +1,5 @@
 
 
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { Ingredient, Order, Supplier, WastageEntry, RecipeItem } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -45,6 +44,7 @@ const AIReorderSuggestions: React.FC<{ ingredients: Ingredient[], orders: Order[
                     Generate a brief, bulleted list of ingredients to reorder. For example: '• Mozzarella (Supplier: General Food Supplies Co.): Consider ordering 10kg.'
                 `;
 
+                // FIX: Updated to use the new generateContent API with gemini-2.5-flash model
                 const response = await ai.models.generateContent({
                     model: 'gemini-2.5-flash',
                     contents: prompt,

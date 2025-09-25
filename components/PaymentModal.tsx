@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Order, PaymentMethod, AppPlugin, PaymentType, AppSettings, ToastNotification, Payment } from '../types';
 import CurrencyDollarIcon from './icons/CurrencyDollarIcon';
@@ -11,6 +12,7 @@ import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { useModalContext, useToastContext } from '../contexts/AppContext';
+import { cn } from '../lib/utils';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -323,7 +325,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay
                     <span>Paid:</span>
                     <span>{currency}{totalPaid.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between items-center text-2xl font-bold text-destructive">
+                <div className={cn(
+                    "flex justify-between items-center text-5xl font-bold text-destructive",
+                    remainingDue > 0.001 && "animate-pulse"
+                )}>
                     <span>Remaining Due:</span>
                     <span>{currency}{remainingDue.toFixed(2)}</span>
                 </div>

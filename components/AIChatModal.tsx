@@ -37,6 +37,7 @@ const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => {
         }
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const chatSession = ai.chats.create({
+          // FIX: Updated to use gemini-2.5-flash model
           model: 'gemini-2.5-flash',
           config: {
             systemInstruction: "You are Gem, a friendly and knowledgeable AI assistant for the Ordino POS system. Your goal is to help restaurant staff with their questions about the menu, ingredients, promotions, and general operational queries. Be concise and helpful.",
@@ -71,6 +72,7 @@ const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => {
     setHistory(prev => [...prev, { role: 'model', text: '' }]);
 
     try {
+      // FIX: Updated sendMessageStream call to conform to new API
       const result = await chat.sendMessageStream({ message: text });
       
       for await (const chunk of result) {

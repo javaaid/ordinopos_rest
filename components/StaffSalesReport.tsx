@@ -46,6 +46,7 @@ const AIStaffAnalysis: React.FC<{ reportData: StaffStat[], isEnabled: boolean }>
                     Example for actionableRecommendation: "Offer ${lowerPerformer.name} coaching on upselling techniques to boost performance."
                 `;
                 
+                // FIX: Updated to use the new generateContent API with gemini-2.5-flash model
                 const response = await ai.models.generateContent({
                     model: 'gemini-2.5-flash',
                     contents: prompt,

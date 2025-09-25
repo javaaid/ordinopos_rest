@@ -106,7 +106,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         iotSensors: { smartFridges: { enabled: false, apiKey: '' }, storageSensors: { enabled: false, apiKey: '' } },
         ai: { enableAIFeatures: true, enableUpsell: true, enableCFDSuggestions: true, enableReportAnalysis: true },
         cfd: { attractScreenPlaylistId: null, featuredItemIds: [] },
-        notificationSettings: { duration: 5, position: 'top-right', theme: 'dark' },
+        notificationSettings: { duration: 1, position: 'top-right', theme: 'dark' },
         // FIX: Added missing showGuestCountPrompt property to the dineIn settings object.
         dineIn: { enabled: true, defaultGuests: 2, maxGuests: 20, enableStaffSelection: false, showGuestCountPrompt: true, surcharge: { enabled: false, name: 'Service Charge', type: 'percentage', value: 10 }, minCharge: { enabled: false, amount: 0 } },
         delivery: { enabled: true, surcharge: { enabled: false, surchargeId: null }, zones: [] },
@@ -1291,7 +1291,10 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
         isKsaPluginActive,
         isOrderNumberDisplayPluginActive,
         isQRCodePluginActive,
-        handleClockIn, handleClockOut, handleStartBreak, handleEndBreak,
+        handleClockIn,
+        handleClockOut,
+        handleStartBreak,
+        handleEndBreak,
         onSelectItem,
         waitlist, setWaitlist,
         onUpdateWaitlistStatus,
@@ -1378,7 +1381,7 @@ const handleDeleteCategory = useCallback((categoryId: string) => {
     }), [
         activeView, managementSubView, settingsSubView, currentEmployee, currentLocationId, locations, theme, settings, toasts, modal, cart, orderType, selectedCustomer, orders, currentTable, searchQuery, activeCategory, isSuggestingUpsell, aiUpsellSuggestions, heldOrders, onNewSaleClick, activeOrderToSettle, selectedStaff, activeTab, appliedLoyaltyPoints, isSidebarHidden, isSidebarCollapsed, plugins, isWaitlistPluginActive, isReservationPluginActive, isMultiStorePluginActive, isKsaPluginActive, isOrderNumberDisplayPluginActive, isQRCodePluginActive, handleClockIn, handleClockOut, handleStartBreak, handleEndBreak, onSelectItem, waitlist, onUpdateWaitlistStatus, handlePinLogin, handleLogout, printQueue, notifications, isFullscreen, onToggleFullScreen, onLaunchView, updatePrintJobStatus, addPrintJobs, openModal, closeModal, addToast,
         categories, categoriesWithCounts, menuItems, customers, drivers, employees, suppliers, wastageLog, roles, auditLog, printers, tables, subscriptions, purchaseOrders, schedule, reservations, ingredients, recipes, signageDisplays, signageContent, signagePlaylists, signageSchedule, paymentTypes, modifierGroups, kitchenDisplays, kitchenNotes, voidReasons, manualDiscounts, surcharges, customerDisplays, scales, callLog, handleSendToKitchen, handleInitiatePayment, handleSaveTab, handleVoidOrder, handleFinalizePayment, handleSettleBill, handleInitiateSettlePayment, handleSavePrinter, handleDeletePrinter, handleHoldOrder, handleReopenOrder, handleDeleteHeldOrder, onToggleTheme, handleGetUpsellSuggestions, onSelectUpsellSuggestion, lastCompletedOrder, promotions, onSelectCustomer, handleSettleTab, handleApplyDiscountToItem, availablePromotions,
-        calledOrderNumber, handleSaveCategory, handleDeleteCategory, handleSaveProduct, handleDeleteProduct
+        calledOrderNumber
     ]);
 
     return (

@@ -36,6 +36,7 @@ const MenuGrid: React.FC = () => {
         try {
           const prompt = `A delicious, photorealistic image of ${item.name}, a popular dish in the ${item.category} category. The food is presented beautifully on a clean plate, ready to be served in a restaurant. High quality food photography.`;
           
+          // FIX: Updated generateImages call to the new API and model name.
           const response = await ai.models.generateImages({
             model: 'imagen-4.0-generate-001',
             prompt: prompt,
