@@ -1083,33 +1083,71 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveOrderToSettle(activeTab);
     }, [activeTab]);
 
-    const handleAddPizzaToCart = (item: MenuItem, config: PizzaConfiguration, finalPrice: number) => {
-        const newCartItem: CartItem = {
-            cartId: `${Date.now()}-${Math.random()}`,
-            menuItem: item,
-            quantity: 1,
-            selectedModifiers: [], // Base pizza has no standard modifiers
-            pizzaConfiguration: config,
-            priceOverride: finalPrice - item.price,
-        };
-        setCart(prev => [...prev, newCartItem]);
-        addToast({ type: 'success', title: 'Pizza Added', message: `${item.name} has been added to the cart.` });
-        closeModal();
-    };
-
-    const handleAddBurgerToCart = (item: MenuItem, config: BurgerConfiguration, finalPrice: number) => {
-        const newCartItem: CartItem = {
-            cartId: `${Date.now()}-${Math.random()}`,
-            menuItem: item,
-            quantity: 1,
-            selectedModifiers: [], // Base burger has no standard modifiers
-            burgerConfiguration: config,
-            priceOverride: finalPrice - item.price,
-        };
-        setCart(prev => [...prev, newCartItem]);
-        addToast({ type: 'success', title: 'Burger Added', message: `${item.name} has been added to the cart.` });
-        closeModal();
-    };
+    const handleTransferTable = useCallback((sourceTableId: string, destinationTableId: string) => {
+        setTables(prevTables => {
+            const sourceTableIndex = prevTables.findIndex(t => t.id === sourceTableId);
+            const destTableIndex = prevTables.findIndex(t => t.id === destinationTableId);
+    
+            if (sourceTableIndex === -1 || destTableIndex === -1) {
+                addToast({ type: 'error', title: 'Transfer Failed', message: 'Could not find source or destination table.' });
+                return prevTables;
+            }
+    
+            const sourceTable = prevTables[sourceTableIndex];
+            const destTable = prevTables[destTableIndex];
+    
+            if (sourceTable.status !== 'occupied' || destTable.status !== 'available') {
+                addToast({ type: 'error', title: 'Transfer Failed', message: 'Can only transfer from an occupied table to an available one.' });
+                return prevTables;
+            }
+            
+            const ordersToTransfer = (orders || []).filter((o: Order) => o.tableId === sourceTableId && (o.status === 'kitchen' || o.status === 'served'));
+    
+            if (ordersToTransfer.length === 0) {
+                addToast({ type: 'error', title: 'Transfer Failed', message: 'Source table has no active order to transfer.' });
+                return prevTables;
+            }
+    
+            setOrders(prevOrders => {
+                const newOrders = [...prevOrders];
+                ordersToTransfer.forEach(orderToTransfer => {
+                    const orderIndex = newOrders.findIndex(o => o.id === orderToTransfer.id);
+                    if (orderIndex !== -1) {
+                        newOrders[orderIndex] = { ...newOrders[orderIndex], tableId: destinationTableId };
+                    }
+                });
+                return newOrders;
+            });
+    
+            const newTables = [...prevTables];
+            
+            newTables[destTableIndex] = {
+                ...destTable,
+                status: 'occupied',
+                orderId: sourceTable.orderId,
+                occupiedSince: sourceTable.occupiedSince,
+                customerName: sourceTable.customerName,
+                guestCount: sourceTable.guestCount,
+            };
+    
+            newTables[sourceTableIndex] = {
+                ...sourceTable,
+                status: 'available',
+                orderId: undefined,
+                occupiedSince: undefined,
+                customerName: undefined,
+                guestCount: undefined,
+            };
+            
+            addToast({ type: 'success', title: 'Transfer Successful', message: `Order from ${sourceTable.name} moved to ${destTable.name}.` });
+            
+            if(currentTable?.id === sourceTableId) {
+                setCurrentTable(newTables[destTableIndex]);
+            }
+    
+            return newTables;
+        });
+    }, [setTables, setOrders, addToast, orders, currentTable, setCurrentTable]);
 
     const contextValue = useMemo(() => ({
         activeView, setView: setActiveView,
@@ -1142,6 +1180,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         selectedStaff, setSelectedStaff,
         activeTab, setActiveTab,
         handleSettleTab,
+        handleTransferTable,
         appliedLoyaltyPoints, setAppliedLoyaltyPoints,
         isSidebarHidden, onToggleSidebar,
         isSidebarCollapsed, onToggleSidebarCollapse: () => setIsSidebarCollapsed(p => !p),
@@ -1152,7 +1191,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isKsaPluginActive,
         isOrderNumberDisplayPluginActive,
         isQRCodePluginActive,
-// FIX: Removed reference to the obsolete function `onToggleClockStatus`.
+        handleClockIn, handleClockOut, handleStartBreak, handleEndBreak,
         onSelectItem,
         waitlist, setWaitlist,
         onUpdateWaitlistStatus,
@@ -1236,14 +1275,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         lastCompletedOrder,
         handleApplyDiscountToItem,
         calledOrderNumber,
-        handleAddPizzaToCart,
-        handleAddBurgerToCart,
-        handleClockIn, handleClockOut, handleStartBreak, handleEndBreak,
     }), [
-        activeView, managementSubView, settingsSubView, currentEmployee, currentLocationId, locations, theme, settings, toasts, modal, cart, orderType, selectedCustomer, orders, currentTable, searchQuery, activeCategory, isSuggestingUpsell, aiUpsellSuggestions, heldOrders, onNewSaleClick, activeOrderToSettle, selectedStaff, activeTab, appliedLoyaltyPoints, isSidebarHidden, isSidebarCollapsed, plugins, isWaitlistPluginActive, isReservationPluginActive, isMultiStorePluginActive, isKsaPluginActive, isOrderNumberDisplayPluginActive, isQRCodePluginActive, waitlist, onUpdateWaitlistStatus, handlePinLogin, handleLogout, printQueue, notifications, isFullscreen, onToggleFullScreen, onLaunchView, updatePrintJobStatus, addPrintJobs, openModal, closeModal, addToast,
-// FIX: Added the new time clock functions to the dependency array for correctness.
+        activeView, managementSubView, settingsSubView, currentEmployee, currentLocationId, locations, theme, settings, toasts, modal, cart, orderType, selectedCustomer, orders, currentTable, searchQuery, activeCategory, isSuggestingUpsell, aiUpsellSuggestions, heldOrders, onNewSaleClick, activeOrderToSettle, selectedStaff, activeTab, appliedLoyaltyPoints, isSidebarHidden, isSidebarCollapsed, plugins, isWaitlistPluginActive, isReservationPluginActive, isMultiStorePluginActive, isKsaPluginActive, isOrderNumberDisplayPluginActive, isQRCodePluginActive, handleClockIn, handleClockOut, handleStartBreak, handleEndBreak, waitlist, onUpdateWaitlistStatus, handlePinLogin, handleLogout, printQueue, notifications, isFullscreen, onToggleFullScreen, onLaunchView, updatePrintJobStatus, addPrintJobs, openModal, closeModal, addToast,
         categories, categoriesWithCounts, menuItems, customers, drivers, employees, suppliers, wastageLog, roles, auditLog, printers, tables, subscriptions, purchaseOrders, schedule, reservations, ingredients, recipes, signageDisplays, signageContent, signagePlaylists, signageSchedule, paymentTypes, modifierGroups, kitchenDisplays, kitchenNotes, voidReasons, manualDiscounts, surcharges, customerDisplays, scales, callLog, handleSendToKitchen, handleInitiatePayment, handleSaveTab, handleVoidOrder, handleFinalizePayment, handleSettleBill, handleInitiateSettlePayment, handleSavePrinter, handleDeletePrinter, handleHoldOrder, handleReopenOrder, handleDeleteHeldOrder, onToggleTheme, handleGetUpsellSuggestions, onSelectItem, onSelectUpsellSuggestion, lastCompletedOrder, promotions, onSelectCustomer, handleSettleTab, handleApplyDiscountToItem, availablePromotions,
-        calledOrderNumber, handleAddPizzaToCart, handleAddBurgerToCart, handleClockIn, handleClockOut, handleStartBreak, handleEndBreak
+        calledOrderNumber, handleTransferTable
     ]);
 
     return (

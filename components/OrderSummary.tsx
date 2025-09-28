@@ -1,6 +1,8 @@
 
 
 
+
+
 import React, { useMemo } from 'react';
 import OrderItem from './OrderItem';
 import UserCircleIcon from './icons/UserCircleIcon';
@@ -14,7 +16,6 @@ import PauseIcon from './icons/PauseIcon';
 import PlusCircleIcon from './icons/PlusCircleIcon';
 import ChefHatIcon from './icons/ChefHatIcon';
 import CreditCardIcon from './icons/CreditCardIcon';
-// FIX: Corrected import name for the icon component.
 import ClipboardDocumentListIcon from './icons/ClipboardDocumentListIcon';
 import UserIcon from './icons/UserIcon';
 import { useTranslations } from '../hooks/useTranslations';

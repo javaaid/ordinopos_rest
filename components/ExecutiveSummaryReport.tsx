@@ -1,6 +1,8 @@
 
 
 
+
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Order, MenuItem, Employee, AIExecutiveSummary, AISettings } from '../types';
@@ -42,7 +44,7 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                 const topDay = topDayArr.length > 0 ? topDayArr[0] : null;
                 
                 const menuPerformance = orders.flatMap(o => o.cart).reduce((acc, item) => {
-                    // FIX: Ensure price is treated as a number during calculation
+                    // FIX: Explicitly cast menuItem price and quantity to numbers to prevent type errors in arithmetic operations.
                     acc[item.menuItem.name] = (acc[item.menuItem.name] || 0) + (Number(item.menuItem.price) * Number(item.quantity));
                     return acc;
                 }, {} as Record<string, number>);
@@ -50,7 +52,7 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                 
                 const staffPerformance = orders.reduce((acc, o) => {
                     if (o.employeeId) {
-                         // FIX: Ensure total is treated as a number during calculation
+                         // FIX: Explicitly cast order total to a number to prevent type errors in arithmetic operations.
                          acc[o.employeeId] = (acc[o.employeeId] || 0) + Number(o.total);
                     }
                     return acc;
@@ -64,9 +66,9 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                     period: `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`,
                     totalRevenue: totalRevenue.toFixed(2),
                     totalOrders: orders.length,
-                    // FIX: Cast to Number before calling toFixed to prevent type errors.
+                    // FIX: Explicitly cast array entry to a number to use the `toFixed` method.
                     topSaleDay: topDay ? { day: topDay[0], amount: Number(topDay[1]).toFixed(2) } : null,
-                    // FIX: Cast to Number before calling toFixed to prevent type errors.
+                    // FIX: Explicitly cast revenue to a number to use the `toFixed` method.
                     bestSellingItems: topItems.map(([name, revenue]) => ({ name, revenue: Number(revenue).toFixed(2) })),
                     topPerformingStaff: topStaff,
                 };
