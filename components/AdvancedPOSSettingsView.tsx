@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { AppSettings, AdvancedPOSSettings, TranslationKey } from '../types';
@@ -7,7 +8,6 @@ import { Card, CardContent } from './ui/Card';
 import { Button } from './ui/Button';
 import { useTranslations } from '../hooks/useTranslations';
 
-// FIX: Changed to a named export to resolve module resolution errors.
 export const AdvancedPOSSettingsView: React.FC = () => {
     const { settings, setSettings, addToast } = useAppContext();
     const t = useTranslations(settings.language.staff);
@@ -47,7 +47,7 @@ export const AdvancedPOSSettingsView: React.FC = () => {
     };
 
     const ToggleRow: React.FC<{ labelKey: TranslationKey; descKey: TranslationKey; enabled: boolean; onToggle?: () => void; }> = ({ labelKey, descKey, enabled, onToggle }) => (
-        <div className="flex items-start justify-between py-3 text-start rtl:text-end">
+        <div className="flex items-start justify-between py-3">
             <div>
                 <p className="font-medium text-foreground">{t(labelKey)}</p>
                 <p className="text-xs text-muted-foreground">{t(descKey)}</p>
@@ -55,6 +55,7 @@ export const AdvancedPOSSettingsView: React.FC = () => {
             <button
                 type="button"
                 onClick={() => {
+// FIX: Check if onToggle is a function before calling it.
                     if (typeof onToggle === 'function') {
                         onToggle();
                     }
@@ -172,7 +173,6 @@ export const AdvancedPOSSettingsView: React.FC = () => {
                         <ToggleRow labelKey="advpos_forcePinEntry_label" descKey="advpos_forcePinEntry_desc" enabled={localSettings.loginDoNotRememberPassword} onToggle={() => handleToggle('loginDoNotRememberPassword')} />
                     </SettingsGroup>
 
-                    {/* FIX: Add missing onToggle props to ToggleRow components. */}
                     <SettingsGroup titleKey="delivery">
                         <ToggleRow labelKey="advpos_enableDeliveryMaps_label" descKey="advpos_enableDeliveryMaps_desc" enabled={localSettings.enableDeliveryMaps} onToggle={() => handleToggle('enableDeliveryMaps')} />
                         <ToggleRow labelKey="advpos_enableLiveDriverTracking_label" descKey="advpos_enableLiveDriverTracking_desc" enabled={localSettings.enableLiveDriverTracking} onToggle={() => handleToggle('enableLiveDriverTracking')} />

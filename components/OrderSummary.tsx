@@ -1,12 +1,9 @@
 
 
-
-
-
 import React, { useMemo } from 'react';
 import OrderItem from './OrderItem';
 import UserCircleIcon from './icons/UserCircleIcon';
-import { calculateOrderTotals } from '../utils/calculations';
+import { calculateOrderTotals, OrderTotals } from '../utils/calculations';
 import SparklesIcon from './icons/SparklesIcon';
 import AISuggestions from './AISuggestions';
 import { useAppContext } from '../contexts/AppContext';
@@ -16,7 +13,7 @@ import PauseIcon from './icons/PauseIcon';
 import PlusCircleIcon from './icons/PlusCircleIcon';
 import ChefHatIcon from './icons/ChefHatIcon';
 import CreditCardIcon from './icons/CreditCardIcon';
-import ClipboardDocumentListIcon from './icons/ClipboardDocumentListIcon';
+import ClipboardDocumentList from './icons/ClipboardDocumentListIcon';
 import UserIcon from './icons/UserIcon';
 import { useTranslations } from '../hooks/useTranslations';
 import ShoppingBagIcon from './icons/ShoppingBagIcon';
@@ -62,7 +59,7 @@ export default function OrderSummary() {
     return pendingTableOrders.flatMap((o: Order) => o.cart || []);
   }, [pendingTableOrders, activeTab]);
   
-  const allItemsForBill = isSettlingOrder && activeOrderToSettle ? (activeOrderToSettle.cart || []) : [...sentItems, ...(cart || [])];
+  const allItemsForBill: CartItem[] = isSettlingOrder && activeOrderToSettle ? (activeOrderToSettle.cart || []) : [...sentItems, ...(cart || [])];
   
   const { subtotal, tax, total, taxDetails, discountAmount, finalAppliedDiscount, surchargeAmount, surchargeDetails, loyaltyDiscountAmount } = useMemo(() => 
     calculateOrderTotals(allItemsForBill, currentLocation, appliedDiscount, appliedPromotion, orderType, settings, selectedCustomer, surcharges, appliedLoyaltyPoints),
@@ -155,7 +152,7 @@ export default function OrderSummary() {
             return (
                  <div className="flex gap-2">
                     <Button onClick={handleSaveTab} disabled={(isCartEmpty && !activeTab) || needsCustomerForTab} title={needsCustomerForTab ? t('tab_needs_customer') : ''} className={`${buttonBaseClass}`} variant="outline">
-                        <ClipboardDocumentListIcon className="w-5 h-5" /> {activeTab ? t('add_to_tab') : t('open_tab')}
+                        <ClipboardDocumentList className="w-5 h-5" /> {activeTab ? t('add_to_tab') : t('open_tab')}
                     </Button>
                     {activeTab && (
                         <Button onClick={handleSettleTab} disabled={needsCustomerForTab} title={needsCustomerForTab ? t('tab_needs_customer') : ''} className={`${buttonBaseClass}`}>
@@ -217,6 +214,7 @@ export default function OrderSummary() {
                       className="w-full bg-accent border border-border rounded-lg px-3 py-2 text-foreground focus:ring-primary focus:border-primary font-semibold"
                   >
                       <option value="" disabled>{t('select_table')}</option>
+                      {/* FIX: Cast `tablesInFloor` to `Table[]` to resolve TypeScript error. */}
                       {(Object.entries(availableTablesByFloor) as [string, Table[]][]).map(([floor, tablesInFloor]) => (
                           <optgroup key={floor} label={floor}>
                               {(tablesInFloor as Table[]).map(table => (
@@ -259,19 +257,19 @@ export default function OrderSummary() {
 
       <div className="flex-1 flex flex-col overflow-y-hidden">
         <div className="flex-grow overflow-y-auto p-2 space-y-1.5 bg-background">
-          {/* FIX: Cast `allItemsForBill` to `any[]` to ensure `length` property is accessible. */}
-          {(allItemsForBill as any[]).length === 0 ? (
+          {allItemsForBill.length === 0 ? (
             <div className="flex-grow flex flex-col justify-center items-center text-muted-foreground p-4 h-full">
               <ShoppingBagIcon className="h-12 w-12 mb-2"/>
               <p className="text-center font-medium">{t('your_cart_is_empty')}</p>
             </div>
           ) : (
             <>
-              {(cart || []).length > 0 && (
+              {/* FIX: Guard against cart being null or undefined before accessing length property. */}
+              {cart && cart.length > 0 && (
                 <div>
                   <h3 className="text-xs font-bold uppercase text-muted-foreground mb-1.5 pt-1.5 px-1">{t('new_items')}</h3>
                   <div className="space-y-1.5">
-                    {(cart || []).map((item) => <OrderItem key={item.cartId} cartItem={item} onRemoveItem={onRemoveItem} onUpdateCartQuantity={onUpdateCartQuantity} orderType={orderType} customer={selectedCustomer} onClick={() => handleItemClick(item)} />)}
+                    {cart.map((item) => <OrderItem key={item.cartId} cartItem={item} onRemoveItem={onRemoveItem} onUpdateCartQuantity={onUpdateCartQuantity} orderType={orderType} customer={selectedCustomer} onClick={() => handleItemClick(item)} />)}
                   </div>
                 </div>
               )}
@@ -299,30 +297,24 @@ export default function OrderSummary() {
           <AISuggestions suggestions={aiUpsellSuggestions} isLoading={isSuggestingUpsell} onSelectSuggestion={onSelectUpsellSuggestion} language={language.staff} />
           
           <div className="space-y-1 text-sm">
-              {/* FIX: Cast `subtotal` to `number` to use `toFixed`. */}
-              <div className="flex justify-between"><span className="text-muted-foreground">{t('subtotal')}</span><span className="font-medium text-foreground">{currency}{(subtotal as number).toFixed(2)}</span></div>
-              {/* FIX: Cast `value` to `number` to use `toFixed`. */}
-              {Object.entries(taxDetails).map(([name, value]) => (<div key={name} className="flex justify-between"><span className="text-muted-foreground">{name}</span><span className="font-medium text-foreground">{currency}{(value as number).toFixed(2)}</span></div>))}
-              {/* FIX: Cast `surchargeAmount` to `number` to use `toFixed`. */}
-              {surchargeAmount > 0 && surchargeDetails && (<div className="flex justify-between"><span className="text-muted-foreground">{surchargeDetails.name}</span><span className="font-medium text-foreground">{currency}{(surchargeAmount as number).toFixed(2)}</span></div>)}
+              <div className="flex justify-between"><span className="text-muted-foreground">{t('subtotal')}</span><span className="font-medium text-foreground">{currency}{Number(subtotal).toFixed(2)}</span></div>
+              {Object.entries(taxDetails).map(([name, value]) => (<div key={name} className="flex justify-between"><span className="text-muted-foreground">{name}</span><span className="font-medium text-foreground">{currency}{Number(value).toFixed(2)}</span></div>))}
+              {surchargeAmount > 0 && surchargeDetails && (<div className="flex justify-between"><span className="text-muted-foreground">{surchargeDetails.name}</span><span className="font-medium text-foreground">{currency}{Number(surchargeAmount).toFixed(2)}</span></div>)}
               {discountAmount > 0 ? (
-                // FIX: Cast `discountAmount` to `number` to use `toFixed`.
-                <div className="flex justify-between text-primary"><button onClick={handleAddDiscountClick} className="hover:underline font-semibold">{t('discount')} {finalAppliedDiscount ? `(${finalAppliedDiscount.name})` : ''}</button><span className="font-medium">-{currency}{(discountAmount as number).toFixed(2)}</span></div>
+                <div className="flex justify-between text-primary"><button onClick={handleAddDiscountClick} className="hover:underline font-semibold">{t('discount')} {finalAppliedDiscount ? `(${finalAppliedDiscount.name})` : ''}</button><span className="font-medium">-{currency}{Number(discountAmount).toFixed(2)}</span></div>
               ) : (
                   <div className="flex justify-between"><span className="text-muted-foreground">{t('discount')}</span><button onClick={handleAddDiscountClick} className="text-primary font-semibold hover:underline">{t('apply_discount')}</button></div>
               )}
                {loyaltyDiscountAmount > 0 && (
-                // FIX: Cast `loyaltyDiscountAmount` to `number` to use `toFixed`.
-                <div className="flex justify-between text-green-600"><button onClick={() => openModal('loyaltyRedemption')} className="hover:underline font-semibold">{t('loyalty_discount')}</button><span className="font-medium">-{currency}{(loyaltyDiscountAmount as number).toFixed(2)}</span></div>
+                <div className="flex justify-between text-green-600"><button onClick={() => openModal('loyaltyRedemption', { customer: selectedCustomer, orderTotal: subtotal - discountAmount, onApplyPoints: setAppliedLoyaltyPoints})} className="hover:underline font-semibold">{t('loyalty_discount')}</button><span className="font-medium">-{currency}{Number(loyaltyDiscountAmount).toFixed(2)}</span></div>
               )}
               <div className="flex justify-between items-center pt-1 mt-1 border-t border-border">
                   <span className="text-lg font-bold text-foreground">{t('total')}</span>
                   <div className="text-end">
-                      {/* FIX: Cast `total` to `number` to use `toFixed`. */}
-                      <span className="text-2xl font-bold text-primary">{currency}{(total as number).toFixed(2)}</span>
+                      {/* FIX: Cast total to number before calling toFixed to resolve potential type errors. */}
+                      <span className="text-2xl font-bold text-primary">{currency}{Number(total).toFixed(2)}</span>
                       {settings.dualCurrency.enabled && (
-                          // FIX: Cast `total` to `number` for arithmetic operation and `toFixed`.
-                          <p className="text-xs text-muted-foreground font-mono">≈ {settings.dualCurrency.secondaryCurrency} {((total as number) * settings.dualCurrency.exchangeRate).toFixed(2)}</p>
+                          <p className="text-xs text-muted-foreground font-mono">≈ {settings.dualCurrency.secondaryCurrency} {(Number(total) * settings.dualCurrency.exchangeRate).toFixed(2)}</p>
                       )}
                   </div>
               </div>

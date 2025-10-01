@@ -1,8 +1,5 @@
 
 
-
-
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Order, MenuItem, Employee, AIExecutiveSummary, AISettings } from '../types';
@@ -35,28 +32,29 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
 
             try {
                 const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
-                const salesByDay = orders.reduce((acc, o) => {
+                // FIX: Typed the accumulator to resolve arithmetic and subsequent .toFixed errors.
+                const salesByDay = orders.reduce((acc: Record<string, number>, o) => {
                     const day = new Date(o.createdAt).toLocaleDateString();
                     acc[day] = (acc[day] || 0) + o.total;
                     return acc;
-                }, {} as Record<string, number>);
+                }, {});
                 const topDayArr = Object.entries(salesByDay).sort((a, b) => b[1] - a[1]);
                 const topDay = topDayArr.length > 0 ? topDayArr[0] : null;
                 
-                const menuPerformance = orders.flatMap(o => o.cart).reduce((acc, item) => {
-                    // FIX: Explicitly cast menuItem price and quantity to numbers to prevent type errors in arithmetic operations.
-                    acc[item.menuItem.name] = (acc[item.menuItem.name] || 0) + (Number(item.menuItem.price) * Number(item.quantity));
+                // FIX: Typed the accumulator to resolve arithmetic and subsequent .toFixed errors.
+                const menuPerformance = orders.flatMap(o => o.cart).reduce((acc: Record<string, number>, item) => {
+                    acc[item.menuItem.name] = (acc[item.menuItem.name] || 0) + (item.menuItem.price * item.quantity);
                     return acc;
-                }, {} as Record<string, number>);
+                }, {});
                 const topItems = Object.entries(menuPerformance).sort((a, b) => b[1] - a[1]).slice(0, 3);
                 
-                const staffPerformance = orders.reduce((acc, o) => {
+                // FIX: Typed the accumulator to resolve arithmetic and subsequent .toFixed errors.
+                const staffPerformance = orders.reduce((acc: Record<string, number>, o) => {
                     if (o.employeeId) {
-                         // FIX: Explicitly cast order total to a number to prevent type errors in arithmetic operations.
-                         acc[o.employeeId] = (acc[o.employeeId] || 0) + Number(o.total);
+                         acc[o.employeeId] = (acc[o.employeeId] || 0) + o.total;
                     }
                     return acc;
-                }, {} as Record<string, number>);
+                }, {});
                 const topStaff = Object.entries(staffPerformance).sort((a,b)=>b[1]-a[1]).slice(0,1).map(([id, sales]) => ({
                     name: (employees || []).find(e => e.id === id)?.name.replace(/\s\(.*\)/, ''),
                     sales
@@ -66,10 +64,8 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                     period: `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`,
                     totalRevenue: totalRevenue.toFixed(2),
                     totalOrders: orders.length,
-                    // FIX: Explicitly cast array entry to a number to use the `toFixed` method.
-                    topSaleDay: topDay ? { day: topDay[0], amount: Number(topDay[1]).toFixed(2) } : null,
-                    // FIX: Explicitly cast revenue to a number to use the `toFixed` method.
-                    bestSellingItems: topItems.map(([name, revenue]) => ({ name, revenue: Number(revenue).toFixed(2) })),
+                    topSaleDay: topDay ? { day: topDay[0], amount: topDay[1].toFixed(2) } : null,
+                    bestSellingItems: topItems.map(([name, revenue]) => ({ name, revenue: revenue.toFixed(2) })),
                     topPerformingStaff: topStaff,
                 };
 

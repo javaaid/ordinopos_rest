@@ -37,7 +37,6 @@ const AIReportSummary: React.FC<AIReportSummaryProps> = ({ reportData, isEnabled
                 
                 const prompt = `Analyze the following menu performance data. The data is sorted by revenue descending. Provide a very brief, high-level summary (1 sentence), one key positive insight (1 sentence), and one actionable recommendation (1 sentence) based on the data. Focus on top and bottom performers. Data: ${reportDataJSON}`;
 
-                // FIX: Updated to use the new generateContent API with gemini-2.5-flash model
                 const response = await ai.models.generateContent({
                     model: 'gemini-2.5-flash',
                     contents: prompt,

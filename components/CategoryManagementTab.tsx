@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { Category } from '../types';
 import PencilSquareIcon from './icons/PencilSquareIcon';
@@ -7,7 +8,6 @@ import SearchIcon from './icons/SearchIcon';
 import { cn } from '../lib/utils';
 import ArrowsPointingOutIcon from './icons/ArrowsPointingOutIcon';
 import ArrowsPointingInIcon from './icons/ArrowsPointingInIcon';
-// FIX: Changed to a named import to resolve "Module has no default export" error.
 import { ExportButtons } from './ExportButtons';
 import { useAppContext } from '../contexts/AppContext';
 import { useTranslations } from '../hooks/useTranslations';

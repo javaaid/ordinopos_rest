@@ -1,4 +1,5 @@
 
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { Order, Employee, AIReportAnalysis, Location, AISettings } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -46,7 +47,6 @@ const AIStaffAnalysis: React.FC<{ reportData: StaffStat[], isEnabled: boolean }>
                     Example for actionableRecommendation: "Offer ${lowerPerformer.name} coaching on upselling techniques to boost performance."
                 `;
                 
-                // FIX: Updated to use the new generateContent API with gemini-2.5-flash model
                 const response = await ai.models.generateContent({
                     model: 'gemini-2.5-flash',
                     contents: prompt,

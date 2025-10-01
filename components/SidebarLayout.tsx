@@ -5,7 +5,6 @@ import { useDataContext, useAppContext } from '../contexts/AppContext';
 import { coreModules, optionalPlugins } from '../plugins';
 import { useTranslations } from '../hooks/useTranslations';
 import ChevronDownIcon from './icons/ChevronDownIcon';
-import { cn } from '../lib/utils';
 
 
 interface SidebarLayoutProps {
@@ -47,7 +46,7 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ title, activeItem, onNavI
 
     const permissions = useMemo<PermissionSet | null>(() => {
         if (!currentEmployee || !roles) return null;
-        return (roles || []).find((r: Role) => r.id === currentEmployee.roleId)?.permissions;
+        return roles.find((r: Role) => r.id === currentEmployee.roleId)?.permissions;
     }, [currentEmployee, roles]);
     
     const navItems = useMemo(() => {

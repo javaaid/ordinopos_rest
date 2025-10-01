@@ -1,5 +1,7 @@
 
 
+
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from './contexts/AppContext';
 import { AppSettings, AdvancedPOSSettings } from './types';
@@ -7,7 +9,7 @@ import WrenchScrewdriverIcon from './icons/WrenchScrewdriverIcon';
 import { Card, CardContent } from './ui/Card';
 import { Button } from './ui/Button';
 
-const AdvancedPOSSettingsView: React.FC = () => {
+export const AdvancedPOSSettingsView: React.FC = () => {
     const { settings, setSettings, addToast } = useAppContext();
 
     if (!settings || !settings.advancedPOS) {
@@ -53,10 +55,9 @@ const AdvancedPOSSettingsView: React.FC = () => {
             <button
                 type="button"
                 onClick={() => {
+                    // FIX: Check if onToggle is a function before calling it.
                     if (typeof onToggle === 'function') {
                         onToggle();
-                    } else {
-                        console.error(`onToggle prop is not a function for ToggleRow with label: "${label}"`);
                     }
                 }}
                 className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors flex-shrink-0 ${enabled ? 'bg-primary' : 'bg-muted'}`}
@@ -180,4 +181,3 @@ const AdvancedPOSSettingsView: React.FC = () => {
         </div>
     );
 };
-export default AdvancedPOSSettingsView;

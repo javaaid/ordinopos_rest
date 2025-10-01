@@ -107,14 +107,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ai: { enableAIFeatures: true, enableUpsell: true, enableCFDSuggestions: true, enableReportAnalysis: true },
         cfd: { attractScreenPlaylistId: null, featuredItemIds: [] },
         notificationSettings: { duration: 5, position: 'top-right', theme: 'dark' },
-        // FIX: Added missing showGuestCountPrompt property to the dineIn settings object.
         dineIn: { enabled: true, defaultGuests: 2, maxGuests: 20, enableStaffSelection: false, showGuestCountPrompt: true, surcharge: { enabled: false, name: 'Service Charge', type: 'percentage', value: 10 }, minCharge: { enabled: false, amount: 0 } },
         delivery: { enabled: true, surcharge: { enabled: false, surchargeId: null }, zones: [] },
         takeAway: { enabled: true, customName: 'Take Away', requireCustomerName: false, useHoldReason: false, surcharge: { enabled: false, name: 'Packaging Fee', type: 'fixed', value: 0.50 } },
         tab: { enabled: true, customName: 'Tab' },
         qrOrdering: { enabled: true, baseUrl: '' },
         devices: { receiptPrinterId: 'p1', kitchenPrinterId: 'kp1', kioskPrinterId: null, barPrinterId: 'bp1', reportPrinterId: 'p4', customerDisplayId: 'cd1', kitchenDisplayId: 'kds_1', scaleId: 'sc1', printServerUrl: 'http://localhost:5000' },
-        // FIX: Added missing properties to the advancedPOS settings object.
         advancedPOS: { enableItemNumber: false, separateSameItems: false, combineKitchenItems: true, kitchenPrintFooter: false, kitchenPrintReservedOrder: false, sortItemInKitchen: false, sortModifier: false, sortOrderInKDS: false, printVoidOrderItem: true, printOrderAfterSending: false, quickPay: true, useVoidReason: true, confirmPayment: true, printReceiptAfterPayment: true, combineReceiptItem: true, sortItemInReceipt: false, showItemDiscount: true, showVoidOrderItem: false, emailReceipt: true, showTaxOnReceipt: true, inventoryManagement: true, allowMinusQuantity: false, useInventoryPrint: false, useEndOfDayReport: true, useStaffSalary: false, useCashInOutPrint: true, useWorkTimePrint: true, autoClockOut: false, loginDoNotRememberPassword: false, dateFormat: 'MM/DD/YYYY', lockTillToLocation: false, enableTimeClock: true, defaultPrepTimeMinutes: 15, sendLowStockEmails: true, lowStockEmailRecipients: 'manager@example.com', enableDeliveryMaps: true, enableLiveDriverTracking: true },
         preferences: { actionAfterSendOrder: 'order', actionAfterPayment: 'order', defaultPaymentMethod: 'Cash', enableOrderNotes: true, enableKitchenPrint: true, defaultOrderType: 'dine-in', enableOrderHold: true, resetOrderNumberDaily: true, dashboardWidgetOrder: ['stats', 'chart', 'quickActions', 'topItems', 'lowStock', 'recentTransactions'] },
         loyalty: { enabled: true, pointsPerDollar: 10, redemptionRate: 100 },
@@ -272,31 +270,102 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const onToggleTheme = () => setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
 
-    const onToggleClockStatus = useCallback((employeeId: string) => {
+    const handleClockIn = useCallback((employeeId: string) => {
         setEmployees(prev => {
-            const employeeIndex = prev.findIndex(e => e.id === employeeId);
-            if (employeeIndex === -1) return prev;
-
             const newEmployees = [...prev];
+            const employeeIndex = newEmployees.findIndex(e => e.id === employeeId);
+            if (employeeIndex === -1) return prev;
+    
             const employee = { ...newEmployees[employeeIndex] };
-            const now = Date.now();
-            const shifts = [...employee.shifts];
-
-            if (employee.shiftStatus === 'clocked-out' || !employee.shiftStatus) {
-                employee.shiftStatus = 'clocked-in';
-                shifts.push({ clockIn: now });
-                addToast({ type: 'success', title: 'Clocked In', message: `${employee.name} has clocked in.` });
-            } else {
-                employee.shiftStatus = 'clocked-out';
-                const lastShift = shifts[shifts.length - 1];
-                if (lastShift && !lastShift.clockOut) {
-                    lastShift.clockOut = now;
-                }
-                addToast({ type: 'info', title: 'Clocked Out', message: `${employee.name} has clocked out.` });
+            if (employee.shiftStatus === 'clocked-in' || employee.shiftStatus === 'on-break') {
+                addToast({ type: 'error', title: 'Action Failed', message: `${employee.name} is already on shift.` });
+                return prev;
             }
-            
-            employee.shifts = shifts;
+    
+            employee.shiftStatus = 'clocked-in';
+            employee.shifts = [...employee.shifts, { clockIn: Date.now(), breaks: [] }];
             newEmployees[employeeIndex] = employee;
+            
+            addToast({ type: 'success', title: 'Clocked In', message: `${employee.name} has clocked in.` });
+            return newEmployees;
+        });
+    }, [setEmployees, addToast]);
+    
+    const handleClockOut = useCallback((employeeId: string) => {
+        setEmployees(prev => {
+            const newEmployees = [...prev];
+            const employeeIndex = newEmployees.findIndex(e => e.id === employeeId);
+            if (employeeIndex === -1) return prev;
+    
+            const employee = { ...newEmployees[employeeIndex] };
+            if (employee.shiftStatus === 'clocked-out') {
+                addToast({ type: 'error', title: 'Action Failed', message: `${employee.name} is not clocked in.` });
+                return prev;
+            }
+            if (employee.shiftStatus === 'on-break') {
+                addToast({ type: 'error', title: 'Action Failed', message: `${employee.name} must end their break before clocking out.` });
+                return prev;
+            }
+    
+            employee.shiftStatus = 'clocked-out';
+            const lastShift = employee.shifts[employee.shifts.length - 1];
+            if (lastShift && !lastShift.clockOut) {
+                lastShift.clockOut = Date.now();
+            }
+            newEmployees[employeeIndex] = employee;
+            
+            addToast({ type: 'info', title: 'Clocked Out', message: `${employee.name} has clocked out.` });
+            return newEmployees;
+        });
+    }, [setEmployees, addToast]);
+    
+    const handleStartBreak = useCallback((employeeId: string) => {
+        setEmployees(prev => {
+            const newEmployees = [...prev];
+            const employeeIndex = newEmployees.findIndex(e => e.id === employeeId);
+            if (employeeIndex === -1) return prev;
+    
+            const employee = { ...newEmployees[employeeIndex] };
+            if (employee.shiftStatus !== 'clocked-in') {
+                addToast({ type: 'error', title: 'Action Failed', message: `${employee.name} must be clocked in to start a break.` });
+                return prev;
+            }
+    
+            employee.shiftStatus = 'on-break';
+            const lastShift = employee.shifts[employee.shifts.length - 1];
+            if (lastShift && !lastShift.clockOut) {
+                lastShift.breaks = [...(lastShift.breaks || []), { start: Date.now() }];
+            }
+            newEmployees[employeeIndex] = employee;
+            
+            addToast({ type: 'info', title: 'Break Started', message: `${employee.name} is now on break.` });
+            return newEmployees;
+        });
+    }, [setEmployees, addToast]);
+    
+    const handleEndBreak = useCallback((employeeId: string) => {
+        setEmployees(prev => {
+            const newEmployees = [...prev];
+            const employeeIndex = newEmployees.findIndex(e => e.id === employeeId);
+            if (employeeIndex === -1) return prev;
+    
+            const employee = { ...newEmployees[employeeIndex] };
+            if (employee.shiftStatus !== 'on-break') {
+                addToast({ type: 'error', title: 'Action Failed', message: `${employee.name} is not on a break.` });
+                return prev;
+            }
+    
+            employee.shiftStatus = 'clocked-in';
+            const lastShift = employee.shifts[employee.shifts.length - 1];
+            if (lastShift && !lastShift.clockOut && lastShift.breaks && lastShift.breaks.length > 0) {
+                const lastBreak = lastShift.breaks[lastShift.breaks.length - 1];
+                if (!lastBreak.end) {
+                    lastBreak.end = Date.now();
+                }
+            }
+            newEmployees[employeeIndex] = employee;
+            
+            addToast({ type: 'success', title: 'Break Ended', message: `${employee.name} is back from break.` });
             return newEmployees;
         });
     }, [setEmployees, addToast]);
@@ -1013,6 +1082,100 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveOrderToSettle(activeTab);
     }, [activeTab]);
 
+    const handleAddPizzaToCart = useCallback((item: MenuItem, config: PizzaConfiguration, finalPrice: number) => {
+        const newCartItem: CartItem = {
+            cartId: `pizza_${Date.now()}_${Math.random()}`,
+            menuItem: item,
+            quantity: 1,
+            selectedModifiers: [], // Modifiers are part of the configuration price
+            pizzaConfiguration: config,
+            priceOverride: finalPrice,
+        };
+        setCart(prev => [...prev, newCartItem]);
+        addToast({ type: 'success', title: 'Pizza Added', message: `${item.name} with custom toppings added to cart.` });
+        closeModal();
+    }, [setCart, addToast, closeModal]);
+    
+    const handleAddBurgerToCart = useCallback((item: MenuItem, config: BurgerConfiguration, finalPrice: number) => {
+        const newCartItem: CartItem = {
+            cartId: `burger_${Date.now()}_${Math.random()}`,
+            menuItem: item,
+            quantity: 1,
+            selectedModifiers: [], // Modifiers are part of the configuration price
+            burgerConfiguration: config,
+            priceOverride: finalPrice,
+        };
+        setCart(prev => [...prev, newCartItem]);
+        addToast({ type: 'success', title: 'Burger Added', message: `${item.name} with custom toppings added to cart.` });
+        closeModal();
+    }, [setCart, addToast, closeModal]);
+
+    const handleTransferTable = useCallback((sourceTableId: string, destinationTableId: string) => {
+        setTables(prevTables => {
+            const sourceTableIndex = prevTables.findIndex(t => t.id === sourceTableId);
+            const destTableIndex = prevTables.findIndex(t => t.id === destinationTableId);
+    
+            if (sourceTableIndex === -1 || destTableIndex === -1) {
+                addToast({ type: 'error', title: 'Transfer Failed', message: 'Could not find source or destination table.' });
+                return prevTables;
+            }
+    
+            const sourceTable = prevTables[sourceTableIndex];
+            const destTable = prevTables[destTableIndex];
+    
+            if (sourceTable.status !== 'occupied' || destTable.status !== 'available') {
+                addToast({ type: 'error', title: 'Transfer Failed', message: 'Can only transfer from an occupied table to an available one.' });
+                return prevTables;
+            }
+            
+            const ordersToTransfer = (orders || []).filter((o: Order) => o.tableId === sourceTableId && (o.status === 'kitchen' || o.status === 'served'));
+    
+            if (ordersToTransfer.length === 0) {
+                addToast({ type: 'error', title: 'Transfer Failed', message: 'Source table has no active order to transfer.' });
+                return prevTables;
+            }
+    
+            setOrders(prevOrders => {
+                const newOrders = [...prevOrders];
+                ordersToTransfer.forEach(orderToTransfer => {
+                    const orderIndex = newOrders.findIndex(o => o.id === orderToTransfer.id);
+                    if (orderIndex !== -1) {
+                        newOrders[orderIndex] = { ...newOrders[orderIndex], tableId: destinationTableId };
+                    }
+                });
+                return newOrders;
+            });
+    
+            const newTables = [...prevTables];
+            
+            newTables[destTableIndex] = {
+                ...destTable,
+                status: 'occupied',
+                orderId: sourceTable.orderId,
+                occupiedSince: sourceTable.occupiedSince,
+                customerName: sourceTable.customerName,
+                guestCount: sourceTable.guestCount,
+            };
+    
+            newTables[sourceTableIndex] = {
+                ...sourceTable,
+                status: 'available',
+                orderId: undefined,
+                occupiedSince: undefined,
+                customerName: undefined,
+                guestCount: undefined,
+            };
+            
+            addToast({ type: 'success', title: 'Transfer Successful', message: `Order from ${sourceTable.name} moved to ${destTable.name}.` });
+            
+            if(currentTable?.id === sourceTableId) {
+                setCurrentTable(newTables[destTableIndex]);
+            }
+    
+            return newTables;
+        });
+    }, [setTables, setOrders, addToast, orders, currentTable, setCurrentTable]);
+
     const contextValue = useMemo(() => ({
         activeView, setView: setActiveView,
         managementSubView, setManagementSubView,
@@ -1044,6 +1207,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         selectedStaff, setSelectedStaff,
         activeTab, setActiveTab,
         handleSettleTab,
+        handleTransferTable,
         appliedLoyaltyPoints, setAppliedLoyaltyPoints,
         isSidebarHidden, onToggleSidebar,
         isSidebarCollapsed, onToggleSidebarCollapse: () => setIsSidebarCollapsed(p => !p),
@@ -1054,7 +1218,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isKsaPluginActive,
         isOrderNumberDisplayPluginActive,
         isQRCodePluginActive,
-        onToggleClockStatus,
+        handleClockIn, handleClockOut, handleStartBreak, handleEndBreak,
         onSelectItem,
         waitlist, setWaitlist,
         onUpdateWaitlistStatus,
@@ -1138,10 +1302,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         lastCompletedOrder,
         handleApplyDiscountToItem,
         calledOrderNumber,
+        handleAddPizzaToCart,
+        handleAddBurgerToCart,
     }), [
-        activeView, managementSubView, settingsSubView, currentEmployee, currentLocationId, locations, theme, settings, toasts, modal, cart, orderType, selectedCustomer, orders, currentTable, searchQuery, activeCategory, isSuggestingUpsell, aiUpsellSuggestions, heldOrders, onNewSaleClick, activeOrderToSettle, selectedStaff, activeTab, appliedLoyaltyPoints, isSidebarHidden, isSidebarCollapsed, plugins, isWaitlistPluginActive, isReservationPluginActive, isMultiStorePluginActive, isKsaPluginActive, isOrderNumberDisplayPluginActive, isQRCodePluginActive, onToggleClockStatus, waitlist, onUpdateWaitlistStatus, handlePinLogin, handleLogout, printQueue, notifications, isFullscreen, onToggleFullScreen, onLaunchView, updatePrintJobStatus, addPrintJobs, openModal, closeModal, addToast,
+        activeView, managementSubView, settingsSubView, currentEmployee, currentLocationId, locations, theme, settings, toasts, modal, cart, orderType, selectedCustomer, orders, currentTable, searchQuery, activeCategory, isSuggestingUpsell, aiUpsellSuggestions, heldOrders, onNewSaleClick, activeOrderToSettle, selectedStaff, activeTab, appliedLoyaltyPoints, isSidebarHidden, isSidebarCollapsed, plugins, isWaitlistPluginActive, isReservationPluginActive, isMultiStorePluginActive, isKsaPluginActive, isOrderNumberDisplayPluginActive, isQRCodePluginActive, handleClockIn, handleClockOut, handleStartBreak, handleEndBreak, waitlist, onUpdateWaitlistStatus, handlePinLogin, handleLogout, printQueue, notifications, isFullscreen, onToggleFullScreen, onLaunchView, updatePrintJobStatus, addPrintJobs, openModal, closeModal, addToast,
         categories, categoriesWithCounts, menuItems, customers, drivers, employees, suppliers, wastageLog, roles, auditLog, printers, tables, subscriptions, purchaseOrders, schedule, reservations, ingredients, recipes, signageDisplays, signageContent, signagePlaylists, signageSchedule, paymentTypes, modifierGroups, kitchenDisplays, kitchenNotes, voidReasons, manualDiscounts, surcharges, customerDisplays, scales, callLog, handleSendToKitchen, handleInitiatePayment, handleSaveTab, handleVoidOrder, handleFinalizePayment, handleSettleBill, handleInitiateSettlePayment, handleSavePrinter, handleDeletePrinter, handleHoldOrder, handleReopenOrder, handleDeleteHeldOrder, onToggleTheme, handleGetUpsellSuggestions, onSelectItem, onSelectUpsellSuggestion, lastCompletedOrder, promotions, onSelectCustomer, handleSettleTab, handleApplyDiscountToItem, availablePromotions,
-        calledOrderNumber
+        calledOrderNumber, handleTransferTable, handleAddPizzaToCart, handleAddBurgerToCart,
     ]);
 
     return (

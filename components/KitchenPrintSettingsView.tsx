@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { KitchenPrintSettings, Order, Printer, KitchenProfileType, PrinterConnectionType } from '../types';
 import ArrowLeftIcon from './icons/ArrowLeftIcon';
 import { DEFAULT_KITCHEN_PRINT_SETTINGS } from '../constants';
@@ -77,7 +78,7 @@ const KitchenReceiptPreview: React.FC<{ settings: KitchenPrintSettings, paperWid
              {settings.showBarcode && DUMMY_KITCHEN_ORDER.invoiceNumber && (
                  <div className="flex flex-col items-center mt-2">
                     <div className="flex space-x-px h-8 w-4/5 items-end">
-                        {DUMMY_KITCHEN_ORDER.invoiceNumber.repeat(5).split('').map((_, i) => (<div key={i} className="bg-black" style={{ width: `${seededRandom(barcodeSeed + i) * 1.5 + 0.5}px`, height: `${seededRandom(barcodeSeed - i) * 60 + 20}%` }}></div>))}
+                        {(DUMMY_KITCHEN_ORDER.invoiceNumber.repeat(5)).split('').map((_, i) => (<div key={i} className="bg-black" style={{ width: `${seededRandom(barcodeSeed + i) * 1.5 + 0.5}px`, height: `${seededRandom(barcodeSeed - i) * 60 + 20}%` }}></div>))}
                     </div>
                     <p className="text-[8px] font-mono tracking-widest mt-1">{DUMMY_KITCHEN_ORDER.invoiceNumber}</p>
                 </div>
@@ -131,10 +132,12 @@ const KitchenPrintSettingsView: React.FC<KitchenPrintSettingsViewProps> = ({ pri
 
         setFormData(prev => {
             const newState = { ...prev, [name]: isNum ? parseInt(value) : value };
-            if (name === 'connection' && value !== 'ESC/POS Printer Wifi/Lan') {
+            // FIX: Use 'Print Server' to match the type definition.
+            if (name === 'connection' && value !== 'Print Server') {
                 newState.port = undefined;
             }
-             if (name === 'connection' && value === 'ESC/POS Printer Wifi/Lan') {
+             // FIX: Use 'Print Server' to match the type definition.
+             if (name === 'connection' && value === 'Print Server') {
                 newState.port = newState.port || 9100;
             }
             return newState;
@@ -183,12 +186,14 @@ const KitchenPrintSettingsView: React.FC<KitchenPrintSettingsViewProps> = ({ pri
             <div>
                 <label className="block text-sm font-semibold text-foreground mb-1">Connection Type</label>
                 <Select name="connection" value={(formData as Printer).connection || ''} onChange={handleBaseChange}>
-                    <option value="ESC/POS Printer Wifi/Lan">Wifi/Lan</option>
+                    {/* FIX: Use 'Print Server' to match the type definition. */}
+                    <option value="Print Server">Print Server</option>
                     <option value="Bluetooth">Bluetooth</option>
                     <option value="USB">USB</option>
                 </Select>
             </div>
-            {(formData as Printer).connection === 'ESC/POS Printer Wifi/Lan' ? (
+            {/* FIX: Use 'Print Server' to match the type definition. */}
+            {(formData as Printer).connection === 'Print Server' ? (
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-semibold text-foreground mb-1">IP Address</label>

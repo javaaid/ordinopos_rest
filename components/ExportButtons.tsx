@@ -1,6 +1,7 @@
 
 
 
+
 import React from 'react';
 import { Button } from './ui/Button';
 import ArrowDownTrayIcon from './icons/ArrowDownTrayIcon';
@@ -13,7 +14,6 @@ interface ExportButtonsProps {
   onPrint?: () => void;
 }
 
-// FIX: Changed to a named export to resolve module resolution errors.
 export const ExportButtons: React.FC<ExportButtonsProps> = ({ onCsvExport, onPrint }) => {
   const { addToast } = useToastContext();
   const { settings } = useAppContext();

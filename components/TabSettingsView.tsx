@@ -1,5 +1,7 @@
 
 
+
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext, useToastContext } from '../contexts/AppContext';
 import { AppSettings, TabSettings } from '../types';
@@ -61,7 +63,6 @@ const TabSettingsView: React.FC = () => {
             <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2 rtl:flex-row-reverse">
                 <CreditCardIcon className="w-6 h-6" /> {t('tabSettings')}
             </h3>
-            {/* FIX: Corrected translation key from 'tabDescription' to 'tabSettingsDescription' */}
             <p className="text-sm text-muted-foreground mb-6 rtl:text-end">{t('tabSettingsDescription')}</p>
             
             <div className="space-y-6 max-w-2xl overflow-y-auto pr-4">

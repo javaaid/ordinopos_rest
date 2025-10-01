@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Order, PaymentMethod, AppPlugin, PaymentType, AppSettings, ToastNotification, Payment } from '../types';
 import CurrencyDollarIcon from './icons/CurrencyDollarIcon';

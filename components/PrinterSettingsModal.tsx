@@ -113,7 +113,8 @@ const PrinterSettingsModal: React.FC<PrinterSettingsModalProps> = ({ isOpen, onC
             <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-1">Connection Type</label>
                 <Select name="connection" value={formData.connection || ''} onChange={handleChange}>
-                    <option value="ESC/POS Printer Wifi/Lan">Wifi/Lan</option>
+                    {/* FIX: Use 'Print Server' to match the type definition. */}
+                    <option value="Print Server">Print Server</option>
                     <option value="Bluetooth">Bluetooth</option>
                     <option value="USB">USB</option>
                     <option value="PDF Printer">PDF Printer</option>

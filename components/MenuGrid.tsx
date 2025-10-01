@@ -36,7 +36,6 @@ const MenuGrid: React.FC = () => {
         try {
           const prompt = `A delicious, photorealistic image of ${item.name}, a popular dish in the ${item.category} category. The food is presented beautifully on a clean plate, ready to be served in a restaurant. High quality food photography.`;
           
-          // FIX: Updated generateImages call to the new API and model name.
           const response = await ai.models.generateImages({
             model: 'imagen-4.0-generate-001',
             prompt: prompt,
@@ -50,7 +49,7 @@ const MenuGrid: React.FC = () => {
           if (response.generatedImages?.[0]?.image?.imageBytes) {
             const base64ImageBytes = response.generatedImages[0].image.imageBytes;
             const imageUrl = `data:image/jpeg;base64,${base64ImageBytes}`;
-            handleSaveProduct({ ...item, imageUrl }, false);
+            handleSaveProduct({ ...item, imageUrl }, false, undefined);
           }
         } catch (error) {
           console.error(`Failed to generate image for ${item.name}:`, error);

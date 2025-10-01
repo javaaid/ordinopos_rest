@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext, useToastContext, useDataContext } from '../contexts/AppContext';
 import { AppSettings, DeliverySettings, DeliveryZone, Surcharge } from '../types';
@@ -76,7 +77,6 @@ const DeliverySettingsView: React.FC = () => {
     };
 
     const addZone = () => {
-        // FIX: Added missing 'geojson' property to satisfy the DeliveryZone type.
         const newZone: DeliveryZone = { id: `zone_${Date.now()}`, name: 'New Zone', fee: 0, geojson: null };
         setLocalSettings(prev => ({ ...prev, zones: [...(prev.zones || []), newZone] }));
     };

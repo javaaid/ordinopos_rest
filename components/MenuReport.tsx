@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useMemo } from 'react';
 import { Order, MenuItem, Location, Ingredient, RecipeItem, AISettings } from '../types';
 import AIReportSummary from './AIReportSummary';

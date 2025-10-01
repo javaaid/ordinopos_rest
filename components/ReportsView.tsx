@@ -1,6 +1,5 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-// FIX: Added TranslationKey to the import list to resolve a type error.
 import { Order, MenuItem, Employee, Location, Category, Customer, Supplier, WastageEntry, Role, AppSettings, Ingredient, RecipeItem, PaymentType, AISettings, ReportGroup, ReportTab, TranslationKey } from '../types';
 import SalesDashboard from './SalesDashboard';
 import MenuReport from './MenuReport';
@@ -43,7 +42,6 @@ const reportTitles: Record<ReportTab, TranslationKey> = {
     bi_dashboard: 'businessIntelligence',
 };
 
-// FIX: Changed to a named export to resolve "Module has no default export" error.
 export const ReportsView: React.FC = () => {
     const {
         orders, menuItems, ingredients, recipes, employees, locations, 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import ChefHatIcon from './icons/ChefHatIcon';
 import TvIcon from './icons/TvIcon';
@@ -21,7 +22,7 @@ import Bars3Icon from './icons/Bars3Icon';
 import { Role, Notification, View } from '../types';
 import ChatBubbleOvalLeftEllipsisIcon from './icons/ChatBubbleOvalLeftEllipsisIcon';
 
-const POSHeader: React.FC = () => {
+export const POSHeader: React.FC = () => {
     const { 
         isFullscreen, onToggleFullScreen, isMultiStorePluginActive, 
         currentLocation, onLocationChange, isPizzaBuilderPluginActive,
@@ -61,7 +62,7 @@ const POSHeader: React.FC = () => {
     const role = useMemo(() => {
         return currentEmployee ? roles.find((r: Role) => r.id === currentEmployee.roleId) : null;
     }, [currentEmployee, roles]);
-
+    
     const dropdownItemClass = "w-full flex items-center gap-3 px-3 py-2 text-start text-sm rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground";
     const unreadNotificationCount = notifications.filter((n: Notification) => !n.read).length;
 
@@ -87,21 +88,22 @@ const POSHeader: React.FC = () => {
                     {t('held_orders')}
                     {heldOrders.length > 0 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">{heldOrders.length}</span>}
                 </button>
-                 <button onClick={() => openModal('aiChat')} className="flex items-center gap-2 bg-secondary hover:bg-muted text-secondary-foreground font-semibold h-9 w-9 justify-center rounded-lg text-sm transition-colors" title="AI Assistant">
-                    <ChatBubbleOvalLeftEllipsisIcon className="w-5 h-5" />
-                </button>
                  <div className="relative" ref={launchpadRef}>
                     <button onClick={() => setIsLaunchpadOpen(p => !p)} className="flex items-center gap-2 bg-secondary hover:bg-muted text-secondary-foreground font-semibold h-9 w-9 justify-center rounded-lg text-sm transition-colors" title={t('launchpad')}>
                         <Squares2X2Icon className="w-5 h-5" />
                     </button>
                     {isLaunchpadOpen && (
-                        <div className="absolute top-full end-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50 animate-fade-in-down">
+                        <div className="absolute top-full right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50 animate-fade-in-down">
                             <div className="p-1">
-                                {isPizzaBuilderPluginActive && (<button onClick={() => { openModal('pizzaBuilder'); setIsLaunchpadOpen(false); }} className={dropdownItemClass}><PizzaIcon className="w-5 h-5" /> {t('pizza_builder')}</button>)}
-                                <button onClick={() => { onLaunchView('kds' as View); setIsLaunchpadOpen(false); }} className={dropdownItemClass}><ChefHatIcon className="w-5 h-5" /> {t('kds')}</button>
-                                <button onClick={() => { onLaunchView('cfd' as View); setIsLaunchpadOpen(false); }} className={dropdownItemClass}><TvIcon className="w-5 h-5" /> {t('cfd')}</button>
-                                <button onClick={() => { onLaunchView('kiosk' as View); setIsLaunchpadOpen(false); }} className={dropdownItemClass}><ComputerDesktopIcon className="w-5 h-5" /> {t('kiosk')}</button>
-                                {isOrderNumberDisplayPluginActive && (<button onClick={() => { onLaunchView('order_number_display' as View); setIsLaunchpadOpen(false); }} className={dropdownItemClass}><QueueListIcon className="w-5 h-5" /> {t('order_display')}</button>)}
+                                {isPizzaBuilderPluginActive && (<button onClick={() => {
+                                    const pizzaItem = menuItems.find((item: any) => item.isCustomizablePizza);
+                                    if(pizzaItem) openModal('pizzaBuilder', { item: pizzaItem }); else addToast({type: 'error', title: 'Setup Required', message: 'Pizza builder menu item not found.'});
+                                    setIsLaunchpadOpen(false);
+                                }} className={dropdownItemClass}><PizzaIcon className="w-5 h-5" /> {t('pizza_builder')}</button>)}
+                                <button onClick={() => { onLaunchView('kds'); setIsLaunchpadOpen(false); }} className={dropdownItemClass}><ChefHatIcon className="w-5 h-5" /> {t('kds')}</button>
+                                <button onClick={() => { onLaunchView('cfd'); setIsLaunchpadOpen(false); }} className={dropdownItemClass}><TvIcon className="w-5 h-5" /> {t('cfd')}</button>
+                                <button onClick={() => { onLaunchView('kiosk'); setIsLaunchpadOpen(false); }} className={dropdownItemClass}><ComputerDesktopIcon className="w-5 h-5" /> {t('kiosk')}</button>
+                                {isOrderNumberDisplayPluginActive && (<button onClick={() => { onLaunchView('order_number_display'); setIsLaunchpadOpen(false); }} className={dropdownItemClass}><QueueListIcon className="w-5 h-5" /> {t('order_display')}</button>)}
                             </div>
                         </div>
                     )}
@@ -113,7 +115,7 @@ const POSHeader: React.FC = () => {
                                 <span className="hidden md:inline">{currentLocation.name}</span>
                         </button>
                         {isLocationDropdownOpen && (
-                            <div className="absolute top-full end-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50 animate-fade-in-down"><div className="p-1">{locations.map((loc: any) => (<button key={loc.id} onClick={() => { onLocationChange(loc.id); setIsLocationDropdownOpen(false);}} className={dropdownItemClass}>{loc.name}</button>))}</div></div>
+                            <div className="absolute top-full right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50 animate-fade-in-down"><div className="p-1">{locations.map((loc: any) => (<button key={loc.id} onClick={() => { onLocationChange(loc.id); setIsLocationDropdownOpen(false);}} className={dropdownItemClass}>{loc.name}</button>))}</div></div>
                         )}
                     </div>
                 )}
@@ -127,11 +129,7 @@ const POSHeader: React.FC = () => {
                 <div className="relative" ref={notificationPanelRef}>
                     <button onClick={() => setIsNotificationsOpen(p => !p)} className="relative flex items-center gap-2 bg-secondary hover:bg-muted text-secondary-foreground font-semibold h-9 w-9 justify-center rounded-lg text-sm transition-colors" title="Notifications">
                         <BellIcon className="w-5 h-5" />
-                        {unreadNotificationCount > 0 && 
-                            <span className={cn("absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground")}>
-                                {unreadNotificationCount}
-                            </span>
-                        }
+                        {unreadNotificationCount > 0 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">{unreadNotificationCount}</span>}
                     </button>
                     {isNotificationsOpen && (
                         <NotificationsPanel
@@ -147,13 +145,16 @@ const POSHeader: React.FC = () => {
                         <img src={currentEmployee?.avatar} alt={currentEmployee?.name} className="h-full w-full object-cover" />
                     </button>
                      {isUserMenuOpen && (
-                        <div className="absolute top-full end-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg z-50 animate-fade-in-down">
+                        <div className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg z-50 animate-fade-in-down">
                             <div className="p-3 border-b border-border">
                                 <p className="font-bold text-foreground text-sm">{currentEmployee?.name}</p>
                                 <p className="text-xs text-muted-foreground">{role?.name}</p>
                             </div>
                             <div className="p-1">
-                                <button onClick={handleLogout} className={cn(dropdownItemClass, 'text-destructive')}>
+                                <button onClick={() => { setIsUserMenuOpen(false); openModal('aiChat') }} className={dropdownItemClass}>
+                                    <ChatBubbleOvalLeftEllipsisIcon className="w-5 h-5"/> Ask AI Assistant
+                                </button>
+                                <button onClick={() => handleLogout()} className={cn(dropdownItemClass, 'text-destructive')}>
                                     <LogoutIcon className="w-5 h-5"/> {t('logout')}
                                 </button>
                             </div>
@@ -168,5 +169,3 @@ const POSHeader: React.FC = () => {
         </header>
     );
 };
-
-export default POSHeader;

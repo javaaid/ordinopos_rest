@@ -1,10 +1,11 @@
+
+
 import React, { useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import MenuGrid from './components/MenuGrid';
 import OrderSummary from './components/OrderSummary';
 import DeliveryView from './components/DeliveryView';
 import PermissionDenied from './components/PermissionDenied';
 import { LoginPage } from './components/LoginPage';
-import LandingPage from './components/LandingPage';
 import OrderHistoryView from './components/OrderHistoryView';
 import ToastContainer from './components/ToastContainer';
 import SidebarLayout from './components/SidebarLayout';
@@ -12,7 +13,7 @@ import { MainSidebar } from './components/MainSidebar';
 import CategoryTabs from './components/CategoryTabs';
 import TableServicesView from './components/TableServicesView';
 import { View, ManagementSubView, SettingsSubView, Order, Table, Location, Role, Category } from './types';
-import POSHeader from './components/POSHeader';
+import { POSHeader } from './components/POSHeader';
 import POSSubHeader from './components/POSSubHeader';
 import { useAppContext } from './contexts/AppContext';
 import ModalManager from './components/ModalManager';
@@ -61,7 +62,6 @@ import CustomizationSettings from './components/CustomizationSettings';
 import FontSettingsView from './components/FontSettingsView';
 import NumberingSettingsView from './components/NumberingSettingsView';
 import PreferencesSettingsView from './components/PreferencesSettingsView';
-// FIX: Changed to a named import to resolve module resolution error.
 import { AdvancedPOSSettingsView } from './components/AdvancedPOSSettingsView';
 import DeviceSettingsView from './components/DeviceSettingsView';
 import PrintersView from './components/PrintersView';
@@ -99,13 +99,13 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleHashChange = () => {
         const hash = window.location.hash.replace(/^#\/?/, '');
-        const validViews: View[] = ['kds', 'cfd', 'kiosk', 'order_number_display', 'qr_ordering', 'landing', 'pos', 'dashboard', 'tables', 'history', 'timeclock', 'management', 'settings'];
+        const validViews: View[] = ['kds', 'cfd', 'kiosk', 'order_number_display', 'qr_ordering', 'pos', 'dashboard', 'tables', 'history', 'timeclock', 'management', 'settings'];
         
         if (hash && validViews.includes(hash as View)) {
             setView(hash as View);
         } else if (!hash) {
             if (!currentEmployee) {
-                setView('landing');
+                setView('pos');
             } else {
                 setView('dashboard');
             }
@@ -178,9 +178,6 @@ const App: React.FC = () => {
 
   const publicViews: View[] = ['qr_ordering'];
   if (!currentEmployee) {
-    if (activeView === 'landing') {
-      return <LandingPage />;
-    }
     if (publicViews.includes(activeView)) {
         switch(activeView) {
             case 'qr_ordering': return <QRCodeOrderingView />;

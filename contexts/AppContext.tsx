@@ -1,4 +1,5 @@
 
+
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { LOCATIONS, CATEGORIES, MENU_ITEMS, CUSTOMERS, DRIVERS, EMPLOYEES, SUPPLIERS, WASTAGE_LOG, ROLES, AUDIT_LOG, PRINTERS, TABLES, SUBSCRIPTIONS, PURCHASE_ORDERS, PLUGINS, SCHEDULE, RESERVATIONS, INGREDIENTS, RECIPES, SIGNAGE_DISPLAYS, SIGNAGE_CONTENT, SIGNAGE_PLAYLISTS, SIGNAGE_SCHEDULE, ACTIVATION_CODES, PAYMENT_TYPES, PIZZA_OPTIONS, PROMOTIONS, MODIFIER_GROUPS, KITCHEN_DISPLAYS, KITCHEN_NOTES, VOID_REASONS, MANUAL_DISCOUNTS, SURCHARGES, CUSTOMER_DISPLAYS, SCALES, CALL_LOG, DEFAULT_KITCHEN_PRINT_SETTINGS, DEFAULT_RECEIPT_SETTINGS, KITCHEN_PROFILE_NAMES } from '../constants';
@@ -87,7 +88,7 @@ const usePersistentState = <T,>(key: string, defaultValue: T): [T, React.Dispatc
 const channel = new BroadcastChannel('ordino_pos_sync');
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [activeView, setActiveView] = usePersistentState<View>('activeView', 'landing');
+    const [activeView, setActiveView] = usePersistentState<View>('activeView', 'pos');
     const [managementSubView, setManagementSubView] = usePersistentState<ManagementSubView>('managementSubView', 'menu_products');
     const [settingsSubView, setSettingsSubView] = usePersistentState<SettingsSubView>('settingsSubView', 'integrations');
     const [currentEmployee, setCurrentEmployee] = usePersistentState<Employee | null>('currentEmployee', null);
@@ -181,6 +182,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [lastCompletedOrder, setLastCompletedOrder] = usePersistentState<Order | null>('lastCompletedOrder', null);
     const [justAddedCategoryId, setJustAddedCategoryId] = useState<string | null>(null);
     const [justAddedCustomer, setJustAddedCustomer] = useState<Customer | null>(null);
+    const [reportSchedules, setReportSchedules] = usePersistentState<ReportSchedule[]>('reportSchedules', []);
     
     const addToast = useCallback((toast: Omit<ToastNotification, 'id'>) => {
         setToasts(prev => [...prev, { ...toast, id: Date.now() }]);
@@ -205,6 +207,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             itemCount: itemCounts[cat.id] || 0,
         }));
     }, [categories, menuItems]);
+
+    const handleAddReportSchedule = useCallback((schedule: Omit<ReportSchedule, 'id' | 'locationId'>) => {
+        const newSchedule: ReportSchedule = {
+            ...schedule,
+            id: `rs_${Date.now()}`,
+            locationId: currentLocationId,
+        };
+        setReportSchedules(prev => [...prev, newSchedule]);
+        addToast({ type: 'success', title: 'Schedule Added', message: 'Report schedule has been created.' });
+    }, [currentLocationId, setReportSchedules, addToast]);
+
+    const handleDeleteReportSchedule = useCallback((scheduleId: string) => {
+        openModal('confirm', {
+            title: 'Delete Schedule',
+            message: 'Are you sure you want to delete this report schedule?',
+            onConfirm: () => {
+                setReportSchedules(prev => prev.filter(s => s.id !== scheduleId));
+                addToast({ type: 'info', title: 'Schedule Removed', message: 'Report schedule has been deleted.' });
+                closeModal();
+            }
+        });
+    }, [setReportSchedules, addToast, openModal, closeModal]);
 
     const updatePrintJobStatus = useCallback((jobId: string, status: PrintJobStatus) => {
         setPrintQueue(prev => prev.map(job => (job.id === jobId ? { ...job, status } : job)));
@@ -451,7 +475,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }]);
         }
         setCurrentEmployee(null);
-        setActiveView('landing');
+        setActiveView('pos');
     }, [currentEmployee, setCurrentEmployee, setAuditLog, setActiveView]);
     
     const handleTogglePlugin = useCallback((pluginId: string) => {
@@ -1083,6 +1107,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveOrderToSettle(activeTab);
     }, [activeTab]);
 
+    const handleAddPizzaToCart = useCallback((item: MenuItem, config: PizzaConfiguration, finalPrice: number) => {
+        const newCartItem: CartItem = {
+            cartId: `pizza_${Date.now()}_${Math.random()}`,
+            menuItem: item,
+            quantity: 1,
+            selectedModifiers: [], // Modifiers are part of the configuration price
+            pizzaConfiguration: config,
+            priceOverride: finalPrice,
+        };
+        setCart(prev => [...prev, newCartItem]);
+        addToast({ type: 'success', title: 'Pizza Added', message: `${item.name} with custom toppings added to cart.` });
+        closeModal();
+    }, [setCart, addToast, closeModal]);
+    
+    const handleAddBurgerToCart = useCallback((item: MenuItem, config: BurgerConfiguration, finalPrice: number) => {
+        const newCartItem: CartItem = {
+            cartId: `burger_${Date.now()}_${Math.random()}`,
+            menuItem: item,
+            quantity: 1,
+            selectedModifiers: [], // Modifiers are part of the configuration price
+            burgerConfiguration: config,
+            priceOverride: finalPrice,
+        };
+        setCart(prev => [...prev, newCartItem]);
+        addToast({ type: 'success', title: 'Burger Added', message: `${item.name} with custom toppings added to cart.` });
+        closeModal();
+    }, [setCart, addToast, closeModal]);
+
     const handleTransferTable = useCallback((sourceTableId: string, destinationTableId: string) => {
         setTables(prevTables => {
             const sourceTableIndex = prevTables.findIndex(t => t.id === sourceTableId);
@@ -1148,6 +1200,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return newTables;
         });
     }, [setTables, setOrders, addToast, orders, currentTable, setCurrentTable]);
+    
+    const handleSaveVoidReason = useCallback((reason: VoidReason) => {
+        setVoidReasons(prev => {
+            const existingIndex = prev.findIndex(vr => vr.id === reason.id);
+            if (existingIndex !== -1) {
+                const newReasons = [...prev];
+                newReasons[existingIndex] = reason;
+                addToast({ type: 'success', title: 'Void Reason Updated', message: `"${reason.reason}" has been updated.` });
+                return newReasons;
+            } else {
+                addToast({ type: 'success', title: 'Void Reason Added', message: `"${reason.reason}" has been added.` });
+                return [...prev, reason];
+            }
+        });
+    }, [setVoidReasons, addToast]);
+
+    const handleSaveProduct = useCallback((product: MenuItem, isNew: boolean, recipe: RecipeItem[] | undefined | null) => {
+        const productToSave = { ...product };
+        if (isNew) {
+            productToSave.id = Date.now(); // Simple ID generation
+            setMenuItems(prev => [...prev, productToSave as MenuItem]);
+            if (recipe) {
+                setRecipes(prev => ({ ...prev, [productToSave.id]: recipe }));
+            }
+            addToast({ type: 'success', title: 'Product Added', message: `"${productToSave.name}" has been created.` });
+        } else {
+            setMenuItems(prev => prev.map(p => (p.id === productToSave.id ? productToSave as MenuItem : p)));
+            if (recipe !== undefined && recipe !== null) {
+                setRecipes(prev => ({ ...prev, [productToSave.id]: recipe }));
+            }
+            addToast({ type: 'success', title: 'Product Updated', message: `"${productToSave.name}" has been updated.` });
+        }
+        closeModal();
+    }, [setMenuItems, setRecipes, addToast, closeModal]);
 
     const contextValue = useMemo(() => ({
         activeView, setView: setActiveView,
@@ -1275,10 +1361,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         lastCompletedOrder,
         handleApplyDiscountToItem,
         calledOrderNumber,
+        handleAddPizzaToCart,
+        handleAddBurgerToCart,
+        reportSchedules, handleAddReportSchedule, handleDeleteReportSchedule,
     }), [
         activeView, managementSubView, settingsSubView, currentEmployee, currentLocationId, locations, theme, settings, toasts, modal, cart, orderType, selectedCustomer, orders, currentTable, searchQuery, activeCategory, isSuggestingUpsell, aiUpsellSuggestions, heldOrders, onNewSaleClick, activeOrderToSettle, selectedStaff, activeTab, appliedLoyaltyPoints, isSidebarHidden, isSidebarCollapsed, plugins, isWaitlistPluginActive, isReservationPluginActive, isMultiStorePluginActive, isKsaPluginActive, isOrderNumberDisplayPluginActive, isQRCodePluginActive, handleClockIn, handleClockOut, handleStartBreak, handleEndBreak, waitlist, onUpdateWaitlistStatus, handlePinLogin, handleLogout, printQueue, notifications, isFullscreen, onToggleFullScreen, onLaunchView, updatePrintJobStatus, addPrintJobs, openModal, closeModal, addToast,
         categories, categoriesWithCounts, menuItems, customers, drivers, employees, suppliers, wastageLog, roles, auditLog, printers, tables, subscriptions, purchaseOrders, schedule, reservations, ingredients, recipes, signageDisplays, signageContent, signagePlaylists, signageSchedule, paymentTypes, modifierGroups, kitchenDisplays, kitchenNotes, voidReasons, manualDiscounts, surcharges, customerDisplays, scales, callLog, handleSendToKitchen, handleInitiatePayment, handleSaveTab, handleVoidOrder, handleFinalizePayment, handleSettleBill, handleInitiateSettlePayment, handleSavePrinter, handleDeletePrinter, handleHoldOrder, handleReopenOrder, handleDeleteHeldOrder, onToggleTheme, handleGetUpsellSuggestions, onSelectItem, onSelectUpsellSuggestion, lastCompletedOrder, promotions, onSelectCustomer, handleSettleTab, handleApplyDiscountToItem, availablePromotions,
-        calledOrderNumber, handleTransferTable
+        calledOrderNumber, handleTransferTable, handleAddPizzaToCart, handleAddBurgerToCart, reportSchedules, handleAddReportSchedule, handleDeleteReportSchedule,
     ]);
 
     return (
@@ -1286,4 +1375,4 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             {children}
         </AppContext.Provider>
     );
-};
+}
