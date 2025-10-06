@@ -1,10 +1,17 @@
 
 
+
+
+
+
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+// FIX: Correctly import OrderTotals from calculations, not types.
 import { CartItem, Customer, OrderType, Employee, AppliedDiscount, Language, Table, Location, Order, AppSettings, AIResponse, AISettings, Promotion, ManualDiscount, Surcharge } from './types';
 import OrderItem from './components/OrderItem';
 import UserCircleIcon from './components/icons/UserCircleIcon';
-import { calculateOrderTotals } from './utils/calculations';
+// FIX: Correctly import OrderTotals from calculations, not types.
+import { calculateOrderTotals, OrderTotals } from './utils/calculations';
 import SparklesIcon from './components/icons/SparklesIcon';
 import AISuggestions from './components/AISuggestions';
 import { useAppContext } from './contexts/AppContext';
@@ -116,9 +123,11 @@ export default function OrderSummary() {
     return pendingTableOrders.flatMap((o: Order) => o.cart || []);
   }, [pendingTableOrders, activeTab]);
   
-  const allItemsForBill = isSettlingOrder && activeOrderToSettle ? (activeOrderToSettle.cart || []) : [...sentItems, ...(cart || [])];
+  // FIX: Ensure cart is an array before spreading to prevent runtime errors.
+  const allItemsForBill: CartItem[] = isSettlingOrder && activeOrderToSettle ? (activeOrderToSettle.cart || []) : [...sentItems, ...(Array.isArray(cart) ? cart : [])];
   
-  const { subtotal, tax, total, taxDetails, discountAmount, finalAppliedDiscount, surchargeAmount, surchargeDetails, loyaltyDiscountAmount } = useMemo(() => 
+  // FIX: Explicitly type the useMemo return value to ensure `total` is a number, preventing 'toFixed' errors.
+  const { subtotal, tax, total, taxDetails, discountAmount, finalAppliedDiscount, surchargeAmount, surchargeDetails, loyaltyDiscountAmount } = useMemo<OrderTotals>(() => 
     calculateOrderTotals(allItemsForBill, currentLocation, appliedDiscount, appliedPromotion, orderType, settings, selectedCustomer, surcharges, appliedLoyaltyPoints),
   [allItemsForBill, currentLocation, appliedDiscount, appliedPromotion, orderType, settings, selectedCustomer, surcharges, appliedLoyaltyPoints]);
   
@@ -212,7 +221,8 @@ export default function OrderSummary() {
 
   const renderActionButtons = () => {
     const buttonBaseClass = "w-full h-12 rounded-lg font-bold text-base flex items-center justify-center gap-2 transition-transform duration-200 hover:scale-105 hover:shadow-lg";
-    const isCartEmpty = (cart || []).length === 0;
+    // FIX: Add Array.isArray check to prevent error when cart is not an array.
+    const isCartEmpty = !(Array.isArray(cart) && cart.length > 0);
 
     if (isSettlingOrder) {
         return (
@@ -269,11 +279,12 @@ export default function OrderSummary() {
       <div className="p-2 border-b border-border bg-card">
         <div className="flex justify-end items-center h-8">
             <div className="flex items-center gap-0.5">
-                <Button onClick={handleGetUpsellSuggestions} disabled={(cart || []).length === 0 || isSuggestingUpsell || !aiSettings.enableAIFeatures || !aiSettings.enableUpsell} size="icon" variant="ghost" title={t('ai_upsell')} className="text-muted-foreground hover:text-primary h-8 w-8"><SparklesIcon className={`w-5 h-5 ${isSuggestingUpsell ? 'animate-spin' : ''}`} /></Button>
+                {/* FIX: Add Array.isArray check to prevent error when cart is not an array. */}
+                <Button onClick={handleGetUpsellSuggestions} disabled={!(Array.isArray(cart) && cart.length > 0) || isSuggestingUpsell || !aiSettings.enableAIFeatures || !aiSettings.enableUpsell} size="icon" variant="ghost" title={t('ai_upsell')} className="text-muted-foreground hover:text-primary h-8 w-8"><SparklesIcon className={`w-5 h-5 ${isSuggestingUpsell ? 'animate-spin' : ''}`} /></Button>
                 {settings.preferences.enableOrderHold && (
-                    <Button onClick={handleHoldOrder} disabled={(cart || []).length === 0 || isSettlingOrder} size="icon" variant="ghost" title={t('hold_order')} className="text-muted-foreground hover:text-primary h-8 w-8"><PauseIcon className="w-5 h-5"/></Button>
+                    <Button onClick={handleHoldOrder} disabled={!(Array.isArray(cart) && cart.length > 0) || isSettlingOrder} size="icon" variant="ghost" title={t('hold_order')} className="text-muted-foreground hover:text-primary h-8 w-8"><PauseIcon className="w-5 h-5"/></Button>
                 )}
-                <Button onClick={onVoidOrder} disabled={(cart || []).length === 0 && !activeTab && !activeOrderToSettle} size="icon" variant="ghost" title={t('void_order')} className="text-muted-foreground hover:text-destructive h-8 w-8"><TrashIcon className="w-5 h-5"/></Button>
+                <Button onClick={onVoidOrder} disabled={(!(Array.isArray(cart) && cart.length > 0)) && !activeTab && !activeOrderToSettle} size="icon" variant="ghost" title={t('void_order')} className="text-muted-foreground hover:text-destructive h-8 w-8"><TrashIcon className="w-5 h-5"/></Button>
                 <Button onClick={onNewSaleClick} size="icon" variant="ghost" title={t('new_sale')} className="text-muted-foreground hover:text-primary h-8 w-8"><PlusCircleIcon className="w-5 h-5"/></Button>
             </div>
         </div>
@@ -357,7 +368,7 @@ export default function OrderSummary() {
         ) : (
           <>
             {/* FIX: Guard against cart being null or undefined. */}
-            {(cart || []).length > 0 && (
+            {(Array.isArray(cart) && cart.length > 0) && (
               <div>
                 <h3 className="text-xs font-bold uppercase text-muted-foreground mb-1.5 pt-1.5 px-1">
                   {t('new_items')}
@@ -434,7 +445,8 @@ export default function OrderSummary() {
             <div className="flex justify-between items-center pt-1 mt-1 border-t border-border">
                 <span className="text-lg font-bold text-foreground">{t('total')}</span>
                 <div className="text-right">
-                    <span className="text-2xl font-bold text-primary">{currency}{(total as number).toFixed(2)}</span>
+                    {/* FIX: Use `Number(total).toFixed(2)` for safer type conversion and consistency. */}
+                    <span className="text-2xl font-bold text-primary">{currency}{Number(total).toFixed(2)}</span>
                     {settings.dualCurrency.enabled && (
                         <p className="text-xs text-muted-foreground font-mono">
                             ≈ {settings.dualCurrency.secondaryCurrency} {(total * settings.dualCurrency.exchangeRate).toFixed(2)}

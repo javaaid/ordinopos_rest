@@ -1,8 +1,16 @@
 
 
+
+
+
+
+
+
+
 import React, { useState, useEffect, useMemo } from 'react';
+// FIX: Import Type for response schema
 import { GoogleGenAI, Type } from "@google/genai";
-import { Order, MenuItem, Employee, AIExecutiveSummary, AISettings } from '../types';
+import { Order, MenuItem, Employee, AIExecutiveSummary, AISettings, CartItem } from '../types';
 import DocumentChartBarIcon from './icons/DocumentChartBarIcon';
 import { useTranslations } from '../hooks/useTranslations';
 import { useAppContext } from '../contexts/AppContext';
@@ -32,8 +40,8 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
 
             try {
                 const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
-                // FIX: Typed the accumulator to resolve arithmetic and subsequent .toFixed errors.
-                const salesByDay = orders.reduce((acc: Record<string, number>, o) => {
+                // FIX: Explicitly type the accumulator as Record<string, number> to prevent type errors.
+                const salesByDay = orders.reduce((acc: Record<string, number>, o: Order) => {
                     const day = new Date(o.createdAt).toLocaleDateString();
                     acc[day] = (acc[day] || 0) + o.total;
                     return acc;
@@ -41,15 +49,15 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                 const topDayArr = Object.entries(salesByDay).sort((a, b) => b[1] - a[1]);
                 const topDay = topDayArr.length > 0 ? topDayArr[0] : null;
                 
-                // FIX: Typed the accumulator to resolve arithmetic and subsequent .toFixed errors.
-                const menuPerformance = orders.flatMap(o => o.cart).reduce((acc: Record<string, number>, item) => {
+                // FIX: Explicitly type the accumulator as Record<string, number> to prevent type errors.
+                const menuPerformance = orders.flatMap(o => o.cart).reduce((acc: Record<string, number>, item: CartItem) => {
                     acc[item.menuItem.name] = (acc[item.menuItem.name] || 0) + (item.menuItem.price * item.quantity);
                     return acc;
                 }, {});
                 const topItems = Object.entries(menuPerformance).sort((a, b) => b[1] - a[1]).slice(0, 3);
                 
-                // FIX: Typed the accumulator to resolve arithmetic and subsequent .toFixed errors.
-                const staffPerformance = orders.reduce((acc: Record<string, number>, o) => {
+                // FIX: Explicitly type the accumulator as Record<string, number> to prevent type errors.
+                const staffPerformance = orders.reduce((acc: Record<string, number>, o: Order) => {
                     if (o.employeeId) {
                          acc[o.employeeId] = (acc[o.employeeId] || 0) + o.total;
                     }
@@ -83,6 +91,7 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                     Be brief and professional.
                 `;
 
+                // FIX: Updated to a valid model and modern API call as per guidelines.
                 const response = await ai.models.generateContent({
                     model: 'gemini-2.5-flash',
                     contents: prompt,
@@ -91,17 +100,19 @@ const ExecutiveSummaryReport: React.FC<{ orders: Order[], menuItems: MenuItem[],
                         responseSchema: {
                             type: Type.OBJECT,
                             properties: {
-                                title: { type: Type.STRING, description: 'A title for the report, including the date range.' },
-                                salesSummary: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Bullet points for sales summary.' },
-                                menuInsights: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Bullet points for menu insights.' },
-                                staffPerformance: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Bullet points for staff performance.' },
+                                title: { type: Type.STRING },
+                                salesSummary: { type: Type.ARRAY, items: { type: Type.STRING } },
+                                menuInsights: { type: Type.ARRAY, items: { type: Type.STRING } },
+                                staffPerformance: { type: Type.ARRAY, items: { type: Type.STRING } }
                             },
                             required: ['title', 'salesSummary', 'menuInsights', 'staffPerformance']
                         }
                     }
                 });
-
-                setSummary(JSON.parse(response.text) as AIExecutiveSummary);
+                
+                // FIX: Use response.text as per guidelines for safer and more direct access to text content.
+                const text = response.text;
+                setSummary(JSON.parse(text) as AIExecutiveSummary);
 
             } catch (err) {
                 console.error("AI summary failed:", err);

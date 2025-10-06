@@ -1,13 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
-import { useAppContext, useToastContext } from '../contexts/AppContext';
 import { AppSettings, FontSettings, TranslationKey } from '../types';
 import { Button } from './ui/Button';
 import { useTranslations } from '../hooks/useTranslations';
+import { useAppContext } from '../contexts/AppContext';
 
 const FontSettingsView: React.FC = () => {
-    const { settings, setSettings } = useAppContext();
+    const { settings, setSettings, addToast } = useAppContext();
     const t = useTranslations(settings.language.staff);
-    const { addToast } = useToastContext();
     const [localSettings, setLocalSettings] = useState<FontSettings>(settings.fontSettings);
 
     useEffect(() => {

@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Order, PaymentMethod, AppPlugin, PaymentType, AppSettings, ToastNotification, Payment } from '../types';
 import CurrencyDollarIcon from './icons/CurrencyDollarIcon';
@@ -42,7 +41,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, orderToPay
   const [email, setEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
   const [payments, setPayments] = useState<Payment[]>([]);
-  // FIX: Changed NodeJS.Timeout to number for browser compatibility.
   const successTimeoutRef = useRef<number | null>(null);
   
   const isCardConfigured = useMemo(() => {

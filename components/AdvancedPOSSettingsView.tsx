@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { AppSettings, AdvancedPOSSettings, TranslationKey } from '../types';
@@ -55,7 +56,7 @@ export const AdvancedPOSSettingsView: React.FC = () => {
             <button
                 type="button"
                 onClick={() => {
-// FIX: Check if onToggle is a function before calling it.
+                    // FIX: Check if onToggle is a function before calling it.
                     if (typeof onToggle === 'function') {
                         onToggle();
                     }

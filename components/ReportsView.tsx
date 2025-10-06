@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Order, MenuItem, Employee, Location, Category, Customer, Supplier, WastageEntry, Role, AppSettings, Ingredient, RecipeItem, PaymentType, AISettings, ReportGroup, ReportTab, TranslationKey } from '../types';
 import SalesDashboard from './SalesDashboard';

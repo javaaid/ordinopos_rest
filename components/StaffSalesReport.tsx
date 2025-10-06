@@ -1,5 +1,9 @@
 
 
+
+
+
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { Order, Employee, AIReportAnalysis, Location, AISettings } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -48,6 +52,7 @@ const AIStaffAnalysis: React.FC<{ reportData: StaffStat[], isEnabled: boolean }>
                 `;
                 
                 const response = await ai.models.generateContent({
+                    // FIX: Use recommended model 'gemini-2.5-flash' instead of deprecated 'gemini-1.5-flash'.
                     model: 'gemini-2.5-flash',
                     contents: prompt,
                     config: {

@@ -1,5 +1,12 @@
 
 
+
+
+
+
+
+
+
 import React, { useMemo } from 'react';
 import OrderItem from './OrderItem';
 import UserCircleIcon from './icons/UserCircleIcon';
@@ -59,9 +66,10 @@ export default function OrderSummary() {
     return pendingTableOrders.flatMap((o: Order) => o.cart || []);
   }, [pendingTableOrders, activeTab]);
   
-  const allItemsForBill: CartItem[] = isSettlingOrder && activeOrderToSettle ? (activeOrderToSettle.cart || []) : [...sentItems, ...(cart || [])];
+  // FIX: Ensure cart is an array before spreading to prevent runtime errors.
+  const allItemsForBill: CartItem[] = isSettlingOrder && activeOrderToSettle ? (activeOrderToSettle.cart || []) : [...sentItems, ...(Array.isArray(cart) ? cart : [])];
   
-  const { subtotal, tax, total, taxDetails, discountAmount, finalAppliedDiscount, surchargeAmount, surchargeDetails, loyaltyDiscountAmount } = useMemo(() => 
+  const { subtotal, tax, total, taxDetails, discountAmount, finalAppliedDiscount, surchargeAmount, surchargeDetails, loyaltyDiscountAmount } = useMemo<OrderTotals>(() => 
     calculateOrderTotals(allItemsForBill, currentLocation, appliedDiscount, appliedPromotion, orderType, settings, selectedCustomer, surcharges, appliedLoyaltyPoints),
   [allItemsForBill, currentLocation, appliedDiscount, appliedPromotion, orderType, settings, selectedCustomer, surcharges, appliedLoyaltyPoints]);
 
@@ -128,7 +136,8 @@ export default function OrderSummary() {
 
   const renderActionButtons = () => {
     const buttonBaseClass = "w-full h-12 rounded-lg font-bold text-base flex items-center justify-center gap-2 transition-transform duration-200 hover:scale-105 hover:shadow-lg";
-    const isCartEmpty = (cart || []).length === 0;
+    // FIX: Add Array.isArray check to prevent error when cart is not an array.
+    const isCartEmpty = !(Array.isArray(cart) && cart.length > 0);
 
     if (isSettlingOrder) {
         return (
@@ -181,11 +190,14 @@ export default function OrderSummary() {
       <div className="p-2 border-b border-border bg-card shrink-0">
         <div className="flex justify-end items-center h-8">
             <div className="flex items-center gap-0.5">
-                <Button onClick={handleGetUpsellSuggestions} disabled={(cart || []).length === 0 || isSuggestingUpsell || !aiSettings.enableAIFeatures || !aiSettings.enableUpsell} size="icon" variant="ghost" title={t('ai_upsell')} className="text-muted-foreground hover:text-primary h-8 w-8"><SparklesIcon className={`w-5 h-5 ${isSuggestingUpsell ? 'animate-spin' : ''}`} /></Button>
+{/* FIX: Use Array.isArray to safely check cart length. */}
+                <Button onClick={handleGetUpsellSuggestions} disabled={!(Array.isArray(cart) && cart.length > 0) || isSuggestingUpsell || !aiSettings.enableAIFeatures || !aiSettings.enableUpsell} size="icon" variant="ghost" title={t('ai_upsell')} className="text-muted-foreground hover:text-primary h-8 w-8"><SparklesIcon className={`w-5 h-5 ${isSuggestingUpsell ? 'animate-spin' : ''}`} /></Button>
                 {settings.preferences.enableOrderHold && (
-                    <Button onClick={handleHoldOrder} disabled={(cart || []).length === 0 || isSettlingOrder} size="icon" variant="ghost" title={t('hold_order')} className="text-muted-foreground hover:text-primary h-8 w-8"><PauseIcon className="w-5 h-5"/></Button>
+// FIX: Use Array.isArray to safely check cart length.
+                    <Button onClick={handleHoldOrder} disabled={!(Array.isArray(cart) && cart.length > 0) || isSettlingOrder} size="icon" variant="ghost" title={t('hold_order')} className="text-muted-foreground hover:text-primary h-8 w-8"><PauseIcon className="w-5 h-5"/></Button>
                 )}
-                <Button onClick={onVoidOrder} disabled={(cart || []).length === 0 && !activeTab && !activeOrderToSettle} size="icon" variant="ghost" title={t('void_order')} className="text-muted-foreground hover:text-destructive h-8 w-8"><TrashIcon className="w-5 h-5"/></Button>
+{/* FIX: Use Array.isArray to safely check cart length. */}
+                <Button onClick={onVoidOrder} disabled={(!(Array.isArray(cart) && cart.length > 0)) && !activeTab && !activeOrderToSettle} size="icon" variant="ghost" title={t('void_order')} className="text-muted-foreground hover:text-destructive h-8 w-8"><TrashIcon className="w-5 h-5"/></Button>
                 <Button onClick={onNewSaleClick} size="icon" variant="ghost" title={t('new_sale')} className="text-muted-foreground hover:text-primary h-8 w-8"><PlusCircleIcon className="w-5 h-5"/></Button>
             </div>
         </div>
@@ -214,10 +226,9 @@ export default function OrderSummary() {
                       className="w-full bg-accent border border-border rounded-lg px-3 py-2 text-foreground focus:ring-primary focus:border-primary font-semibold"
                   >
                       <option value="" disabled>{t('select_table')}</option>
-                      {/* FIX: Cast `tablesInFloor` to `Table[]` to resolve TypeScript error. */}
                       {(Object.entries(availableTablesByFloor) as [string, Table[]][]).map(([floor, tablesInFloor]) => (
                           <optgroup key={floor} label={floor}>
-                              {(tablesInFloor as Table[]).map(table => (
+                              {(tablesInFloor).map(table => (
                                   <option key={table.id} value={table.id}>{table.name} (seats {table.capacity})</option>
                               ))}
                           </optgroup>
@@ -264,8 +275,8 @@ export default function OrderSummary() {
             </div>
           ) : (
             <>
-              {/* FIX: Guard against cart being null or undefined before accessing length property. */}
-              {cart && cart.length > 0 && (
+{/* FIX: Use Array.isArray to safely check cart length. */}
+              {Array.isArray(cart) && cart.length > 0 && (
                 <div>
                   <h3 className="text-xs font-bold uppercase text-muted-foreground mb-1.5 pt-1.5 px-1">{t('new_items')}</h3>
                   <div className="space-y-1.5">
@@ -311,7 +322,7 @@ export default function OrderSummary() {
               <div className="flex justify-between items-center pt-1 mt-1 border-t border-border">
                   <span className="text-lg font-bold text-foreground">{t('total')}</span>
                   <div className="text-end">
-                      {/* FIX: Cast total to number before calling toFixed to resolve potential type errors. */}
+                      {/* FIX: Use `Number(total).toFixed(2)` for safer type conversion and consistency. */}
                       <span className="text-2xl font-bold text-primary">{currency}{Number(total).toFixed(2)}</span>
                       {settings.dualCurrency.enabled && (
                           <p className="text-xs text-muted-foreground font-mono">≈ {settings.dualCurrency.secondaryCurrency} {(Number(total) * settings.dualCurrency.exchangeRate).toFixed(2)}</p>

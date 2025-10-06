@@ -2,6 +2,8 @@
 
 
 
+
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Ingredient, Order, Supplier, WastageEntry, RecipeItem } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -47,6 +49,7 @@ const AIReorderSuggestions: React.FC<{ ingredients: Ingredient[], orders: Order[
                 `;
 
                 const response = await ai.models.generateContent({
+                    // FIX: Use recommended model 'gemini-2.5-flash' instead of deprecated 'gemini-1.5-flash'.
                     model: 'gemini-2.5-flash',
                     contents: prompt,
                 });

@@ -1,7 +1,6 @@
 
 
 
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Printer, PrinterReceiptSettings, Order, Location, PrinterConnectionType } from '../types';
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from './ui/Modal';

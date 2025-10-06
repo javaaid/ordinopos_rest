@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { Order, Location, AppSettings, CartItem, Employee } from '../../types';
 import { getPriceForItem, generateZatcaQRCode } from '../../utils/calculations';
@@ -129,11 +127,20 @@ const ZatcaBilingualTemplate: React.FC<TemplateProps> = ({ format, order, locati
         // We render a simple placeholder for preview consistency if called incorrectly.
         return <div className="p-8">A4 preview is handled by a different component.</div>;
     }
+    
+    const QrCodeComponent = showZatcaQR && zatcaQRData && (
+        <div className="flex flex-col items-center my-2">
+            <QRCode value={zatcaQRData} size={settings.zatca.qrCodeSize} level="L" />
+        </div>
+    );
 
     // Thermal ZATCA Receipt
      return (
         <div dir="rtl" className="font-mono bg-white text-black p-2 text-xs font-['Amiri']">
             <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
+            
+            {settings.zatca.qrCodePosition === 'top' && QrCodeComponent}
+
             <div className="text-center mb-2">
                 <h2 className="text-lg font-bold">{location.name}</h2>
                 <p>{location.address}</p>
@@ -156,7 +163,9 @@ const ZatcaBilingualTemplate: React.FC<TemplateProps> = ({ format, order, locati
             <div className="flex justify-between"><span>{currency} {order.subtotal.toFixed(2)}</span><span>المجموع الفرعي</span></div>
             <div className="flex justify-between"><span>{currency} {order.tax.toFixed(2)}</span><span>ضريبة القيمة المضافة (15%)</span></div>
             <div className="flex justify-between font-bold text-base"><span>{currency} {order.total.toFixed(2)}</span><span>الإجمالي</span></div>
-             {showZatcaQR && zatcaQRData && (<div className="flex flex-col items-center mt-2"><QRCode value={zatcaQRData} size={settings.zatca.qrCodeSize} level="L" /></div>)}
+             
+             {settings.zatca.qrCodePosition === 'bottom' && QrCodeComponent}
+
              <div className="text-center text-xs mt-2"><p className="font-sans">Powered by ordinopos.com</p></div>
         </div>
     );

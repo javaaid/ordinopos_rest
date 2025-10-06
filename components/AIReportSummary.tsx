@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { AIReportAnalysis } from '../types';
@@ -38,6 +40,7 @@ const AIReportSummary: React.FC<AIReportSummaryProps> = ({ reportData, isEnabled
                 const prompt = `Analyze the following menu performance data. The data is sorted by revenue descending. Provide a very brief, high-level summary (1 sentence), one key positive insight (1 sentence), and one actionable recommendation (1 sentence) based on the data. Focus on top and bottom performers. Data: ${reportDataJSON}`;
 
                 const response = await ai.models.generateContent({
+                    // FIX: Use recommended model 'gemini-2.5-flash' instead of deprecated 'gemini-1.5-flash'.
                     model: 'gemini-2.5-flash',
                     contents: prompt,
                     config: {
